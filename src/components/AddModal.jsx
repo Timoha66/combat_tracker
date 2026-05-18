@@ -1,58 +1,71 @@
-import { useState } from 'react'
-import { IconX, IconDice5, IconPlus, IconMinus } from '@tabler/icons-react'
+import { useState, useEffect } from 'react'
+import { IconX, IconDice5, IconPlus, IconMinus, IconBook2 } from '@tabler/icons-react'
 import { useBattleStore } from '../store/battleStore'
-
-// ─── ВСТРОЕННЫЙ БЕСТИАРИЙ (шаблоны) ──────────────────────────────────────────
-// В будущем это будет тянуться из IndexedDB / Dexie
-const TEMPLATE_BESTIARY = []
+import { useBestiaryStore } from '../store/bestiaryStore'
 
 export default function AddModal({ onClose }) {
-  const addCombatants = useBattleStore(s => s.addCombatants)
+  const addCombatants  = useBattleStore(s => s.addCombatants)
+  const { creatures, loadAll } = useBestiaryStore()
 
   const [search,   setSearch]   = useState('')
   const [selected, setSelected] = useState(null)
   const [count,    setCount]    = useState(1)
   const [initVal,  setInitVal]  = useState('')
-  const [type,     setType]     = useState(null) // override type
 
-  const filtered = TEMPLATE_BESTIARY.filter(b =>
-    b.name.toLowerCase().includes(search.toLowerCase())
+  useEffect(() => { loadAll() }, [])
+
+  const filtered = creatures.filter(c =>
+    c.name.toLowerCase().includes(search.toLowerCase())
   )
 
+  const typeLabels = { player: 'Игрок', enemy: 'Враг', npc: 'НПС', companion: 'Компаньон', pet: 'Питомец' }
+  const typeColors = { player: 'type-player', enemy: 'type-enemy', npc: 'type-npc', companion: 'type-ally', pet: 'type-ally' }
+
   function rollInit() {
-    const bonus = selected?.initBonus ?? 0
+    if (!selected) return
+    const isPlayer = selected.type === 'player'
+    const dexMod   = Math.floor(((selected.abilities?.dex ?? 10) - 10) / 2)
+    const bonus    = isPlayer ? (selected.initiative ?? dexMod) : (selected.initiative ?? dexMod)
     setInitVal(String(Math.floor(Math.random() * 20) + 1 + bonus))
   }
 
   function handleAdd() {
     if (!selected) return
-    const initiative = parseInt(initVal) || Math.floor(Math.random() * 20) + 1 + (selected.initBonus ?? 0)
+    const isPlayer   = selected.type === 'player'
+    const dexMod     = Math.floor(((selected.abilities?.dex ?? 10) - 10) / 2)
+    const initBonus  = selected.initiative ?? dexMod
+    const initiative = parseInt(initVal) || Math.floor(Math.random() * 20) + 1 + initBonus
+
     addCombatants(
-      { ...selected, type: type ?? selected.type },
+      {
+        name:            selected.name,
+        type:            selected.type,
+        hp:              isPlayer ? selected.hp?.max : selected.hp?.average,
+        ac:              isPlayer ? selected.ac : selected.ac?.value,
+        resistances:     selected.resistances    ?? [],
+        immunities:      selected.immunities     ?? [],
+        vulnerabilities: selected.vulnerabilities ?? [],
+        id:              selected.id,
+      },
       count,
       initiative
     )
     onClose()
   }
 
-  const TYPE_OPTIONS = [
-    { id: null,      label: 'По шаблону' },
-    { id: 'player',  label: 'Игрок' },
-    { id: 'enemy',   label: 'Враг' },
-    { id: 'ally',    label: 'Союзник' },
-    { id: 'npc',     label: 'НПС' },
-  ]
-
   return (
     <div className="overlay">
-      <div className="modal" style={{ width: 420 }}>
+      <div className="modal" style={{ width: 440 }}>
+        {/* Header */}
         <div className="flex items-center gap-3 mb-1">
           <span className="font-cinzel text-lg font-semibold" style={{ color: 'var(--text)' }}>
             Добавить участника
           </span>
           <button className="icon-btn ml-auto" onClick={onClose}><IconX size={15} /></button>
         </div>
-        <p className="text-sm mb-4" style={{ color: 'var(--text-dim)' }}>Выберите существо из бестиария</p>
+        <p className="text-sm mb-4" style={{ color: 'var(--text-dim)' }}>
+          Выберите существо из бестиария
+        </p>
 
         {/* Search */}
         <input
@@ -65,50 +78,63 @@ export default function AddModal({ onClose }) {
           onBlur={e => e.target.style.borderColor = 'var(--border-md)'}
         />
 
-        {/* Beast list */}
-        <div className="overflow-y-auto mb-3" style={{ maxHeight: 200 }}>
-          {filtered.map(b => (
-            <div
-              key={b.id}
-              className="flex items-center gap-2 px-2.5 py-2 rounded-lg cursor-pointer transition-colors"
-              style={{
-                background: selected?.id === b.id ? 'var(--gold-dim)' : 'transparent',
-                borderBottom: '0.5px solid var(--border)',
-              }}
-              onClick={() => setSelected(b)}
-            >
-              <span className="font-cinzel text-sm flex-1" style={{ color: 'var(--text)' }}>{b.name}</span>
-              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                {b.type === 'enemy' ? 'Враг' : b.type === 'ally' ? 'Союзник' : 'НПС'} · КД {b.ac} · HP {b.hp}
+        {/* List */}
+        <div className="overflow-y-auto mb-3" style={{ maxHeight: 220, border: '1px solid var(--border)', borderRadius: 8 }}>
+          {filtered.length === 0 && (
+            <div className="text-center py-8 flex flex-col items-center gap-2" style={{ color: 'var(--text-muted)' }}>
+              <IconBook2 size={28} style={{ opacity: 0.3 }} />
+              <span className="font-cinzel text-xs">
+                {creatures.length === 0 ? 'Бестиарий пуст — добавь существ через кнопку «Бестиарий»' : 'Ничего не найдено'}
               </span>
             </div>
-          ))}
-          {filtered.length === 0 && (
-            <div className="text-center py-6 text-sm" style={{ color: 'var(--text-muted)' }}>
-              Ничего не найдено
-            </div>
           )}
+          {filtered.map(c => {
+            const isPlayer = c.type === 'player'
+            return (
+              <div
+                key={c.id}
+                className="flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors"
+                style={{
+                  background: selected?.id === c.id ? 'var(--gold-dim)' : 'transparent',
+                  borderBottom: '0.5px solid var(--border)',
+                  color: selected?.id === c.id ? 'var(--gold)' : 'var(--text)',
+                }}
+                onClick={() => setSelected(c)}
+              >
+                <span className="font-cinzel text-sm flex-1 truncate">{c.name}</span>
+                <span className={`type-badge ${typeColors[c.type] ?? 'type-npc'} shrink-0`}>
+                  {typeLabels[c.type] ?? c.type}
+                </span>
+                <span className="text-xs shrink-0" style={{ color: 'var(--text-muted)' }}>
+                  {!isPlayer && c.cr !== undefined ? `CR ${c.cr} · ` : ''}
+                  КД {isPlayer ? c.ac : c.ac?.value} · HP {isPlayer ? c.hp?.max : c.hp?.average}
+                </span>
+              </div>
+            )
+          })}
         </div>
 
         {/* Count */}
         <div className="flex items-center gap-3 mb-3">
-          <span className="modal-label" style={{ margin: 0, flex: 1 }}>Количество</span>
-          <button
-            className="icon-btn"
-            onClick={() => setCount(c => Math.max(1, c - 1))}
-          ><IconMinus size={14} /></button>
+          <span className="font-cinzel text-[11px] tracking-widest uppercase flex-1" style={{ color: 'var(--text-muted)' }}>
+            Количество
+          </span>
+          <button className="icon-btn" onClick={() => setCount(c => Math.max(1, c - 1))}>
+            <IconMinus size={14} />
+          </button>
           <span className="font-cinzel text-lg font-semibold w-8 text-center" style={{ color: 'var(--text)' }}>
             {count}
           </span>
-          <button
-            className="icon-btn"
-            onClick={() => setCount(c => Math.min(10, c + 1))}
-          ><IconPlus size={14} /></button>
+          <button className="icon-btn" onClick={() => setCount(c => Math.min(10, c + 1))}>
+            <IconPlus size={14} />
+          </button>
         </div>
 
         {/* Initiative */}
-        <div className="mb-3">
-          <span className="modal-label">Инициатива</span>
+        <div className="mb-4">
+          <div className="font-cinzel text-[11px] tracking-widest uppercase mb-2" style={{ color: 'var(--text-muted)' }}>
+            Инициатива
+          </div>
           <div className="flex gap-2 items-center">
             <input
               type="number"
@@ -120,31 +146,9 @@ export default function AddModal({ onClose }) {
               onFocus={e => e.target.style.borderColor = 'rgba(226,201,126,0.5)'}
               onBlur={e => e.target.style.borderColor = 'var(--border-md)'}
             />
-            <button className="btn btn-ghost shrink-0" onClick={rollInit}>
+            <button className="btn btn-ghost shrink-0" onClick={rollInit} disabled={!selected}>
               <IconDice5 size={15} /> Бросить
             </button>
-          </div>
-        </div>
-
-        {/* Type override */}
-        <div className="mb-4">
-          <span className="modal-label">Тип участника</span>
-          <div className="flex flex-wrap gap-1.5">
-            {TYPE_OPTIONS.map(opt => (
-              <button
-                key={String(opt.id)}
-                onClick={() => setType(opt.id)}
-                className="font-cinzel text-[11px] px-2.5 py-1 rounded-lg transition-all"
-                style={{
-                  background: type === opt.id ? 'var(--gold-dim)' : 'var(--bg-row)',
-                  color: type === opt.id ? 'var(--gold)' : 'var(--text-dim)',
-                  border: `1px solid ${type === opt.id ? 'rgba(226,201,126,0.4)' : 'var(--border)'}`,
-                  cursor: 'pointer',
-                }}
-              >
-                {opt.label}
-              </button>
-            ))}
           </div>
         </div>
 

@@ -1,7 +1,7 @@
-import { IconSword, IconChevronLeft, IconChevronRight, IconPlus, IconFlag, IconList } from '@tabler/icons-react'
+import { IconSword, IconChevronLeft, IconChevronRight, IconPlus, IconFlag, IconBook2 } from '@tabler/icons-react'
 import { useBattleStore } from '../store/battleStore'
 
-export default function Header({ onAdd }) {
+export default function Header({ onAdd, onBestiary, showingBestiary }) {
   const round    = useBattleStore(s => s.round)
   const nextTurn = useBattleStore(s => s.nextTurn)
   const prevTurn = useBattleStore(s => s.prevTurn)
@@ -23,53 +23,73 @@ export default function Header({ onAdd }) {
 
       <div className="w-px h-7 shrink-0" style={{ background: 'var(--border)' }} />
 
-      {/* Turn navigation */}
-      <div className="flex items-center rounded-xl overflow-hidden shrink-0"
-           style={{ border: '1px solid var(--border-md)', background: 'var(--bg-row)' }}>
-        <button
-          onClick={prevTurn}
-          className="flex items-center gap-1.5 font-cinzel text-xs font-semibold tracking-wide px-3 py-2 transition-colors"
-          style={{ color: 'var(--text-dim)' }}
-          onMouseEnter={e => { e.currentTarget.style.color = 'var(--gold)'; e.currentTarget.style.background = 'var(--gold-dim)' }}
-          onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-dim)'; e.currentTarget.style.background = 'transparent' }}
-        >
-          <IconChevronLeft size={15} /> Пред.
-        </button>
+      {/* Turn navigation — скрываем в бестиарии */}
+      {!showingBestiary && (
+        <div className="flex items-center rounded-xl overflow-hidden shrink-0"
+             style={{ border: '1px solid var(--border-md)', background: 'var(--bg-row)' }}>
+          <button
+            onClick={prevTurn}
+            className="flex items-center gap-1.5 font-cinzel text-xs font-semibold tracking-wide px-3 py-2 transition-colors"
+            style={{ color: 'var(--text-dim)', background: 'transparent' }}
+            onMouseEnter={e => { e.currentTarget.style.color = 'var(--gold)'; e.currentTarget.style.background = 'var(--gold-dim)' }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-dim)'; e.currentTarget.style.background = 'transparent' }}
+          >
+            <IconChevronLeft size={15} /> Пред.
+          </button>
 
-        <div className="px-5 py-1 text-center"
-             style={{ borderLeft: '1px solid var(--border)', borderRight: '1px solid var(--border)', minWidth: 180 }}>
-          <span className="font-cinzel text-[10px] tracking-widest uppercase block" style={{ color: 'var(--text-muted)' }}>
-            Раунд {round}
-          </span>
-          <span className="font-cinzel text-sm font-semibold block truncate" style={{ color: 'var(--gold)' }}>
-            {current?.name ?? '—'}
-          </span>
+          <div className="px-5 py-1 text-center"
+               style={{ borderLeft: '1px solid var(--border)', borderRight: '1px solid var(--border)', minWidth: 180 }}>
+            <span className="font-cinzel text-[10px] tracking-widest uppercase block" style={{ color: 'var(--text-muted)' }}>
+              Раунд {round}
+            </span>
+            <span className="font-cinzel text-sm font-semibold block truncate" style={{ color: 'var(--gold)' }}>
+              {current?.name ?? '—'}
+            </span>
+          </div>
+
+          <button
+            onClick={nextTurn}
+            className="flex items-center gap-1.5 font-cinzel text-xs font-semibold tracking-wide px-3 py-2 transition-colors"
+            style={{ color: 'var(--text-dim)', background: 'transparent' }}
+            onMouseEnter={e => { e.currentTarget.style.color = 'var(--gold)'; e.currentTarget.style.background = 'var(--gold-dim)' }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-dim)'; e.currentTarget.style.background = 'transparent' }}
+          >
+            След. <IconChevronRight size={15} />
+          </button>
         </div>
-
-        <button
-          onClick={nextTurn}
-          className="flex items-center gap-1.5 font-cinzel text-xs font-semibold tracking-wide px-3 py-2 transition-colors"
-          style={{ color: 'var(--text-dim)' }}
-          onMouseEnter={e => { e.currentTarget.style.color = 'var(--gold)'; e.currentTarget.style.background = 'var(--gold-dim)' }}
-          onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-dim)'; e.currentTarget.style.background = 'transparent' }}
-        >
-          След. <IconChevronRight size={15} />
-        </button>
-      </div>
+      )}
 
       {/* Actions */}
       <div className="ml-auto flex items-center gap-2">
-        {view !== 'tracker' && (
-          <button className="btn btn-ghost" onClick={() => setView('tracker')}>
-            <IconList size={15} /> Трекер
-          </button>
+        {/* Кнопка бестиария */}
+        <button
+          className="btn"
+          style={{
+            background: showingBestiary ? 'var(--gold-dim)' : 'none',
+            color: showingBestiary ? 'var(--gold)' : 'var(--text-dim)',
+            borderColor: showingBestiary ? 'rgba(226,201,126,0.4)' : 'var(--border-md)',
+          }}
+          onClick={onBestiary}
+        >
+          <IconBook2 size={15} />
+          {showingBestiary ? 'Закрыть бестиарий' : 'Бестиарий'}
+        </button>
+
+        {!showingBestiary && (
+          <>
+            {view === 'summary' && (
+              <button className="btn btn-ghost" onClick={() => setView('tracker')}>
+                ← Трекер
+              </button>
+            )}
+            <button className="btn btn-add" onClick={onAdd}>
+              <IconPlus size={15} /> Добавить
+            </button>
+            <button className="btn btn-end" onClick={() => setView('summary')}>
+              <IconFlag size={15} /> Завершить бой
+            </button>
+          </>
         )}
-        <button className="btn btn-add" onClick={onAdd}>
-          <IconPlus size={15} /> Добавить
-        </button>
-        <button className="btn btn-end" onClick={() => setView('summary')}>
-          <IconFlag size={15} /> Завершить бой
-        </button>
       </div>
     </header>
   )
