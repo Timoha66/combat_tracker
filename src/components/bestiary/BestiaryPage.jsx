@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import {
   IconPlus, IconSearch, IconUpload, IconDownload,
-  IconPencil, IconTrash, IconSword, IconUser,
+  IconPencil, IconTrash, IconSword, IconUser, IconRefresh,
 } from '@tabler/icons-react'
 import { useBestiaryStore } from '../../store/bestiaryStore'
 import { ENTITY_TYPES } from '../../data/gameData'
+import { db } from '../../data/bestiaryDb'
+import seedData from '../../data/seedBestiary.json'
 import CreatureForm from './CreatureForm'
 import StatblockView from './StatblockView'
 
@@ -34,6 +36,14 @@ export default function BestiaryPage() {
       await deleteCreature(c.id)
       if (viewTarget?.id === c.id) setViewTarget(null)
     }
+  }
+
+  async function handleReset() {
+    if (!confirm('Сбросить бестиарий к базовому списку?\n\nВсе твои существа будут УДАЛЕНЫ и заменены базовыми. Это действие нельзя отменить.')) return
+    await db.creatures.clear()
+    await db.creatures.bulkAdd(seedData)
+    await loadAll()
+    setViewTarget(null)
   }
 
   function handleImport(e) {
@@ -198,6 +208,15 @@ export default function BestiaryPage() {
             <IconUpload size={13} /> Импорт
             <input type="file" accept=".json" className="hidden" onChange={handleImport} />
           </label>
+        </div>
+        <div className="px-3 pb-3">
+          <button
+            className="btn w-full justify-center"
+            style={{ fontSize: 11, background: 'none', color: 'var(--text-muted)', borderColor: 'var(--border)' }}
+            onClick={handleReset}
+          >
+            <IconRefresh size={13} /> Сбросить к базовому
+          </button>
         </div>
       </div>
 
