@@ -3,9 +3,28 @@ import { abilityMod, ABILITY_KEYS, ABILITY_LABELS, ACTION_SECTIONS } from '../..
 import { useBattleStore } from '../../store/battleStore'
 import { DMG_TYPES } from '../../data/constants'
 
-// id → русское название
+const ATTACK_TYPE_LABEL = {
+  melee:        'Атака рукопашным оружием',
+  ranged:       'Атака дальнобойным оружием',
+  spell_melee:  'Атака заклинанием ближнего боя',
+  spell_ranged: 'Атака заклинанием дальнего боя',
+}
+
+// id → русское название урона
 const DMG_LABEL = Object.fromEntries(DMG_TYPES.map(t => [t.id, t.label]))
 function dmgName(id) { return DMG_LABEL[id] ?? id }
+
+// Формирует строку атаки как в официальных книгах
+function attackLine(a) {
+  if (!a.attackType && a.attackBonus == null) return null
+  const typeLabel = ATTACK_TYPE_LABEL[a.attackType] ?? 'Атака'
+  const bonus = a.attackBonus != null ? `${a.attackBonus >= 0 ? '+' : ''}${a.attackBonus} к попаданию` : ''
+  const isRanged = a.attackType === 'ranged' || a.attackType === 'spell_ranged'
+  const isMelee  = a.attackType === 'melee'  || a.attackType === 'spell_melee'
+  const reach = isMelee  ? `, досягаемость ${a.reach || '1,5 м'}, одна цель` : ''
+  const range = isRanged ? `, дальность ${a.range || '—'}, одна цель` : ''
+  return `${typeLabel}: ${bonus}${reach}${range}.`
+}
 
 export default function StatblockView({ creature: c, onEdit }) {
   const addCombatants = useBattleStore(s => s.addCombatants)
@@ -155,7 +174,12 @@ export default function StatblockView({ creature: c, onEdit }) {
                       <span className="font-cinzel text-sm font-semibold" style={{ color: 'var(--text)' }}>
                         {a.name}.{' '}
                       </span>
-                      {a.attackBonus != null && (
+                      {attackLine(a) && (
+                        <span className="text-sm italic" style={{ color: 'var(--text-dim)' }}>
+                          {attackLine(a)}{' '}
+                        </span>
+                      )}
+                      {!attackLine(a) && a.attackBonus != null && (
                         <span className="text-sm" style={{ color: 'var(--text-dim)' }}>
                           <em>Атака:</em> {a.attackBonus >= 0 ? '+' : ''}{a.attackBonus} к попаданию.{' '}
                         </span>

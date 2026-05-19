@@ -6,6 +6,23 @@ import { CONDITIONS, STATUS_LABEL, STATUS_PILL, getStatus } from '../data/consta
 import { ABILITY_KEYS, ABILITY_LABELS, ACTION_SECTIONS, abilityMod } from '../data/gameData'
 import { DMG_TYPES } from '../data/constants'
 
+const ATTACK_TYPE_LABEL = {
+  melee:        'Атака рукопашным оружием',
+  ranged:       'Атака дальнобойным оружием',
+  spell_melee:  'Атака заклинанием ближнего боя',
+  spell_ranged: 'Атака заклинанием дальнего боя',
+}
+function attackLine(a) {
+  if (!a.attackType && a.attackBonus == null) return null
+  const typeLabel = ATTACK_TYPE_LABEL[a.attackType] ?? 'Атака'
+  const bonus = a.attackBonus != null ? `${a.attackBonus >= 0 ? '+' : ''}${a.attackBonus} к попаданию` : ''
+  const isMelee  = a.attackType === 'melee'  || a.attackType === 'spell_melee'
+  const isRanged = a.attackType === 'ranged' || a.attackType === 'spell_ranged'
+  const reach = isMelee  ? `, досягаемость ${a.reach || '1,5 м'}, одна цель` : ''
+  const range = isRanged ? `, дальность ${a.range || '—'}, одна цель` : ''
+  return `${typeLabel}: ${bonus}${reach}${range}.`
+}
+
 const DMG_LABEL = Object.fromEntries(DMG_TYPES.map(t => [t.id, t.label]))
 function dmgName(id) { return DMG_LABEL[id] ?? id }
 
@@ -265,7 +282,10 @@ function StatblockViewInline({ creature: c, currentHp }) {
             {acts.map((a, i) => (
               <p key={i} className="text-sm mb-2" style={{ color: 'var(--text-dim)' }}>
                 <span className="font-cinzel font-semibold" style={{ color: 'var(--text)' }}>{a.name}. </span>
-                {a.attackBonus != null && <><em>Атака:</em> {a.attackBonus >= 0 ? '+' : ''}{a.attackBonus} к попаданию. </>}
+                {attackLine(a)
+                  ? <><em>{attackLine(a)}</em>{' '}</>
+                  : a.attackBonus != null ? <><em>Атака:</em> {a.attackBonus >= 0 ? '+' : ''}{a.attackBonus} к попаданию. </> : null
+                }
                 {a.damage && <><em>Урон:</em> {a.damage}{a.damageType ? ` ${dmgName(a.damageType)}` : ''}. </>}
                 {a.description}
               </p>

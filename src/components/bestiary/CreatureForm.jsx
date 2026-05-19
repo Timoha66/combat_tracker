@@ -496,12 +496,43 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
                         <Select value={a.section} onChange={v => updateInArray('actions', i, x => ({ ...x, section: v }))}
                           options={ACTION_SECTIONS.map(s => ({ id: s.id, label: s.label }))} />
                       </Field>
+                      <Field label="Тип атаки">
+                        <Select
+                          value={a.attackType ?? ''}
+                          onChange={v => updateInArray('actions', i, x => ({ ...x, attackType: v }))}
+                          options={[
+                            { id: '',          label: '— не атака —' },
+                            { id: 'melee',     label: 'Атака рукопашным оружием' },
+                            { id: 'ranged',    label: 'Атака дальнобойным оружием' },
+                            { id: 'spell_melee',  label: 'Атака заклинанием ближнего боя' },
+                            { id: 'spell_ranged', label: 'Атака заклинанием дальнего боя' },
+                          ]}
+                        />
+                      </Field>
                       <Field label="Бонус попадания">
                         <input className={inputCls} style={inputStyle} type="number" value={a.attackBonus ?? ''}
                           placeholder="пусто = нет атаки"
                           onChange={e => updateInArray('actions', i, x => ({ ...x, attackBonus: e.target.value === '' ? null : Number(e.target.value) }))}
                         />
                       </Field>
+                      {/* Досягаемость — для рукопашных */}
+                      {(a.attackType === 'melee' || a.attackType === 'spell_melee') && (
+                        <Field label="Досягаемость">
+                          <input className={inputCls} style={inputStyle} value={a.reach ?? ''}
+                            placeholder="1,5 м"
+                            onChange={e => updateInArray('actions', i, x => ({ ...x, reach: e.target.value }))}
+                          />
+                        </Field>
+                      )}
+                      {/* Дальность — для дальнобойных */}
+                      {(a.attackType === 'ranged' || a.attackType === 'spell_ranged') && (
+                        <Field label="Дальность (норм./макс.)">
+                          <input className={inputCls} style={inputStyle} value={a.range ?? ''}
+                            placeholder="18/60 м"
+                            onChange={e => updateInArray('actions', i, x => ({ ...x, range: e.target.value }))}
+                          />
+                        </Field>
+                      )}
                       <Field label="Урон (например 2к6+4)">
                         <input className={inputCls} style={inputStyle} value={a.damage ?? ''}
                           onChange={e => updateInArray('actions', i, x => ({ ...x, damage: e.target.value }))}
