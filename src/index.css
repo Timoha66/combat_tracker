@@ -81,7 +81,7 @@
   /* ── COMBATANT ROW ── */
   .c-row {
     display: grid;
-    grid-template-columns: 28px 40px 1fr 52px 108px 28px 28px;
+    grid-template-columns: 28px 40px 1fr 52px 108px 28px 28px 28px;
     gap: 10px;
     align-items: center;
     padding: 8px 12px;

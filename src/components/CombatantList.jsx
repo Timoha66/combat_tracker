@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
-  IconShieldChevron, IconBook2, IconCheck, IconX, IconHeartPlus, IconPlus,
+  IconShieldChevron, IconBook2, IconCheck, IconX, IconHeartPlus, IconPlus, IconNotes,
 } from '@tabler/icons-react'
 import { useBattleStore, getEffectiveAC } from '../store/battleStore'
 import { calcStoredInit, displayInit } from './AddModal'
@@ -9,8 +9,25 @@ import {
   getHpBarColor, getHpTextColor, CONDITION_MAP,
 } from '../data/constants'
 
+// ─── HOTKEYS ──────────────────────────────────────────────────────────────────
+function useHotkeys() {
+  const nextTurn = useBattleStore(s => s.nextTurn)
+  const prevTurn = useBattleStore(s => s.prevTurn)
+  useEffect(() => {
+    function onKey(e) {
+      const tag = document.activeElement?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+      if (e.key === ' ' || e.key === 'ArrowRight') { e.preventDefault(); nextTurn() }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); prevTurn() }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [nextTurn, prevTurn])
+}
+
 // ─── LIST ─────────────────────────────────────────────────────────────────────
 export default function CombatantList({ onOpenStatblock, onOpenCondPicker, onOpenAcEdit, onRevive }) {
+  useHotkeys()
   const combatants      = useBattleStore(s => s.combatants)
   const getCurrentCombatant = useBattleStore(s => s.getCurrentCombatant)
   const selectedTargets = useBattleStore(s => s.selectedTargets)
@@ -52,6 +69,12 @@ function CombatantRow({ combatant: c, isActive, isSelected, onOpenStatblock, onO
   const setInitiative        = useBattleStore(s => s.setInitiative)
   const combatants           = useBattleStore(s => s.combatants)
   const resolveConcentration = useBattleStore(s => s.resolveConcentration)
+  const useLegendaryAction   = useBattleStore(s => s.useLegendaryAction)
+  const useLegendaryResist   = useBattleStore(s => s.useLegendaryResistance)
+  const restoreLegendaryRes  = useBattleStore(s => s.restoreLegendaryResistances)
+  const setNote              = useBattleStore(s => s.setNote)
+
+  const [noteOpen, setNoteOpen] = useState(false)
 
   const [editingInit, setEditingInit] = useState(false)
   const [initDraft,   setInitDraft]   = useState(String(displayInit(c.initiative)))
@@ -235,6 +258,66 @@ function CombatantRow({ combatant: c, isActive, isSelected, onOpenStatblock, onO
             )}
           </div>
         )}
+
+        {/* Легендарные действия и сопротивления */}
+        {(c.legendaryActionsMax > 0 || c.legendaryResistancesMax > 0) && (
+          <div className="flex flex-wrap gap-3 mt-1" onClick={e => e.stopPropagation()}>
+            {c.legendaryActionsMax > 0 && (
+              <div className="flex items-center gap-1">
+                <span className="font-cinzel text-[9px]" style={{ color: 'var(--gold)' }}>⚔</span>
+                {Array.from({ length: c.legendaryActionsMax }).map((_, i) => (
+                  <span key={i} onClick={() => useLegendaryAction(c.id)}
+                    className="cursor-pointer rounded-full transition-all"
+                    style={{
+                      width: 9, height: 9, display: 'inline-block',
+                      background: i < (c.legendaryActionsLeft ?? 0) ? 'var(--gold)' : 'rgba(226,201,126,0.15)',
+                      border: '1px solid rgba(226,201,126,0.4)',
+                    }}
+                    title="Использовать легендарное действие"
+                  />
+                ))}
+              </div>
+            )}
+            {c.legendaryResistancesMax > 0 && (
+              <div className="flex items-center gap-1">
+                <span className="font-cinzel text-[9px]" style={{ color: '#60a5fa' }}>🛡ᴸ</span>
+                {Array.from({ length: c.legendaryResistancesMax }).map((_, i) => (
+                  <span key={i}
+                    onClick={() => i < (c.legendaryResistancesLeft ?? 0)
+                      ? useLegendaryResist(c.id)
+                      : restoreLegendaryRes(c.id)
+                    }
+                    className="cursor-pointer rounded-full transition-all"
+                    style={{
+                      width: 9, height: 9, display: 'inline-block',
+                      background: i < (c.legendaryResistancesLeft ?? 0) ? '#60a5fa' : 'rgba(96,165,250,0.1)',
+                      border: '1px solid rgba(96,165,250,0.35)',
+                    }}
+                    title={i < (c.legendaryResistancesLeft ?? 0) ? 'Использовать легендарное сопротивление' : 'Кликни чтобы восстановить'}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Заметка */}
+        {noteOpen && (
+          <textarea
+            className="w-full mt-1 rounded px-2 py-1 text-xs resize-none outline-none"
+            style={{
+              background: 'var(--bg-panel)',
+              border: '1px solid rgba(226,201,126,0.3)',
+              color: 'var(--text-dim)',
+              minHeight: 46,
+            }}
+            placeholder="Заметка ДМ..."
+            value={c.note ?? ''}
+            onChange={e => setNote(c.id, e.target.value)}
+            onClick={e => e.stopPropagation()}
+            autoFocus
+          />
+        )}
       </div>
 
       {/* AC */}
@@ -350,8 +433,15 @@ function CombatantRow({ combatant: c, isActive, isSelected, onOpenStatblock, onO
             <IconShieldChevron size={14} />
           </button>
           <button
+            className={`icon-btn ${noteOpen || c.note ? 'active' : ''}`}
+            onClick={e => { e.stopPropagation(); setNoteOpen(n => !n) }}
+            title="Заметка"
+            style={c.note && !noteOpen ? { borderColor: 'rgba(226,201,126,0.4)', color: 'var(--gold)' } : {}}
+          >
+            <IconNotes size={14} />
+          </button>
+          <button
             className="icon-btn"
-            style={{ '--hover-color': '#93c5fd' }}
             onClick={e => { e.stopPropagation(); onOpenStatblock(c) }}
             title="Статблок"
           >

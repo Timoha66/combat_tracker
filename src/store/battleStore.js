@@ -29,6 +29,13 @@ export function createCombatant(source, overrides = {}) {
     damageDealt:    0,
     damageTaken:    0,
     kills:          0,
+    // ── Легендарные ──
+    legendaryActionsMax:      source.legendaryActionCount  ?? 0,
+    legendaryActionsLeft:     source.legendaryActionCount  ?? 0,
+    legendaryResistancesMax:  source.legendaryResistances  ?? 0,
+    legendaryResistancesLeft: source.legendaryResistances  ?? 0,
+    // ── Заметка ──
+    note: '',
     ...overrides,
   }
 }
@@ -93,16 +100,20 @@ export const useBattleStore = create((set, get) => ({
     const { combatants, currentIdx, round } = get()
     const live = getLiveOrder(combatants)
     if (!live.length) return
-    const nextIdx = (currentIdx + 1) % live.length
+    const nextIdx  = (currentIdx + 1) % live.length
     const nextRound = nextIdx === 0 ? round + 1 : round
-    // Истечение эффектов на начало хода
-    const nextC = live[nextIdx]
+    const nextC    = live[nextIdx]
     set(state => ({
       currentIdx: nextIdx,
       round: nextRound,
       combatants: state.combatants.map(c =>
         c.id === nextC.id
-          ? { ...c, tempEffects: c.tempEffects.filter(fx => !(fx.expireOn === 'turnStart' && fx.ownerId === c.id)) }
+          ? {
+              ...c,
+              tempEffects: c.tempEffects.filter(fx => !(fx.expireOn === 'turnStart' && fx.ownerId === c.id)),
+              // Восстанавливаем легендарные действия в начале хода существа
+              legendaryActionsLeft: c.legendaryActionsMax ?? 0,
+            }
           : c
       ),
     }))
@@ -112,9 +123,9 @@ export const useBattleStore = create((set, get) => ({
     const { combatants, currentIdx, round } = get()
     const live = getLiveOrder(combatants)
     if (!live.length) return
-    const prevIdx = currentIdx === 0 ? live.length - 1 : currentIdx - 1
+    const prevIdx   = currentIdx === 0 ? live.length - 1 : currentIdx - 1
     const prevRound = currentIdx === 0 && round > 1 ? round - 1 : round
-    const prevC = live[prevIdx]
+    const prevC     = live[prevIdx]
     set(state => ({
       currentIdx: prevIdx,
       round: prevRound,
@@ -188,6 +199,42 @@ export const useBattleStore = create((set, get) => ({
 
       return { combatants: final }
     })
+  },
+
+  // ── ЛЕГЕНДАРНЫЕ ДЕЙСТВИЯ ────────────────────────────────────────────────────
+  useLegendaryAction(id) {
+    set(state => ({
+      combatants: state.combatants.map(c =>
+        c.id === id && (c.legendaryActionsLeft ?? 0) > 0
+          ? { ...c, legendaryActionsLeft: c.legendaryActionsLeft - 1 }
+          : c
+      ),
+    }))
+  },
+
+  useLegendaryResistance(id) {
+    set(state => ({
+      combatants: state.combatants.map(c =>
+        c.id === id && (c.legendaryResistancesLeft ?? 0) > 0
+          ? { ...c, legendaryResistancesLeft: c.legendaryResistancesLeft - 1 }
+          : c
+      ),
+    }))
+  },
+
+  restoreLegendaryResistances(id) {
+    set(state => ({
+      combatants: state.combatants.map(c =>
+        c.id === id ? { ...c, legendaryResistancesLeft: c.legendaryResistancesMax ?? 0 } : c
+      ),
+    }))
+  },
+
+  // ── ЗАМЕТКА ─────────────────────────────────────────────────────────────────
+  setNote(id, note) {
+    set(state => ({
+      combatants: state.combatants.map(c => c.id === id ? { ...c, note } : c),
+    }))
   },
 
   // ── ПРОВЕРКА КОНЦЕНТРАЦИИ ────────────────────────────────────────────────────
