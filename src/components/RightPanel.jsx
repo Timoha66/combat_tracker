@@ -6,6 +6,7 @@ import { DMG_TYPES, DMG_TYPE_GROUPS, getTypeMult } from '../data/constants'
 export default function RightPanel() {
   const combatants     = useBattleStore(s => s.combatants)
   const selectedTargets = useBattleStore(s => s.selectedTargets)
+  const toggleTarget   = useBattleStore(s => s.toggleTarget)
   const clearTargets   = useBattleStore(s => s.clearTargets)
   const applyDamage    = useBattleStore(s => s.applyDamage)
   const applyHeal      = useBattleStore(s => s.applyHeal)
@@ -33,6 +34,18 @@ export default function RightPanel() {
 
   function handleDmgType(id) {
     setDmgType(prev => prev === id ? null : id)
+  }
+
+  function selectByType(mode) {
+    const alive = combatants.filter(c => !c.dead && c.hp?.current > 0)
+    let ids = []
+    if (mode === 'all')     ids = alive.map(c => c.id)
+    if (mode === 'enemies') ids = alive.filter(c => c.type === 'enemy').map(c => c.id)
+    if (mode === 'players') ids = alive.filter(c => c.type === 'player').map(c => c.id)
+    const toRemove = selectedTargets.filter(id => !ids.includes(id))
+    const toAdd    = ids.filter(id => !selectedTargets.includes(id))
+    toRemove.forEach(id => toggleTarget(id))
+    toAdd.forEach(id => toggleTarget(id))
   }
 
   function handleDamage() {
@@ -183,17 +196,47 @@ export default function RightPanel() {
       </button>
 
       <div className="rp-divider" />
-      <button
-        className="w-full font-cinzel text-[10px] tracking-wide py-1.5 rounded-md transition-colors cursor-pointer"
-        style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
-        onClick={clearTargets}
-      >
-        <IconX size={12} className="inline mr-1" /> Снять выделение
-      </button>
+
+      {/* Быстрое выделение */}
+      <span className="rp-label">Быстрый выбор</span>
+      <div className="flex flex-col gap-1.5 mb-2">
+        <button
+          className="w-full font-cinzel text-[10px] tracking-wide py-1.5 rounded-md transition-colors cursor-pointer"
+          style={{ background: 'var(--bg-row)', border: '1px solid var(--border)', color: 'var(--text-dim)' }}
+          onMouseEnter={e => { e.currentTarget.style.color = 'var(--text)'; e.currentTarget.style.borderColor = 'var(--border-md)' }}
+          onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-dim)'; e.currentTarget.style.borderColor = 'var(--border)' }}
+          onClick={() => selectByType('all')}
+        >
+          Выделить всех
+        </button>
+        <button
+          className="w-full font-cinzel text-[10px] tracking-wide py-1.5 rounded-md transition-colors cursor-pointer"
+          style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.2)', color: '#f87171' }}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(248,113,113,0.16)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'rgba(248,113,113,0.08)'}
+          onClick={() => selectByType('enemies')}
+        >
+          Выделить всех врагов
+        </button>
+        <button
+          className="w-full font-cinzel text-[10px] tracking-wide py-1.5 rounded-md transition-colors cursor-pointer"
+          style={{ background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.2)', color: '#60a5fa' }}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(96,165,250,0.16)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'rgba(96,165,250,0.08)'}
+          onClick={() => selectByType('players')}
+        >
+          Выделить всех героев
+        </button>
+        <button
+          className="w-full font-cinzel text-[10px] tracking-wide py-1.5 rounded-md transition-colors cursor-pointer"
+          style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
+          onMouseEnter={e => { e.currentTarget.style.color = 'var(--text)'; e.currentTarget.style.borderColor = 'var(--border-md)' }}
+          onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border)' }}
+          onClick={clearTargets}
+        >
+          <IconX size={12} className="inline mr-1" /> Снять выделение
+        </button>
+      </div>
     </div>
   )
 }
-
-// ─── CSS для preview badges (глобальный через style tag не нужен — в index.css) ─
-// Добавим стили прямо тут через JSX style объект, нет нужды в глобальных классах.
-// pb-* классы уже определены в index.css

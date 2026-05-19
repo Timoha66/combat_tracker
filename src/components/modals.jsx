@@ -1,7 +1,13 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { IconX, IconCheck } from '@tabler/icons-react'
 import { useBattleStore, getEffectiveAC } from '../store/battleStore'
+import { useBestiaryStore } from '../store/bestiaryStore'
 import { CONDITIONS, STATUS_LABEL, STATUS_PILL, getStatus } from '../data/constants'
+import { ABILITY_KEYS, ABILITY_LABELS, ACTION_SECTIONS, abilityMod } from '../data/gameData'
+import { DMG_TYPES } from '../data/constants'
+
+const DMG_LABEL = Object.fromEntries(DMG_TYPES.map(t => [t.id, t.label]))
+function dmgName(id) { return DMG_LABEL[id] ?? id }
 
 // ─── CONDITION PICKER ─────────────────────────────────────────────────────────
 export function ConditionPicker({ id, onClose }) {
@@ -169,11 +175,13 @@ export function ReviveModal({ id, onClose }) {
 
 // ─── STATBLOCK MODAL ──────────────────────────────────────────────────────────
 export function StatblockModal({ combatant: c, onClose }) {
-  // В будущем данные будут тянуться из бестиария по c.sourceId
-  // Сейчас показываем только доступные данные участника боя
+  const creatures  = useBestiaryStore(s => s.creatures)
+  const loadAll    = useBestiaryStore(s => s.loadAll)
 
-  const effectiveAC = getEffectiveAC(c)
-  const status      = getStatus(c)
+  useEffect(() => { loadAll() }, [])
+
+  // Ищем полную запись в бестиарии по sourceId
+  const full = creatures.find(x => x.id === c.sourceId) ?? null
 
   return (
     <div className="overlay">
@@ -186,80 +194,114 @@ export function StatblockModal({ combatant: c, onClose }) {
           <div className="flex-1">
             <div className="font-cinzel text-xl font-bold" style={{ color: 'var(--gold)' }}>{c.name}</div>
             <div className="text-sm italic mt-0.5" style={{ color: 'var(--text-dim)' }}>
-              {c.type === 'player' ? 'Персонаж игрока'
-               : c.type === 'ally' ? 'Союзник'
-               : c.type === 'npc'  ? 'НПС'
+              {full ? `${full.size ?? ''} ${full.creatureType ?? ''}`.trim()
+               : c.type === 'player' ? 'Персонаж игрока'
+               : c.type === 'npc'   ? 'НПС'
                : 'Враг'}
             </div>
           </div>
           <button className="icon-btn shrink-0" onClick={onClose}><IconX size={15} /></button>
         </div>
 
-        {/* Body */}
-        <div className="p-5">
-          {/* Base stats */}
-          <div className="flex gap-5 flex-wrap mb-4">
-            {[
-              { label: 'Класс доспеха', val: effectiveAC },
-              { label: 'Хиты',          val: `${c.hp.current} / ${c.hp.max}` },
-              { label: 'Инициатива',    val: c.initiative },
-            ].map(s => (
-              <div key={s.label}>
-                <span className="font-cinzel text-[10px] tracking-widest uppercase block mb-0.5" style={{ color: 'var(--text-muted)' }}>
-                  {s.label}
-                </span>
-                <span className="font-cinzel text-base font-semibold" style={{ color: 'var(--text)' }}>{s.val}</span>
-              </div>
+        {/* Если нашли полную запись — показываем полный статблок */}
+        {full
+          ? <StatblockViewInline creature={full} currentHp={c.hp.current} />
+          : <StatblockFallback c={c} />
+        }
+      </div>
+    </div>
+  )
+}
+
+// ─── STATBLOCK INLINE (полный статблок внутри модалки трекера) ───────────────
+function StatblockViewInline({ creature: c, currentHp }) {
+  const isPlayer = c.type === 'player'
+  return (
+    <div className="p-5">
+      <div className="flex gap-5 flex-wrap mb-3">
+        <SbStat label="Класс доспеха" val={isPlayer ? c.ac : `${c.ac?.value}${c.ac?.note ? ` (${c.ac.note})` : ''}`} />
+        <SbStat label="Хиты" val={isPlayer ? `${currentHp} / ${c.hp?.max}` : `${currentHp} / ${c.hp?.average} (${c.hp?.formula ?? ''})`} />
+        {!isPlayer && c.speed && <SbStat label="Скорость" val={c.speed} />}
+        {!isPlayer && c.cr   && <SbStat label="Опасность" val={`${c.cr} (+${c.proficiencyBonus ?? 2})`} />}
+      </div>
+      <hr style={{ borderColor: 'rgba(226,201,126,0.2)', margin: '12px 0' }} />
+      <div className="grid grid-cols-6 gap-2 mb-3">
+        {ABILITY_KEYS.map(k => (
+          <div key={k} className="rounded-lg py-2 px-1 text-center ability-box">
+            <div className="font-cinzel text-[9px] tracking-widest uppercase mb-1" style={{ color: 'var(--text-muted)' }}>{ABILITY_LABELS[k]}</div>
+            <div className="font-cinzel text-base font-bold" style={{ color: 'var(--text)' }}>{c.abilities?.[k] ?? 10}</div>
+            <div className="font-cinzel text-xs" style={{ color: 'var(--text-dim)' }}>{abilityMod(c.abilities?.[k] ?? 10)}</div>
+          </div>
+        ))}
+      </div>
+      <hr style={{ borderColor: 'rgba(226,201,126,0.2)', margin: '12px 0' }} />
+      {!isPlayer && (
+        <div className="flex flex-col gap-1.5 mb-3">
+          {c.immunities?.length > 0     && <SbStat label="Иммунитет"    val={c.immunities.map(dmgName).join(', ')}     color="#93c5fd" />}
+          {c.resistances?.length > 0    && <SbStat label="Сопротивление" val={c.resistances.map(dmgName).join(', ')}    color="#4ade80" />}
+          {c.vulnerabilities?.length > 0 && <SbStat label="Уязвимость"  val={c.vulnerabilities.map(dmgName).join(', ')} color="#f87171" />}
+          {c.conditionImmunities?.length > 0 && <SbStat label="Иммун. состояния" val={c.conditionImmunities.join(', ')} />}
+          {c.senses    && <SbStat label="Чувства"  val={c.senses} />}
+          {c.languages && <SbStat label="Языки"    val={c.languages} />}
+        </div>
+      )}
+      {c.traits?.length > 0 && (
+        <>
+          <hr style={{ borderColor: 'rgba(226,201,126,0.2)', margin: '12px 0' }} />
+          {c.traits.map((t, i) => (
+            <p key={i} className="text-sm mb-2" style={{ color: 'var(--text-dim)' }}>
+              <span className="font-cinzel font-semibold italic" style={{ color: 'var(--text)' }}>{t.name}. </span>{t.description}
+            </p>
+          ))}
+        </>
+      )}
+      {ACTION_SECTIONS.map(section => {
+        const acts = (c.actions ?? []).filter(a => a.section === section.id)
+        if (!acts.length) return null
+        return (
+          <div key={section.id}>
+            <hr style={{ borderColor: 'rgba(226,201,126,0.2)', margin: '12px 0' }} />
+            <div className="font-cinzel text-sm font-bold mb-2" style={{ color: 'var(--gold)' }}>{section.label}</div>
+            {acts.map((a, i) => (
+              <p key={i} className="text-sm mb-2" style={{ color: 'var(--text-dim)' }}>
+                <span className="font-cinzel font-semibold" style={{ color: 'var(--text)' }}>{a.name}. </span>
+                {a.attackBonus != null && <><em>Атака:</em> {a.attackBonus >= 0 ? '+' : ''}{a.attackBonus} к попаданию. </>}
+                {a.damage && <><em>Урон:</em> {a.damage}{a.damageType ? ` ${dmgName(a.damageType)}` : ''}. </>}
+                {a.description}
+              </p>
             ))}
           </div>
+        )
+      })}
+    </div>
+  )
+}
 
-          <hr style={{ borderColor: 'rgba(226,201,126,0.2)', marginBottom: 16 }} />
-
-          {/* Resistances */}
-          {(c.resistances?.length > 0 || c.immunities?.length > 0 || c.vulnerabilities?.length > 0) && (
-            <div className="flex flex-col gap-2 mb-4">
-              {c.immunities?.length > 0 && (
-                <div>
-                  <span className="font-cinzel text-[10px] tracking-widest uppercase" style={{ color: 'var(--text-muted)' }}>
-                    Иммунитеты
-                  </span>
-                  <span className="ml-2 text-sm" style={{ color: '#93c5fd' }}>{c.immunities.join(', ')}</span>
-                </div>
-              )}
-              {c.resistances?.length > 0 && (
-                <div>
-                  <span className="font-cinzel text-[10px] tracking-widest uppercase" style={{ color: 'var(--text-muted)' }}>
-                    Сопротивления
-                  </span>
-                  <span className="ml-2 text-sm" style={{ color: '#4ade80' }}>{c.resistances.join(', ')}</span>
-                </div>
-              )}
-              {c.vulnerabilities?.length > 0 && (
-                <div>
-                  <span className="font-cinzel text-[10px] tracking-widest uppercase" style={{ color: 'var(--text-muted)' }}>
-                    Уязвимости
-                  </span>
-                  <span className="ml-2 text-sm" style={{ color: '#f87171' }}>{c.vulnerabilities.join(', ')}</span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Placeholder */}
-          <div
-            className="rounded-xl p-5 text-center"
-            style={{ background: 'var(--bg-row)', border: '1px solid var(--border)' }}
-          >
-            <div className="text-3xl mb-2">📖</div>
-            <div className="font-cinzel text-sm" style={{ color: 'var(--text-muted)' }}>
-              Полный статблок
-            </div>
-            <div className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-              В финальной версии данные подтягиваются из бестиария
-            </div>
-          </div>
-        </div>
+function StatblockFallback({ c }) {
+  const effectiveAC = getEffectiveAC(c)
+  return (
+    <div className="p-5">
+      <div className="flex gap-5 flex-wrap mb-4">
+        {[
+          { label: 'Класс доспеха', val: effectiveAC },
+          { label: 'Хиты',         val: `${c.hp.current} / ${c.hp.max}` },
+          { label: 'Инициатива',   val: c.initiative },
+        ].map(s => <SbStat key={s.label} label={s.label} val={s.val} />)}
       </div>
+      <div className="rounded-xl p-5 text-center" style={{ background: 'var(--bg-row)', border: '1px solid var(--border)' }}>
+        <div className="text-3xl mb-2">📖</div>
+        <div className="font-cinzel text-sm" style={{ color: 'var(--text-muted)' }}>Существо не найдено в бестиарии</div>
+        <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Добавь его через раздел «Бестиарий»</div>
+      </div>
+    </div>
+  )
+}
+
+function SbStat({ label, val, color }) {
+  return (
+    <div className="text-sm">
+      <span className="font-cinzel font-semibold" style={{ color: 'var(--text)' }}>{label}: </span>
+      <span style={{ color: color ?? 'var(--text-dim)' }}>{val}</span>
     </div>
   )
 }
