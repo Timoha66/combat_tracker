@@ -3,6 +3,7 @@ import {
   IconShieldChevron, IconBook2, IconCheck, IconX, IconHeartPlus, IconPlus,
 } from '@tabler/icons-react'
 import { useBattleStore, getEffectiveAC } from '../store/battleStore'
+import { calcStoredInit, displayInit } from './AddModal'
 import {
   getStatus, STATUS, STATUS_LABEL, STATUS_PILL,
   getHpBarColor, getHpTextColor, CONDITION_MAP,
@@ -49,25 +50,40 @@ function CombatantRow({ combatant: c, isActive, isSelected, onOpenStatblock, onO
   const removeCondition = useBattleStore(s => s.removeCondition)
   const addDeathSave    = useBattleStore(s => s.addDeathSave)
   const setInitiative   = useBattleStore(s => s.setInitiative)
+  const combatants      = useBattleStore(s => s.combatants)
 
   const [editingInit, setEditingInit] = useState(false)
-  const [initDraft,   setInitDraft]   = useState(c.initiative)
+  const [initDraft,   setInitDraft]   = useState(String(displayInit(c.initiative)))
+  const [showPriority, setShowPriority] = useState(false)
+  const [priorityDraft, setPriorityDraft] = useState('1')
 
   function handleInitClick(e) {
     e.stopPropagation()
-    setInitDraft(c.initiative)
+    setInitDraft(String(displayInit(c.initiative)))
+    setShowPriority(false)
     setEditingInit(true)
   }
 
   function handleInitConfirm() {
     const val = parseInt(initDraft)
-    if (!isNaN(val)) setInitiative(c.id, val)
+    if (isNaN(val)) { setEditingInit(false); return }
+    // Проверяем ничью с другими участниками
+    const others = combatants.filter(x => x.id !== c.id)
+    const hasTie = others.some(x => displayInit(x.initiative) === val)
+    if (hasTie && !showPriority) {
+      setShowPriority(true)
+      setPriorityDraft('1')
+      return
+    }
+    const prio = showPriority ? (parseInt(priorityDraft) || 1) : 1
+    setInitiative(c.id, calcStoredInit(val, prio))
     setEditingInit(false)
+    setShowPriority(false)
   }
 
   function handleInitKey(e) {
     if (e.key === 'Enter') handleInitConfirm()
-    if (e.key === 'Escape') setEditingInit(false)
+    if (e.key === 'Escape') { setEditingInit(false); setShowPriority(false) }
   }
 
   const status    = getStatus(c)
@@ -116,32 +132,51 @@ function CombatantRow({ combatant: c, isActive, isSelected, onOpenStatblock, onO
         onClick={handleInitClick}
       >
         {editingInit ? (
-          <input
-            type="number"
-            value={initDraft}
-            onChange={e => setInitDraft(e.target.value)}
-            onBlur={handleInitConfirm}
-            onKeyDown={handleInitKey}
-            onClick={e => e.stopPropagation()}
-            autoFocus
-            className="w-10 font-cinzel text-lg font-bold text-center rounded outline-none"
-            style={{
-              background: 'var(--bg-panel)',
-              border: '1px solid var(--gold)',
-              color: 'var(--gold)',
-            }}
-          />
+          <div className="flex flex-col items-center gap-1" onClick={e => e.stopPropagation()}>
+            <input
+              type="number"
+              value={initDraft}
+              onChange={e => setInitDraft(e.target.value)}
+              onBlur={handleInitConfirm}
+              onKeyDown={handleInitKey}
+              autoFocus
+              className="w-10 font-cinzel text-lg font-bold text-center rounded outline-none"
+              style={{ background: 'var(--bg-panel)', border: '1px solid var(--gold)', color: 'var(--gold)' }}
+            />
+            {showPriority && (
+              <div className="flex flex-col items-center gap-0.5">
+                <span className="font-cinzel text-[8px]" style={{ color: '#a78bfa' }}>приор.</span>
+                <input
+                  type="number" min="1" max="20"
+                  value={priorityDraft}
+                  onChange={e => setPriorityDraft(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') handleInitConfirm(); if (e.key === 'Escape') { setEditingInit(false); setShowPriority(false) } }}
+                  autoFocus
+                  className="w-10 font-cinzel text-sm text-center rounded outline-none"
+                  style={{ background: 'var(--bg-panel)', border: '1px solid rgba(167,139,250,0.6)', color: '#c4b5fd' }}
+                  title="1 = ходит первым"
+                />
+                <button
+                  className="font-cinzel text-[9px] px-2 py-0.5 rounded cursor-pointer"
+                  style={{ background: 'rgba(167,139,250,0.2)', color: '#c4b5fd', border: '0.5px solid rgba(167,139,250,0.4)' }}
+                  onClick={handleInitConfirm}
+                >ок</button>
+              </div>
+            )}
+          </div>
         ) : (
           <span
             className="font-cinzel text-xl font-bold leading-none"
             style={{ color: isActive ? 'var(--gold)' : 'var(--text-dim)' }}
           >
-            {c.initiative}
+            {displayInit(c.initiative)}
           </span>
         )}
-        <span className="font-cinzel text-[9px] tracking-wide uppercase mt-0.5" style={{ color: 'var(--text-muted)' }}>
-          Иниц.
-        </span>
+        {!editingInit && (
+          <span className="font-cinzel text-[9px] tracking-wide uppercase mt-0.5" style={{ color: 'var(--text-muted)' }}>
+            Иниц.
+          </span>
+        )}
       </div>
 
       {/* Name + conditions */}
