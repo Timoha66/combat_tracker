@@ -76,7 +76,7 @@ export default function RightPanel() {
   return (
     <div
       className="flex flex-col overflow-y-auto py-4 px-3.5 shrink-0"
-      style={{ width: 215, background: 'var(--bg-panel)', borderLeft: '1px solid var(--border)' }}
+      style={{ width: 270, background: 'var(--bg-panel)', borderLeft: '1px solid var(--border)' }}
     >
       {/* Цели */}
       <span className="rp-label">Цели</span>
@@ -87,7 +87,7 @@ export default function RightPanel() {
         <span className="font-cinzel text-2xl font-bold leading-none block" style={{ color: 'var(--gold)' }}>
           {targets.length}
         </span>
-        <span className="text-[11px] leading-snug block mt-0.5" style={{ color: 'var(--text-muted)' }}>
+        <span className="text-sm leading-snug block mt-0.5" style={{ color: 'var(--text-muted)' }}>
           {targets.length === 0
             ? 'Выберите участников'
             : targets.map(c => c.name).join(', ')
@@ -115,7 +115,7 @@ export default function RightPanel() {
       {/* Тип урона */}
       <div className="flex items-center justify-between mb-2">
         <span className="rp-label" style={{ margin: 0 }}>Тип урона</span>
-        <span className="text-[10px] italic" style={{ color: 'var(--text-muted)', fontFamily: 'Crimson Text, serif' }}>
+        <span className="text-xs italic" style={{ color: 'var(--text-muted)', fontFamily: 'Crimson Text, serif' }}>
           необязательно
         </span>
       </div>
@@ -148,7 +148,7 @@ export default function RightPanel() {
                 className="flex items-center gap-1.5 px-2 py-1.5 rounded-md mb-1"
                 style={{ background: 'var(--bg-row)' }}
               >
-                <span className="flex-1 font-cinzel text-[11px] truncate" style={{ color: 'var(--text-dim)' }}>
+                <span className="flex-1 font-cinzel text-sm truncate" style={{ color: 'var(--text-dim)' }}>
                   {c.name}
                 </span>
                 <span className={`preview-badge ${badgeClass}`}>{badge}</span>
@@ -201,7 +201,7 @@ export default function RightPanel() {
       <span className="rp-label">Быстрый выбор</span>
       <div className="flex flex-col gap-1.5 mb-2">
         <button
-          className="w-full font-cinzel text-[10px] tracking-wide py-1.5 rounded-md transition-colors cursor-pointer"
+          className="w-full font-cinzel text-xs tracking-wide py-1.5 rounded-md transition-colors cursor-pointer"
           style={{ background: 'var(--bg-row)', border: '1px solid var(--border)', color: 'var(--text-dim)' }}
           onMouseEnter={e => { e.currentTarget.style.color = 'var(--text)'; e.currentTarget.style.borderColor = 'var(--border-md)' }}
           onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-dim)'; e.currentTarget.style.borderColor = 'var(--border)' }}
@@ -210,7 +210,7 @@ export default function RightPanel() {
           Выделить всех
         </button>
         <button
-          className="w-full font-cinzel text-[10px] tracking-wide py-1.5 rounded-md transition-colors cursor-pointer"
+          className="w-full font-cinzel text-xs tracking-wide py-1.5 rounded-md transition-colors cursor-pointer"
           style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.2)', color: '#f87171' }}
           onMouseEnter={e => e.currentTarget.style.background = 'rgba(248,113,113,0.16)'}
           onMouseLeave={e => e.currentTarget.style.background = 'rgba(248,113,113,0.08)'}
@@ -219,7 +219,7 @@ export default function RightPanel() {
           Выделить всех врагов
         </button>
         <button
-          className="w-full font-cinzel text-[10px] tracking-wide py-1.5 rounded-md transition-colors cursor-pointer"
+          className="w-full font-cinzel text-xs tracking-wide py-1.5 rounded-md transition-colors cursor-pointer"
           style={{ background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.2)', color: '#60a5fa' }}
           onMouseEnter={e => e.currentTarget.style.background = 'rgba(96,165,250,0.16)'}
           onMouseLeave={e => e.currentTarget.style.background = 'rgba(96,165,250,0.08)'}
@@ -228,7 +228,7 @@ export default function RightPanel() {
           Выделить всех героев
         </button>
         <button
-          className="w-full font-cinzel text-[10px] tracking-wide py-1.5 rounded-md transition-colors cursor-pointer"
+          className="w-full font-cinzel text-xs tracking-wide py-1.5 rounded-md transition-colors cursor-pointer"
           style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
           onMouseEnter={e => { e.currentTarget.style.color = 'var(--text)'; e.currentTarget.style.borderColor = 'var(--border-md)' }}
           onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border)' }}

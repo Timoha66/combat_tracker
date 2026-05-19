@@ -267,6 +267,39 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
             </div>
           </Section>
 
+          {/* ── СОПРОТИВЛЕНИЯ (для всех типов) ── */}
+          <Section title="Иммунитеты / Сопротивления / Уязвимости">
+            {[
+              { field: 'immunities',      label: 'Иммунитеты к урону',  color: '#93c5fd' },
+              { field: 'resistances',     label: 'Сопротивления',       color: '#4ade80' },
+              { field: 'vulnerabilities', label: 'Уязвимости',          color: '#f87171' },
+            ].map(({ field, label, color }) => (
+              <div key={field} className="mb-3">
+                <div className="font-cinzel text-[10px] tracking-widest uppercase mb-1.5" style={{ color: 'var(--text-muted)' }}>{label}</div>
+                <div className="flex flex-wrap gap-1">
+                  {DMG_TYPES.map(t => {
+                    const active = (form[field] ?? []).includes(t.id)
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => toggleStringArray(field, t.id)}
+                        className="font-cinzel text-[10px] px-2 py-0.5 rounded-md transition-all cursor-pointer"
+                        style={{
+                          background: active ? `${color}22` : 'var(--bg-row)',
+                          color: active ? color : 'var(--text-muted)',
+                          border: `1px solid ${active ? color + '66' : 'var(--border)'}`,
+                        }}
+                      >
+                        {t.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+          </Section>
+
           {/* ── СПАСБРОСКИ (только не-игроки) ── */}
           {!isPlayer && (
             <Section title="Спасброски с владением">

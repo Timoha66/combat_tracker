@@ -153,8 +153,8 @@
 
   /* ── RIGHT PANEL ── */
   .rp-btn {
-    @apply w-full flex items-center justify-center gap-2 font-cinzel text-xs font-semibold tracking-wide
-           py-2.5 rounded-xl mb-2 transition-all cursor-pointer;
+    @apply w-full flex items-center justify-center gap-2 font-cinzel text-sm font-semibold tracking-wide
+           py-3 rounded-xl mb-2 transition-all cursor-pointer;
     border: 1px solid transparent;
   }
   .rp-btn:disabled { @apply opacity-35 cursor-not-allowed; }
@@ -212,7 +212,7 @@
   }
 
   .rp-label {
-    @apply font-cinzel text-[10px] tracking-widest uppercase mb-2 block;
+    @apply font-cinzel text-xs tracking-widest uppercase mb-2 block;
     color: var(--text-muted);
   }
 
@@ -249,9 +249,9 @@
 /* MULT BUTTONS IN RIGHT PANEL */
 .rp-mult {
   font-family: 'Cinzel', serif;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
-  padding: 6px 4px;
+  padding: 7px 4px;
   border-radius: 7px;
   border: 1px solid var(--border-md);
   cursor: pointer;
