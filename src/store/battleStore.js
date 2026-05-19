@@ -216,6 +216,14 @@ export const useBattleStore = create((set, get) => ({
   },
 
   // ── КД ──────────────────────────────────────────────────────────────────────
+  setInitiative(id, value) {
+    set(state => ({
+      combatants: [...state.combatants]
+        .map(c => c.id === id ? { ...c, initiative: value } : c)
+        .sort((a, b) => b.initiative - a.initiative),
+    }))
+  },
+
   setAc(id, value) {
     set(state => ({
       combatants: state.combatants.map(c =>

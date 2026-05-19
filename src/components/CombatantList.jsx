@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   IconShieldChevron, IconBook2, IconCheck, IconX, IconHeartPlus, IconPlus,
 } from '@tabler/icons-react'
@@ -47,6 +48,27 @@ function CombatantRow({ combatant: c, isActive, isSelected, onOpenStatblock, onO
   const toggleShield    = useBattleStore(s => s.toggleShield)
   const removeCondition = useBattleStore(s => s.removeCondition)
   const addDeathSave    = useBattleStore(s => s.addDeathSave)
+  const setInitiative   = useBattleStore(s => s.setInitiative)
+
+  const [editingInit, setEditingInit] = useState(false)
+  const [initDraft,   setInitDraft]   = useState(c.initiative)
+
+  function handleInitClick(e) {
+    e.stopPropagation()
+    setInitDraft(c.initiative)
+    setEditingInit(true)
+  }
+
+  function handleInitConfirm() {
+    const val = parseInt(initDraft)
+    if (!isNaN(val)) setInitiative(c.id, val)
+    setEditingInit(false)
+  }
+
+  function handleInitKey(e) {
+    if (e.key === 'Enter') handleInitConfirm()
+    if (e.key === 'Escape') setEditingInit(false)
+  }
 
   const status    = getStatus(c)
   const effectiveAC = getEffectiveAC(c)
@@ -88,14 +110,36 @@ function CombatantRow({ combatant: c, isActive, isSelected, onOpenStatblock, onO
       </div>
 
       {/* Initiative */}
-      <div className="flex flex-col items-center pt-1">
-        <span
-          className="font-cinzel text-xl font-bold leading-none"
-          style={{ color: isActive ? 'var(--gold)' : 'var(--text-dim)' }}
-        >
-          {c.initiative}
-        </span>
-        <span className="font-cinzel text-[9px] tracking-wide uppercase" style={{ color: 'var(--text-muted)' }}>
+      <div
+        className="flex flex-col items-center pt-1 cursor-pointer"
+        title="Изменить инициативу"
+        onClick={handleInitClick}
+      >
+        {editingInit ? (
+          <input
+            type="number"
+            value={initDraft}
+            onChange={e => setInitDraft(e.target.value)}
+            onBlur={handleInitConfirm}
+            onKeyDown={handleInitKey}
+            onClick={e => e.stopPropagation()}
+            autoFocus
+            className="w-10 font-cinzel text-lg font-bold text-center rounded outline-none"
+            style={{
+              background: 'var(--bg-panel)',
+              border: '1px solid var(--gold)',
+              color: 'var(--gold)',
+            }}
+          />
+        ) : (
+          <span
+            className="font-cinzel text-xl font-bold leading-none"
+            style={{ color: isActive ? 'var(--gold)' : 'var(--text-dim)' }}
+          >
+            {c.initiative}
+          </span>
+        )}
+        <span className="font-cinzel text-[9px] tracking-wide uppercase mt-0.5" style={{ color: 'var(--text-muted)' }}>
           Иниц.
         </span>
       </div>
