@@ -80,14 +80,14 @@ export const DMG_TYPES = [
   { id: 'poison',      label: 'Яд',         css: 'dt-poison',   group: 'elem' },
   { id: 'thunder',     label: 'Гром',       css: 'dt-thunder',  group: 'elem' },
   // Магический/энергетический
-  { id: 'necrotic',    label: 'Некрот.',    css: 'dt-necrotic', group: 'magic' },
+  { id: 'necrotic',    label: 'Некротический', css: 'dt-necrotic', group: 'magic' },
   { id: 'radiant',     label: 'Лучистый',   css: 'dt-radiant',  group: 'magic' },
-  { id: 'psychic',     label: 'Психич.',    css: 'dt-psychic',  group: 'magic' },
+  { id: 'psychic',     label: 'Психический',   css: 'dt-psychic',  group: 'magic' },
   { id: 'force',       label: 'Силовое',    css: 'dt-force',    group: 'magic' },
   // Магический физический (игнорирует сопротивление к физ. немагическому)
-  { id: 'magic_p',     label: 'Маг.Кол.',   css: 'dt-magic',    group: 'mphys' },
-  { id: 'magic_s',     label: 'Маг.Руб.',   css: 'dt-magic',    group: 'mphys' },
-  { id: 'magic_b',     label: 'Маг.Дроб.',  css: 'dt-magic',    group: 'mphys' },
+  { id: 'magic_p',     label: 'Маг. колющий',  css: 'dt-magic',    group: 'mphys' },
+  { id: 'magic_s',     label: 'Маг. рубящий',  css: 'dt-magic',    group: 'mphys' },
+  { id: 'magic_b',     label: 'Маг. дробящий', css: 'dt-magic',    group: 'mphys' },
 ]
 
 export const DMG_TYPE_GROUPS = [
