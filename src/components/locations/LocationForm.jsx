@@ -162,25 +162,39 @@ export default function LocationForm({ initial, onClose, onSaved }) {
           {/* Квесты */}
           <FormSection title="Квесты">
             {form.quests?.map((q, i) => (
-              <div key={i} className="flex gap-2 mb-2 items-center">
-                <input className={inputCls} style={{ ...inputStyle, flex: 1 }} value={q.title}
-                  placeholder="Название квеста"
-                  onChange={e => updateInArray('quests', i, x => ({ ...x, title: e.target.value }))} />
-                <select className="rounded-lg px-2 py-1.5 text-xs outline-none shrink-0"
-                  style={{ ...inputStyle, cursor: 'pointer' }}
-                  value={q.status}
-                  onChange={e => updateInArray('quests', i, x => ({ ...x, status: e.target.value }))}>
-                  {QUEST_STATUSES.map(s => (
-                    <option key={s.id} value={s.id}>{s.icon} {s.label}</option>
-                  ))}
-                </select>
-                <button className="icon-btn shrink-0" onClick={() => removeFromArray('quests', i)}>
-                  <IconTrash size={12} />
-                </button>
+              <div key={i} className="mb-2 p-2.5 rounded-lg" style={{ background: 'var(--bg-row)', border: '1px solid var(--border)' }}>
+                <div className="flex gap-2 mb-2 items-center">
+                  <input className={inputCls} style={{ ...inputStyle, flex: 1 }} value={q.title}
+                    placeholder="Название квеста"
+                    onChange={e => updateInArray('quests', i, x => ({ ...x, title: e.target.value }))} />
+                  <select className="rounded-lg px-2 py-1.5 text-xs outline-none shrink-0"
+                    style={{ ...inputStyle, cursor: 'pointer' }}
+                    value={q.status}
+                    onChange={e => updateInArray('quests', i, x => ({ ...x, status: e.target.value }))}>
+                    {QUEST_STATUSES.map(s => (
+                      <option key={s.id} value={s.id}>{s.icon} {s.label}</option>
+                    ))}
+                  </select>
+                  <button className="icon-btn shrink-0" onClick={() => removeFromArray('quests', i)}>
+                    <IconTrash size={12} />
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  <input className={inputCls} style={inputStyle} value={q.giver ?? ''}
+                    placeholder="Кто выдаёт"
+                    onChange={e => updateInArray('quests', i, x => ({ ...x, giver: e.target.value }))} />
+                  <input className={inputCls} style={inputStyle} value={q.reward ?? ''}
+                    placeholder="Награда"
+                    onChange={e => updateInArray('quests', i, x => ({ ...x, reward: e.target.value }))} />
+                </div>
+                <textarea className={`${inputCls} resize-none`} style={{ ...inputStyle, minHeight: 50 }}
+                  value={q.description ?? ''}
+                  placeholder="Описание квеста..."
+                  onChange={e => updateInArray('quests', i, x => ({ ...x, description: e.target.value }))} />
               </div>
             ))}
             <button type="button" className="btn btn-ghost w-full justify-center" style={{ fontSize: 12 }}
-              onClick={() => addToArray('quests', { title: '', status: 'inactive' })}>
+              onClick={() => addToArray('quests', { title: '', status: 'inactive', giver: '', reward: '', description: '' })}>
               <IconPlus size={13} /> Добавить квест
             </button>
           </FormSection>
@@ -251,6 +265,17 @@ export default function LocationForm({ initial, onClose, onSaved }) {
               onClick={() => addToArray('points', { title: '', description: '', npcs: [], quests: [] })}>
               <IconPlus size={13} /> Добавить точку интереса
             </button>
+          </FormSection>
+
+          {/* Заметки ДМ */}
+          <FormSection title="Заметки ДМ 🔒">
+            <textarea
+              className={`${inputCls} resize-none`}
+              style={{ ...inputStyle, minHeight: 80 }}
+              value={form.dmNotes ?? ''}
+              placeholder="Личные заметки, секреты, напоминания..."
+              onChange={e => set('dmNotes', e.target.value)}
+            />
           </FormSection>
 
         </div>

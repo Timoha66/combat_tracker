@@ -34,7 +34,18 @@ export const useLocationsStore = create((set, get) => ({
     set(s => ({ locations: s.locations.filter(l => l.id !== id) }))
   },
 
-  setSearch(v)    { set({ search: v }) },
+  async updateQuestStatus(locId, questIdx, status) {
+    const loc = get().locations.find(l => l.id === locId)
+    if (!loc) return
+    const quests = loc.quests.map((q, i) => i === questIdx ? { ...q, status } : q)
+    await get().updateLocation(locId, { ...loc, quests })
+  },
+
+  async saveDmNotes(locId, dmNotes) {
+    const loc = get().locations.find(l => l.id === locId)
+    if (!loc) return
+    await get().updateLocation(locId, { ...loc, dmNotes })
+  },
   setFilterCat(v) { set({ filterCat: v }) },
   setFilterTag(v) { set({ filterTag: v }) },
 
