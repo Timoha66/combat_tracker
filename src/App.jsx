@@ -1,16 +1,32 @@
 import { useState } from 'react'
 import { useBattleStore } from './store/battleStore'
+import Sidebar from './components/Sidebar'
+import HomePage from './components/HomePage'
 import Header from './components/Header'
 import CombatantList from './components/CombatantList'
-import CombatLog from './components/CombatLog'
 import RightPanel from './components/RightPanel'
 import AddModal from './components/AddModal'
+import CombatLog from './components/CombatLog'
 import BestiaryPage from './components/bestiary/BestiaryPage'
 import {
   ConditionPicker, AcPopover, ReviveModal, StatblockModal, BattleSummary,
 } from './components/modals.jsx'
 
+// Заглушка для будущих разделов
+function ComingSoon({ title }) {
+  return (
+    <div className="flex-1 flex items-center justify-center" style={{ background: 'var(--bg-deep)' }}>
+      <div className="text-center">
+        <div className="text-4xl mb-4">🚧</div>
+        <div className="font-cinzel text-xl font-bold mb-2" style={{ color: 'var(--gold)' }}>{title}</div>
+        <div className="font-cinzel text-sm" style={{ color: 'var(--text-muted)' }}>В разработке</div>
+      </div>
+    </div>
+  )
+}
+
 export default function App() {
+  const [page, setPage] = useState('home')
   const view = useBattleStore(s => s.view)
 
   const [showBestiary,     setShowBestiary]     = useState(false)
@@ -20,45 +36,65 @@ export default function App() {
   const [acTarget,         setAcTarget]         = useState(null)
   const [reviveTarget,     setReviveTarget]     = useState(null)
 
+  function handleNavigate(dest) {
+    setPage(dest)
+    // Скрываем бестиарий при переходе
+    if (dest !== 'tracker') setShowBestiary(false)
+  }
+
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
-      <Header
-        onAdd={() => setAddModalOpen(true)}
-        onBestiary={() => setShowBestiary(b => !b)}
-        showingBestiary={showBestiary}
-      />
+    <div className="flex h-screen overflow-hidden">
+      {/* Сайдбар — всегда виден */}
+      <Sidebar page={page} onNavigate={handleNavigate} />
 
-      <div className="flex flex-1 overflow-hidden relative">
-        {/* Бестиарий */}
-        {showBestiary && <BestiaryPage />}
+      {/* Основной контент */}
+      <div className="flex flex-col flex-1 overflow-hidden">
 
-        {/* Трекер — скрываем когда открыт бестиарий */}
-        {!showBestiary && (
+        {/* ── ДОМАШНЯЯ СТРАНИЦА ── */}
+        {page === 'home' && <HomePage onNavigate={handleNavigate} />}
+
+        {/* ── ТРЕКЕР ── */}
+        {page === 'tracker' && (
           <>
-            {view === 'tracker' && (
-              <div className="flex flex-col flex-1 overflow-hidden">
-                <div className="flex flex-1 overflow-hidden">
-                  <CombatantList
-                    onOpenStatblock={setStatblockTarget}
-                    onOpenCondPicker={setCondPickerTarget}
-                    onOpenAcEdit={setAcTarget}
-                    onRevive={setReviveTarget}
-                  />
-                  <RightPanel />
-                </div>
-                <CombatLog />
-              </div>
-            )}
-            {view === 'summary' && <BattleSummary />}
+            <Header
+              onAdd={() => setAddModalOpen(true)}
+              onBestiary={() => setShowBestiary(b => !b)}
+              showingBestiary={showBestiary}
+            />
+            <div className="flex flex-1 overflow-hidden relative">
+              {showBestiary && <BestiaryPage />}
+              {!showBestiary && (
+                <>
+                  {view === 'tracker' && (
+                    <div className="flex flex-col flex-1 overflow-hidden">
+                      <div className="flex flex-1 overflow-hidden">
+                        <CombatantList
+                          onOpenStatblock={setStatblockTarget}
+                          onOpenCondPicker={setCondPickerTarget}
+                          onOpenAcEdit={setAcTarget}
+                          onRevive={setReviveTarget}
+                        />
+                        <RightPanel />
+                      </div>
+                      <CombatLog />
+                    </div>
+                  )}
+                  {view === 'summary' && <BattleSummary />}
+                </>
+              )}
+
+              {addModalOpen     && <AddModal onClose={() => setAddModalOpen(false)} />}
+              {statblockTarget  && <StatblockModal combatant={statblockTarget} onClose={() => setStatblockTarget(null)} />}
+              {condPickerTarget && <ConditionPicker id={condPickerTarget} onClose={() => setCondPickerTarget(null)} />}
+              {acTarget         && <AcPopover id={acTarget} onClose={() => setAcTarget(null)} />}
+              {reviveTarget     && <ReviveModal id={reviveTarget} onClose={() => setReviveTarget(null)} />}
+            </div>
           </>
         )}
 
-        {/* Modals */}
-        {addModalOpen     && <AddModal onClose={() => setAddModalOpen(false)} />}
-        {statblockTarget  && <StatblockModal combatant={statblockTarget} onClose={() => setStatblockTarget(null)} />}
-        {condPickerTarget && <ConditionPicker id={condPickerTarget} onClose={() => setCondPickerTarget(null)} />}
-        {acTarget         && <AcPopover id={acTarget} onClose={() => setAcTarget(null)} />}
-        {reviveTarget     && <ReviveModal id={reviveTarget} onClose={() => setReviveTarget(null)} />}
+        {/* ── ЛОКАЦИИ (заглушка) ── */}
+        {page === 'locations' && <ComingSoon title="Справочник локаций" />}
+
       </div>
     </div>
   )
