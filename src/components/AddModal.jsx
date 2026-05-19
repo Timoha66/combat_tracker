@@ -89,14 +89,16 @@ export default function AddModal({ onClose }) {
       const finalInit = calcStoredInit(base, prio)
       addCombatants(
         {
-          name:            creature.name,
-          type:            creature.type,
-          hp:              creature.type === 'player' ? creature.hp?.max : creature.hp?.average,
-          ac:              creature.type === 'player' ? creature.ac : creature.ac?.value,
-          resistances:     creature.resistances    ?? [],
-          immunities:      creature.immunities     ?? [],
-          vulnerabilities: creature.vulnerabilities ?? [],
-          id:              creature.id,
+          name:                 creature.name,
+          type:                 creature.type,
+          hp:                   creature.type === 'player' ? creature.hp?.max : creature.hp?.average,
+          ac:                   creature.type === 'player' ? creature.ac : creature.ac?.value,
+          resistances:          creature.resistances     ?? [],
+          immunities:           creature.immunities      ?? [],
+          vulnerabilities:      creature.vulnerabilities  ?? [],
+          legendaryActionCount: creature.legendaryActionCount ?? 0,
+          legendaryResistances: creature.legendaryResistances ?? 0,
+          id:                   creature.id,
         },
         1,
         finalInit

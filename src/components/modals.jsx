@@ -308,11 +308,31 @@ function StatblockViewInline({ creature: c, currentHp }) {
       {c.traits?.length > 0 && (
         <>
           <hr style={{ borderColor: 'rgba(226,201,126,0.2)', margin: '12px 0' }} />
+          {/* Легендарные сопротивления */}
+          {c.legendaryResistances > 0 && (
+            <p className="text-sm mb-2" style={{ color: 'var(--text-dim)' }}>
+              <span className="font-cinzel font-semibold italic" style={{ color: 'var(--text)' }}>
+                Легендарное сопротивление ({c.legendaryResistances}/день).{' '}
+              </span>
+              Если это существо провалило спасбросок, оно может вместо этого считать его успешным.
+            </p>
+          )}
           {c.traits.map((t, i) => (
             <p key={i} className="text-sm mb-2" style={{ color: 'var(--text-dim)' }}>
               <span className="font-cinzel font-semibold italic" style={{ color: 'var(--text)' }}>{t.name}. </span>{t.description}
             </p>
           ))}
+        </>
+      )}
+      {!c.traits?.length && c.legendaryResistances > 0 && (
+        <>
+          <hr style={{ borderColor: 'rgba(226,201,126,0.2)', margin: '12px 0' }} />
+          <p className="text-sm mb-2" style={{ color: 'var(--text-dim)' }}>
+            <span className="font-cinzel font-semibold italic" style={{ color: 'var(--text)' }}>
+              Легендарное сопротивление ({c.legendaryResistances}/день).{' '}
+            </span>
+            Если это существо провалило спасбросок, оно может вместо этого считать его успешным.
+          </p>
         </>
       )}
       {ACTION_SECTIONS.map(section => {
@@ -321,7 +341,14 @@ function StatblockViewInline({ creature: c, currentHp }) {
         return (
           <div key={section.id}>
             <hr style={{ borderColor: 'rgba(226,201,126,0.2)', margin: '12px 0' }} />
-            <div className="font-cinzel text-sm font-bold mb-2" style={{ color: 'var(--gold)' }}>{section.label}</div>
+            <div className="font-cinzel text-sm font-bold mb-2" style={{ color: 'var(--gold)' }}>
+              {section.label}
+              {section.id === 'legendary' && c.legendaryActionCount > 0 && (
+                <span className="font-normal text-xs ml-2" style={{ color: 'var(--text-dim)' }}>
+                  ({c.legendaryActionCount} в ход)
+                </span>
+              )}
+            </div>
             {acts.map((a, i) => (
               <p key={i} className="text-sm mb-2" style={{ color: 'var(--text-dim)' }}>
                 <span className="font-cinzel font-semibold" style={{ color: 'var(--text)' }}>{a.name}. </span>
