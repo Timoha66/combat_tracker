@@ -390,9 +390,13 @@ function CombatantRow({ combatant: c, isActive, isSelected, onOpenStatblock, onO
           )}
         </div>
         <div className="hp-bar-outer" style={{ width: '100%' }}>
-          {c.hp.temp > 0 && <div className="hp-bar-temp" style={{ width: `${tempPct}%` }} />}
           <div className="hp-bar-fill" style={{ width: `${hpPct}%`, background: getHpBarColor(getStatus(c)) }} />
         </div>
+        {c.hp.temp > 0 && (
+          <div className="hp-bar-outer" style={{ width: '100%', marginTop: 2 }}>
+            <div className="hp-bar-fill" style={{ width: `${Math.min(100, (c.hp.temp / c.hp.max) * 100)}%`, background: '#3b82f6' }} />
+          </div>
+        )}
         <span className={`status-pill ${STATUS_PILL[status]}`}>{STATUS_LABEL[status]}</span>
 
         {/* Проверка концентрации */}
