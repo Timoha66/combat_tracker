@@ -8,6 +8,7 @@ import RightPanel from './components/RightPanel'
 import AddModal from './components/AddModal'
 import CombatLog from './components/CombatLog'
 import BestiaryPage from './components/bestiary/BestiaryPage'
+import LocationsPage from './components/locations/LocationsPage'
 import {
   ConditionPicker, AcPopover, ReviveModal, StatblockModal, BattleSummary,
 } from './components/modals.jsx'
@@ -92,8 +93,8 @@ export default function App() {
           </>
         )}
 
-        {/* ── ЛОКАЦИИ (заглушка) ── */}
-        {page === 'locations' && <ComingSoon title="Справочник локаций" />}
+        {/* ── ЛОКАЦИИ ── */}
+        {page === 'locations' && <LocationsPage />}
 
       </div>
     </div>
