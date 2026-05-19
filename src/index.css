@@ -92,7 +92,7 @@
     transition: border-color 0.2s, background 0.2s, opacity 0.2s;
   }
   .c-row:hover { background: var(--bg-hover); }
-  .c-row.active { border-color: var(--gold); background: #1a1c10; box-shadow: 0 0 0 1px rgba(226,201,126,0.1); }
+  .c-row.active { border-color: var(--gold); background: #1a1c10; box-shadow: 0 0 0 1px rgba(226,201,126,0.1); border-left: 3px solid var(--gold); }
   .c-row.selected { border-color: rgba(226,201,126,0.4); background: rgba(226,201,126,0.04); }
   .c-row.dying { border-color: var(--crimson); background: #160b0b; }
   .c-row.dead { opacity: 0.42; }

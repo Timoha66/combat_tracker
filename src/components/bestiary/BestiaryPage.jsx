@@ -16,9 +16,10 @@ export default function BestiaryPage() {
           deleteCreature, exportJSON, importJSON } = useBestiaryStore()
 
   const [formOpen,    setFormOpen]    = useState(false)
-  const [editTarget,  setEditTarget]  = useState(null)  // creature to edit
-  const [viewTarget,  setViewTarget]  = useState(null)  // creature to view statblock
+  const [editTarget,  setEditTarget]  = useState(null)
+  const [viewTarget,  setViewTarget]  = useState(null)
   const [addType,     setAddType]     = useState('enemy')
+  const [sortBy,      setSortBy]      = useState('name') // 'name' | 'type' | 'cr'
 
   useEffect(() => { loadAll() }, [])
 
@@ -70,6 +71,15 @@ export default function BestiaryPage() {
     player: 'Игрок', enemy: 'Враг', npc: 'НПС',
     companion: 'Компаньон', pet: 'Питомец',
   }
+
+  const CR_ORDER = ['0','1/8','1/4','1/2','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30']
+
+  const sorted = [...filtered].sort((a, b) => {
+    if (sortBy === 'name') return a.name.localeCompare(b.name, 'ru')
+    if (sortBy === 'type') return (a.type ?? '').localeCompare(b.type ?? '', 'ru')
+    if (sortBy === 'cr') return (CR_ORDER.indexOf(a.cr ?? '0')) - (CR_ORDER.indexOf(b.cr ?? '0'))
+    return 0
+  })
 
   return (
     <div className="flex flex-1 overflow-hidden">
@@ -123,6 +133,27 @@ export default function BestiaryPage() {
           ))}
         </div>
 
+        {/* Сортировка */}
+        <div className="px-3 py-2 border-b flex items-center gap-1" style={{ borderColor: 'var(--border)' }}>
+          <span className="font-cinzel text-[10px] uppercase tracking-wide mr-1" style={{ color: 'var(--text-muted)' }}>
+            Сортировка:
+          </span>
+          {[{ id: 'name', label: 'Имя' }, { id: 'type', label: 'Тип' }, { id: 'cr', label: 'CR' }].map(s => (
+            <button
+              key={s.id}
+              onClick={() => setSortBy(s.id)}
+              className="font-cinzel text-[10px] px-2 py-1 rounded-md transition-all cursor-pointer"
+              style={{
+                background: sortBy === s.id ? 'var(--gold-dim)' : 'var(--bg-row)',
+                color: sortBy === s.id ? 'var(--gold)' : 'var(--text-muted)',
+                border: `1px solid ${sortBy === s.id ? 'rgba(226,201,126,0.4)' : 'var(--border)'}`,
+              }}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+
         {/* Кнопки добавления */}
         <div className="px-3 py-2 flex gap-2 border-b" style={{ borderColor: 'var(--border)' }}>
           <button className="btn btn-add flex-1 justify-center" style={{ fontSize: 11 }} onClick={() => openAdd('enemy')}>
@@ -146,7 +177,7 @@ export default function BestiaryPage() {
               <div className="text-xs">Добавь первое существо</div>
             </div>
           )}
-          {filtered.map(c => (
+          {sorted.map(c => (
             <div
               key={c.id}
               className="flex items-center gap-2 px-3 py-2.5 rounded-lg mb-1 cursor-pointer transition-all"

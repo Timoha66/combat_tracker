@@ -76,7 +76,33 @@ function CombatantRow({ combatant: c, isActive, isSelected, onOpenStatblock, onO
   const setExhaustion        = useBattleStore(s => s.setExhaustion)
   const cycleExhaustion      = useBattleStore(s => s.cycleExhaustion)
 
-  const [noteOpen, setNoteOpen] = useState(false)
+  const [noteOpen,    setNoteOpen]    = useState(false)
+  const [hpEdit,      setHpEdit]      = useState(null) // 'dmg' | 'heal' | null
+  const [hpDraft,     setHpDraft]     = useState('')
+
+  const applyDamage = useBattleStore(s => s.applyDamage)
+  const applyHeal   = useBattleStore(s => s.applyHeal)
+
+  function handleHpClick(e) {
+    e.stopPropagation()
+    setHpEdit('dmg')
+    setHpDraft('')
+  }
+
+  function handleHpApply(mode) {
+    const val = parseInt(hpDraft)
+    if (!isNaN(val) && val > 0) {
+      if (mode === 'dmg')  applyDamage([c.id], val, null, 1)
+      if (mode === 'heal') applyHeal([c.id], val)
+    }
+    setHpEdit(null)
+    setHpDraft('')
+  }
+
+  function handleHpKey(e) {
+    if (e.key === 'Enter') handleHpApply(hpEdit)
+    if (e.key === 'Escape') { setHpEdit(null); setHpDraft('') }
+  }
 
   const [editingInit, setEditingInit] = useState(false)
   const [initDraft,   setInitDraft]   = useState(String(displayInit(c.initiative)))
@@ -368,7 +394,11 @@ function CombatantRow({ combatant: c, isActive, isSelected, onOpenStatblock, onO
 
       {/* HP */}
       <div className="flex flex-col gap-1 pt-1">
-        <div className="flex items-baseline gap-1">
+        <div
+          className="flex items-baseline gap-1 cursor-pointer"
+          onClick={handleHpClick}
+          title="Быстрый урон/лечение"
+        >
           <span className={`font-cinzel text-xl font-bold leading-none ${getHpTextColor(getStatus(c))}`}>
             {c.hp.current}
           </span>
@@ -377,6 +407,39 @@ function CombatantRow({ combatant: c, isActive, isSelected, onOpenStatblock, onO
             <span className="font-cinzel text-xs" style={{ color: '#60a5fa' }}>+{c.hp.temp}</span>
           )}
         </div>
+
+        {/* Инлайн редактирование HP */}
+        {hpEdit && (
+          <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+            <input
+              type="number"
+              value={hpDraft}
+              onChange={e => setHpDraft(e.target.value)}
+              onKeyDown={handleHpKey}
+              autoFocus
+              placeholder="0"
+              className="w-14 font-cinzel text-sm text-center rounded px-1 py-0.5 outline-none"
+              style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-md)', color: 'var(--text)' }}
+            />
+            <button
+              className="font-cinzel text-[10px] px-1.5 py-0.5 rounded cursor-pointer"
+              style={{ background: 'rgba(248,113,113,0.15)', color: '#f87171', border: '0.5px solid rgba(248,113,113,0.3)' }}
+              onClick={() => handleHpApply('dmg')}
+              title="Нанести урон"
+            >−</button>
+            <button
+              className="font-cinzel text-[10px] px-1.5 py-0.5 rounded cursor-pointer"
+              style={{ background: 'rgba(74,222,128,0.13)', color: '#4ade80', border: '0.5px solid rgba(74,222,128,0.3)' }}
+              onClick={() => handleHpApply('heal')}
+              title="Вылечить"
+            >+</button>
+            <button
+              className="font-cinzel text-[10px] px-1 py-0.5 rounded cursor-pointer"
+              style={{ background: 'var(--bg-row)', color: 'var(--text-muted)', border: '0.5px solid var(--border)' }}
+              onClick={() => { setHpEdit(null); setHpDraft('') }}
+            >✕</button>
+          </div>
+        )}
         <div className="hp-bar-outer" style={{ width: '100%' }}>
           <div className="hp-bar-fill" style={{ width: `${hpPct}%`, background: getHpBarColor(getStatus(c)) }} />
         </div>
