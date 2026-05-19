@@ -31,9 +31,17 @@ export default function AddModal({ onClose }) {
 
   function handleAdd() {
     if (!selected) return
-    const isPlayer   = selected.type === 'player'
-    const dexMod     = Math.floor(((selected.abilities?.dex ?? 10) - 10) / 2)
-    const initBonus  = selected.initiative ?? dexMod
+    const isPlayer  = selected.type === 'player'
+    const dexMod    = Math.floor(((selected.abilities?.dex ?? 10) - 10) / 2)
+    const initBonus = selected.initiative ?? dexMod
+
+    // Для игроков инициатива обязательна вручную
+    if (isPlayer && !initVal) {
+      alert('Введи инициативу для игрока вручную')
+      return
+    }
+
+    // Для остальных — вручную или автобросок
     const initiative = parseInt(initVal) || Math.floor(Math.random() * 20) + 1 + initBonus
 
     addCombatants(
@@ -132,23 +140,36 @@ export default function AddModal({ onClose }) {
 
         {/* Initiative */}
         <div className="mb-4">
-          <div className="font-cinzel text-[11px] tracking-widest uppercase mb-2" style={{ color: 'var(--text-muted)' }}>
-            Инициатива
+          <div className="flex items-center justify-between mb-2">
+            <div className="font-cinzel text-[11px] tracking-widest uppercase" style={{ color: 'var(--text-muted)' }}>
+              Инициатива
+            </div>
+            {selected?.type === 'player' && (
+              <span className="font-cinzel text-[10px]" style={{ color: '#f59e0b' }}>
+                ✦ Вводится вручную
+              </span>
+            )}
           </div>
           <div className="flex gap-2 items-center">
             <input
               type="number"
-              placeholder="Ввести вручную"
+              placeholder={selected?.type === 'player' ? 'Введи инициативу игрока...' : 'Оставь пустым для автоброска'}
               value={initVal}
               onChange={e => setInitVal(e.target.value)}
               className="flex-1 rounded-lg px-3 py-2 outline-none text-sm"
-              style={{ background: 'var(--bg-row)', border: '1px solid var(--border-md)', color: 'var(--text)' }}
+              style={{
+                background: 'var(--bg-row)',
+                border: `1px solid ${selected?.type === 'player' && !initVal ? 'rgba(245,158,11,0.4)' : 'var(--border-md)'}`,
+                color: 'var(--text)',
+              }}
               onFocus={e => e.target.style.borderColor = 'rgba(226,201,126,0.5)'}
-              onBlur={e => e.target.style.borderColor = 'var(--border-md)'}
+              onBlur={e => e.target.style.borderColor = selected?.type === 'player' && !initVal ? 'rgba(245,158,11,0.4)' : 'var(--border-md)'}
             />
-            <button className="btn btn-ghost shrink-0" onClick={rollInit} disabled={!selected}>
-              <IconDice5 size={15} /> Бросить
-            </button>
+            {selected?.type !== 'player' && (
+              <button className="btn btn-ghost shrink-0" onClick={rollInit} disabled={!selected}>
+                <IconDice5 size={15} /> Бросить
+              </button>
+            )}
           </div>
         </div>
 
@@ -160,8 +181,8 @@ export default function AddModal({ onClose }) {
           <button
             className="btn btn-add flex-1 justify-center"
             onClick={handleAdd}
-            disabled={!selected}
-            style={{ opacity: selected ? 1 : 0.4 }}
+            disabled={!selected || (selected?.type === 'player' && !initVal)}
+            style={{ opacity: (!selected || (selected?.type === 'player' && !initVal)) ? 0.4 : 1 }}
           >
             <IconPlus size={14} /> Добавить
           </button>
