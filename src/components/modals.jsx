@@ -29,17 +29,21 @@ function dmgName(id) { return DMG_LABEL[id] ?? id }
 // ─── CONDITION PICKER ─────────────────────────────────────────────────────────
 export function ConditionPicker({ id, onClose }) {
   const combatant       = useBattleStore(s => s.combatants.find(c => c.id === id))
-  const toggleCondition = useBattleStore(s => s.toggleCondition)
+  const toggleCondition  = useBattleStore(s => s.toggleCondition)
+  const cycleExhaustion  = useBattleStore(s => s.cycleExhaustion)
   const [immuneMsg, setImmuneMsg] = useState(null)
 
   if (!combatant) return null
 
-  // Получаем иммунитеты к состояниям из бестиария (через sourceId) или из самого участника
-  const creatures  = useBestiaryStore.getState().creatures
-  const source     = creatures.find(c => c.id === combatant.sourceId)
+  const creatures      = useBestiaryStore.getState().creatures
+  const source         = creatures.find(c => c.id === combatant.sourceId)
   const condImmunities = source?.conditionImmunities ?? combatant.conditionImmunities ?? []
 
   function handleToggle(cond) {
+    if (cond.id === 'exhaustion') {
+      cycleExhaustion(id)
+      return
+    }
     const isActive = combatant.conditions.includes(cond.id)
     if (!isActive && condImmunities.includes(cond.label)) {
       setImmuneMsg(`Нельзя добавить — ${combatant.name} имеет иммунитет к состоянию «${cond.label}»`)
@@ -68,9 +72,16 @@ export function ConditionPicker({ id, onClose }) {
         title={isImmune ? `Иммунитет к ${cond.label}` : ''}
       >
         <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: dotColor }} />
-        <span className="font-cinzel text-[11px] flex-1">{cond.label}</span>
+        <span className="font-cinzel text-[11px] flex-1">
+          {cond.label}{cond.id === 'exhaustion' && (combatant.exhaustion ?? 0) > 0 ? ` ${combatant.exhaustion}` : ''}
+        </span>
         {isImmune && <span className="font-cinzel text-[9px]" style={{ color: '#60a5fa' }}>иммун.</span>}
-        {isActive && !isImmune && <IconCheck size={12} />}
+        {isActive && !isImmune && cond.id === 'exhaustion' && (
+          <span className="font-cinzel text-[9px]" style={{ color: 'var(--text-muted)' }}>
+            {(combatant.exhaustion ?? 0) < 6 ? '+1' : 'снять'}
+          </span>
+        )}
+        {isActive && !isImmune && cond.id !== 'exhaustion' && <IconCheck size={12} />}
       </div>
     )
   }

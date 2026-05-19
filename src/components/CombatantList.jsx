@@ -74,6 +74,7 @@ function CombatantRow({ combatant: c, isActive, isSelected, onOpenStatblock, onO
   const restoreLegendaryRes  = useBattleStore(s => s.restoreLegendaryResistances)
   const setNote              = useBattleStore(s => s.setNote)
   const setExhaustion        = useBattleStore(s => s.setExhaustion)
+  const cycleExhaustion      = useBattleStore(s => s.cycleExhaustion)
 
   const [noteOpen, setNoteOpen] = useState(false)
 
@@ -236,15 +237,29 @@ function CombatantRow({ combatant: c, isActive, isSelected, onOpenStatblock, onO
             {c.conditions.map(condId => {
               const cond = CONDITION_MAP[condId]
               if (!cond) return null
+              const isExhaustion = condId === 'exhaustion'
+              const label = isExhaustion && (c.exhaustion ?? 0) > 1
+                ? `${cond.label} ${c.exhaustion}`
+                : cond.label
               return (
                 <span
                   key={condId}
                   className={`cond ${cond.css}`}
-                  onClick={e => { e.stopPropagation(); removeCondition(c.id, condId) }}
-                  title="Снять состояние"
+                  onClick={e => {
+                    e.stopPropagation()
+                    if (isExhaustion) cycleExhaustion(c.id)
+                    else removeCondition(c.id, condId)
+                  }}
+                  title={isExhaustion
+                    ? (c.exhaustion ?? 0) < 6 ? `Уровень ${c.exhaustion} → нажми для +1` : 'Уровень 6 → нажми чтобы снять'
+                    : 'Снять состояние'
+                  }
                 >
-                  {cond.label}
-                  <IconX size={9} style={{ opacity: 0.7 }} />
+                  {label}
+                  {isExhaustion
+                    ? <span style={{ fontSize: 9, opacity: 0.7, marginLeft: 3 }}>↑</span>
+                    : <IconX size={9} style={{ opacity: 0.7 }} />
+                  }
                 </span>
               )
             })}

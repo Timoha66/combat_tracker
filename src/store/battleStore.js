@@ -245,6 +245,26 @@ export const useBattleStore = create((set, get) => ({
     }))
   },
 
+  // ── ИСТОЩЕНИЕ (циклическое) ─────────────────────────────────────────────────
+  cycleExhaustion(id) {
+    set(state => ({
+      combatants: state.combatants.map(c => {
+        if (c.id !== id) return c
+        const current = c.exhaustion ?? 0
+        if (current >= 6) {
+          // Снимаем состояние
+          return { ...c, exhaustion: 0, conditions: c.conditions.filter(x => x !== 'exhaustion') }
+        } else if (current === 0) {
+          // Добавляем с уровнем 1
+          return { ...c, exhaustion: 1, conditions: [...c.conditions.filter(x => x !== 'exhaustion'), 'exhaustion'] }
+        } else {
+          // Увеличиваем уровень
+          return { ...c, exhaustion: current + 1 }
+        }
+      }),
+    }))
+  },
+
   // ── ИСТОЩЕНИЕ ───────────────────────────────────────────────────────────────
   setExhaustion(id, value) {
     set(state => ({
