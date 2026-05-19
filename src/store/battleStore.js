@@ -34,6 +34,8 @@ export function createCombatant(source, overrides = {}) {
     legendaryActionsLeft:     source.legendaryActionCount  ?? 0,
     legendaryResistancesMax:  source.legendaryResistances  ?? 0,
     legendaryResistancesLeft: source.legendaryResistances  ?? 0,
+    // ── Истощение (0-6) ──
+    exhaustion: 0,
     // ── Заметка ──
     note: '',
     ...overrides,
@@ -199,6 +201,19 @@ export const useBattleStore = create((set, get) => ({
 
       return { combatants: final }
     })
+    // Пишем в лог
+    const { combatants: updated, combatLog } = get()
+    const targets = updated.filter(c => targetIds.includes(c.id))
+    const attName = get().getCurrentCombatant()?.name ?? '???'
+    targets.forEach(t => {
+      const dmg = t.damageTaken - (get().combatants.find(x => x.id === t.id)?.damageTaken ?? t.damageTaken)
+      // просто логируем факт урона
+    })
+    if (targets.length === 1) {
+      get().addLog(`⚔ ${attName} → ${targets[0].name}: ${Math.floor(rawAmount * manualMult)} урона`)
+    } else if (targets.length > 1) {
+      get().addLog(`⚔ ${attName} → ${targets.length} целей: ${Math.floor(rawAmount * manualMult)} урона`)
+    }
   },
 
   // ── ЛЕГЕНДАРНЫЕ ДЕЙСТВИЯ ────────────────────────────────────────────────────
@@ -230,6 +245,26 @@ export const useBattleStore = create((set, get) => ({
     }))
   },
 
+  // ── ИСТОЩЕНИЕ ───────────────────────────────────────────────────────────────
+  setExhaustion(id, value) {
+    set(state => ({
+      combatants: state.combatants.map(c =>
+        c.id === id ? { ...c, exhaustion: Math.max(0, Math.min(6, value)) } : c
+      ),
+    }))
+  },
+
+  // ── ЛОГ ДЕЙСТВИЙ ────────────────────────────────────────────────────────────
+  combatLog: [],
+
+  addLog(message) {
+    set(state => ({
+      combatLog: [{ id: Date.now(), message, time: new Date().toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' }) }, ...state.combatLog].slice(0, 5),
+    }))
+  },
+
+  clearLog() { set({ combatLog: [] }) },
+
   // ── ЗАМЕТКА ─────────────────────────────────────────────────────────────────
   setNote(id, note) {
     set(state => ({
@@ -256,14 +291,12 @@ export const useBattleStore = create((set, get) => ({
         if (!targetIds.includes(c.id)) return c
         const hp = { ...c.hp, current: Math.min(c.hp.max, c.hp.current + amount) }
         const recovered = hp.current > 0
-        return {
-          ...c,
-          hp,
-          dead: recovered ? false : c.dead,
-          deathSaves: recovered ? null : c.deathSaves,
-        }
+        return { ...c, hp, dead: recovered ? false : c.dead, deathSaves: recovered ? null : c.deathSaves }
       }),
     }))
+    const names = get().combatants.filter(c => targetIds.includes(c.id)).map(c => c.name)
+    if (names.length === 1) get().addLog(`💚 ${names[0]}: +${amount} HP`)
+    else if (names.length > 1) get().addLog(`💚 ${names.length} участников: +${amount} HP`)
   },
 
   setTempHp(targetIds, amount) {

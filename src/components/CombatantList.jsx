@@ -73,6 +73,7 @@ function CombatantRow({ combatant: c, isActive, isSelected, onOpenStatblock, onO
   const useLegendaryResist   = useBattleStore(s => s.useLegendaryResistance)
   const restoreLegendaryRes  = useBattleStore(s => s.restoreLegendaryResistances)
   const setNote              = useBattleStore(s => s.setNote)
+  const setExhaustion        = useBattleStore(s => s.setExhaustion)
 
   const [noteOpen, setNoteOpen] = useState(false)
 
@@ -207,7 +208,7 @@ function CombatantRow({ combatant: c, isActive, isSelected, onOpenStatblock, onO
       <div className="flex flex-col gap-1 min-w-0 py-1">
         <div className="flex items-center gap-2 flex-wrap">
           <span
-            className={`font-cinzel text-sm font-semibold truncate ${isDead ? 'line-through' : ''}`}
+            className={`font-cinzel text-base font-semibold truncate ${isDead ? 'line-through' : ''}`}
             style={{
               color: isActive ? 'var(--gold)' : isDead ? 'var(--text-muted)' : isDying ? '#f87171' : 'var(--text)'
             }}
@@ -301,7 +302,33 @@ function CombatantRow({ combatant: c, isActive, isSelected, onOpenStatblock, onO
           </div>
         )}
 
-        {/* Заметка */}
+        {/* Истощение */}
+          {(c.exhaustion > 0 || !isDead) && (
+            <div className="flex items-center gap-1 mt-1" onClick={e => e.stopPropagation()}>
+              <span className="font-cinzel text-[9px] uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Истощ.</span>
+              <button
+                className="font-cinzel text-[9px] w-4 h-4 rounded flex items-center justify-center cursor-pointer transition-all"
+                style={{ background: 'var(--bg-panel)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
+                onClick={() => setExhaustion(c.id, (c.exhaustion ?? 0) - 1)}
+              >−</button>
+              <span
+                className="font-cinzel text-xs font-bold min-w-[16px] text-center"
+                style={{ color: (c.exhaustion ?? 0) > 0 ? '#f59e0b' : 'var(--text-muted)' }}
+              >
+                {c.exhaustion ?? 0}
+              </span>
+              <button
+                className="font-cinzel text-[9px] w-4 h-4 rounded flex items-center justify-center cursor-pointer transition-all"
+                style={{ background: 'var(--bg-panel)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
+                onClick={() => setExhaustion(c.id, (c.exhaustion ?? 0) + 1)}
+              >+</button>
+              {(c.exhaustion ?? 0) > 0 && (
+                <span className="font-cinzel text-[9px]" style={{ color: '#f59e0b' }}>
+                  {['', '−Скор., −1 к броскам', '−Скор.×½', 'Помеха атакам', '−HP вдвое', '−Скор. 0', 'Смерть'][c.exhaustion]}
+                </span>
+              )}
+            </div>
+          )}
         {noteOpen && (
           <textarea
             className="w-full mt-1 rounded px-2 py-1 text-xs resize-none outline-none"
@@ -333,7 +360,7 @@ function CombatantRow({ combatant: c, isActive, isSelected, onOpenStatblock, onO
           🛡
         </span>
         <span
-          className="font-cinzel text-lg font-bold leading-none"
+          className="font-cinzel text-xl font-bold leading-none"
           style={{ color: shieldFx ? 'var(--gold)' : acModified ? '#c4b5fd' : 'var(--text)' }}
         >
           {effectiveAC}

@@ -135,7 +135,7 @@
   .type-npc    { background: rgba(167,139,250,0.12); color: #a78bfa; border: 0.5px solid rgba(167,139,250,0.25); }
 
   /* ── HP BAR ── */
-  .hp-bar-outer { @apply h-1.5 rounded-full overflow-hidden flex; background: rgba(255,255,255,0.07); }
+  .hp-bar-outer { @apply h-3 rounded-full overflow-hidden flex; background: rgba(255,255,255,0.07); }
   .hp-bar-temp  { @apply h-full flex-shrink-0; background: #3b82f6; }
   .hp-bar-fill  { @apply h-full rounded-sm; }
 

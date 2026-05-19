@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useBattleStore } from './store/battleStore'
 import Header from './components/Header'
 import CombatantList from './components/CombatantList'
+import CombatLog from './components/CombatLog'
 import RightPanel from './components/RightPanel'
 import AddModal from './components/AddModal'
 import BestiaryPage from './components/bestiary/BestiaryPage'
@@ -35,15 +36,18 @@ export default function App() {
         {!showBestiary && (
           <>
             {view === 'tracker' && (
-              <>
-                <CombatantList
-                  onOpenStatblock={setStatblockTarget}
-                  onOpenCondPicker={setCondPickerTarget}
-                  onOpenAcEdit={setAcTarget}
-                  onRevive={setReviveTarget}
-                />
-                <RightPanel />
-              </>
+              <div className="flex flex-col flex-1 overflow-hidden">
+                <div className="flex flex-1 overflow-hidden">
+                  <CombatantList
+                    onOpenStatblock={setStatblockTarget}
+                    onOpenCondPicker={setCondPickerTarget}
+                    onOpenAcEdit={setAcTarget}
+                    onRevive={setReviveTarget}
+                  />
+                  <RightPanel />
+                </div>
+                <CombatLog />
+              </div>
             )}
             {view === 'summary' && <BattleSummary />}
           </>
