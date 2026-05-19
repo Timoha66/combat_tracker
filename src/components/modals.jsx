@@ -40,14 +40,15 @@ export function ConditionPicker({ id, onClose }) {
   const condImmunities = source?.conditionImmunities ?? combatant.conditionImmunities ?? []
 
   function handleToggle(cond) {
-    if (cond.id === 'exhaustion') {
-      cycleExhaustion(id)
-      return
-    }
     const isActive = combatant.conditions.includes(cond.id)
+    // Проверяем иммунитет для всех состояний включая истощение
     if (!isActive && condImmunities.includes(cond.label)) {
       setImmuneMsg(`Нельзя добавить — ${combatant.name} имеет иммунитет к состоянию «${cond.label}»`)
       setTimeout(() => setImmuneMsg(null), 3000)
+      return
+    }
+    if (cond.id === 'exhaustion') {
+      cycleExhaustion(id)
       return
     }
     setImmuneMsg(null)
