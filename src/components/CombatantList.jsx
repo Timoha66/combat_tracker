@@ -45,12 +45,13 @@ export default function CombatantList({ onOpenStatblock, onOpenCondPicker, onOpe
 
 // ─── ROW ──────────────────────────────────────────────────────────────────────
 function CombatantRow({ combatant: c, isActive, isSelected, onOpenStatblock, onOpenCondPicker, onOpenAcEdit, onRevive }) {
-  const toggleTarget    = useBattleStore(s => s.toggleTarget)
-  const toggleShield    = useBattleStore(s => s.toggleShield)
-  const removeCondition = useBattleStore(s => s.removeCondition)
-  const addDeathSave    = useBattleStore(s => s.addDeathSave)
-  const setInitiative   = useBattleStore(s => s.setInitiative)
-  const combatants      = useBattleStore(s => s.combatants)
+  const toggleTarget         = useBattleStore(s => s.toggleTarget)
+  const toggleShield         = useBattleStore(s => s.toggleShield)
+  const removeCondition      = useBattleStore(s => s.removeCondition)
+  const addDeathSave         = useBattleStore(s => s.addDeathSave)
+  const setInitiative        = useBattleStore(s => s.setInitiative)
+  const combatants           = useBattleStore(s => s.combatants)
+  const resolveConcentration = useBattleStore(s => s.resolveConcentration)
 
   const [editingInit, setEditingInit] = useState(false)
   const [initDraft,   setInitDraft]   = useState(String(displayInit(c.initiative)))
@@ -283,6 +284,31 @@ function CombatantRow({ combatant: c, isActive, isSelected, onOpenStatblock, onO
           <div className="hp-bar-fill" style={{ width: `${hpPct}%`, background: getHpBarColor(getStatus(c)) }} />
         </div>
         <span className={`status-pill ${STATUS_PILL[status]}`}>{STATUS_LABEL[status]}</span>
+
+        {/* Проверка концентрации */}
+        {c.concentrationCheck && (
+          <div
+            className="flex items-center gap-1.5 mt-1 px-2 py-1 rounded-lg"
+            style={{ background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.35)' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <span className="font-cinzel text-[9px] font-semibold flex-1" style={{ color: '#c4b5fd' }}>
+              🎯 Конц. СЛ {c.concentrationCheck.dc}
+            </span>
+            <button
+              className="font-cinzel text-[9px] px-1.5 py-0.5 rounded cursor-pointer transition-all"
+              style={{ background: 'rgba(74,222,128,0.15)', color: '#4ade80', border: '0.5px solid rgba(74,222,128,0.35)' }}
+              onClick={() => resolveConcentration(c.id, true)}
+              title="Успех — концентрация сохраняется"
+            >✓</button>
+            <button
+              className="font-cinzel text-[9px] px-1.5 py-0.5 rounded cursor-pointer transition-all"
+              style={{ background: 'rgba(248,113,113,0.15)', color: '#f87171', border: '0.5px solid rgba(248,113,113,0.35)' }}
+              onClick={() => resolveConcentration(c.id, false)}
+              title="Провал — концентрация сброшена"
+            >✗</button>
+          </div>
+        )}
       </div>
 
       {/* Action buttons */}

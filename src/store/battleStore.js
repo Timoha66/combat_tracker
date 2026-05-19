@@ -163,7 +163,13 @@ export const useBattleStore = create((set, get) => ({
             kills = 1
           }
         }
-        return { ...c, hp, dead, deathSaves, damageTaken: (c.damageTaken ?? 0) + actualDmg, _kills: kills }
+        // Проверка концентрации
+        const hasConc  = c.conditions.includes('concentrating')
+        const concCheck = hasConc && actualDmg > 0
+          ? { dc: Math.max(10, Math.floor(actualDmg / 2)) }
+          : (c.concentrationCheck ?? null)
+
+        return { ...c, hp, dead, deathSaves, damageTaken: (c.damageTaken ?? 0) + actualDmg, _kills: kills, concentrationCheck: concCheck }
       })
 
       // Записываем урон и убийства атакующему
@@ -182,6 +188,19 @@ export const useBattleStore = create((set, get) => ({
 
       return { combatants: final }
     })
+  },
+
+  // ── ПРОВЕРКА КОНЦЕНТРАЦИИ ────────────────────────────────────────────────────
+  resolveConcentration(id, success) {
+    set(state => ({
+      combatants: state.combatants.map(c => {
+        if (c.id !== id) return c
+        const conditions = success
+          ? c.conditions  // успех — концентрация сохраняется
+          : c.conditions.filter(x => x !== 'concentrating') // провал — снимаем
+        return { ...c, concentrationCheck: null, conditions }
+      }),
+    }))
   },
 
   applyHeal(targetIds, amount) {
