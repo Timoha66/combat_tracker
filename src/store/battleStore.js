@@ -303,7 +303,7 @@ export const useBattleStore = create((set, get) => ({
     set(state => ({
       combatants: state.combatants.map(c =>
         targetIds.includes(c.id)
-          ? { ...c, hp: { ...c.hp, temp: Math.max(c.hp.temp, amount) } }
+          ? { ...c, hp: { ...c.hp, temp: Math.max(c.hp.temp, amount), tempMax: Math.max(c.hp.temp, amount) } }
           : c
       ),
     }))
