@@ -302,33 +302,6 @@ function CombatantRow({ combatant: c, isActive, isSelected, onOpenStatblock, onO
           </div>
         )}
 
-        {/* Истощение */}
-          {(c.exhaustion > 0 || !isDead) && (
-            <div className="flex items-center gap-1 mt-1" onClick={e => e.stopPropagation()}>
-              <span className="font-cinzel text-[9px] uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Истощ.</span>
-              <button
-                className="font-cinzel text-[9px] w-4 h-4 rounded flex items-center justify-center cursor-pointer transition-all"
-                style={{ background: 'var(--bg-panel)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
-                onClick={() => setExhaustion(c.id, (c.exhaustion ?? 0) - 1)}
-              >−</button>
-              <span
-                className="font-cinzel text-xs font-bold min-w-[16px] text-center"
-                style={{ color: (c.exhaustion ?? 0) > 0 ? '#f59e0b' : 'var(--text-muted)' }}
-              >
-                {c.exhaustion ?? 0}
-              </span>
-              <button
-                className="font-cinzel text-[9px] w-4 h-4 rounded flex items-center justify-center cursor-pointer transition-all"
-                style={{ background: 'var(--bg-panel)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
-                onClick={() => setExhaustion(c.id, (c.exhaustion ?? 0) + 1)}
-              >+</button>
-              {(c.exhaustion ?? 0) > 0 && (
-                <span className="font-cinzel text-[9px]" style={{ color: '#f59e0b' }}>
-                  {['', '−Скор., −1 к броскам', '−Скор.×½', 'Помеха атакам', '−HP вдвое', '−Скор. 0', 'Смерть'][c.exhaustion]}
-                </span>
-              )}
-            </div>
-          )}
         {noteOpen && (
           <textarea
             className="w-full mt-1 rounded px-2 py-1 text-xs resize-none outline-none"
@@ -394,7 +367,7 @@ function CombatantRow({ combatant: c, isActive, isSelected, onOpenStatblock, onO
         </div>
         {c.hp.temp > 0 && (
           <div className="hp-bar-outer" style={{ width: '100%', marginTop: 2 }}>
-            <div className="hp-bar-fill" style={{ width: `${Math.min(100, (c.hp.temp / c.hp.max) * 100)}%`, background: '#3b82f6' }} />
+            <div className="hp-bar-fill" style={{ width: '100%', background: '#3b82f6' }} />
           </div>
         )}
         <span className={`status-pill ${STATUS_PILL[status]}`}>{STATUS_LABEL[status]}</span>
