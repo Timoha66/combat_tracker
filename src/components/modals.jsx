@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { IconX, IconCheck } from '@tabler/icons-react'
 import { useBattleStore, getEffectiveAC } from '../store/battleStore'
 import { useBestiaryStore } from '../store/bestiaryStore'
-import { CONDITIONS, STATUS_LABEL, STATUS_PILL, getStatus } from '../data/constants'
+import { CONDITIONS, CONDITIONS_BASE, CONDITIONS_COMBAT, STATUS_LABEL, STATUS_PILL, getStatus } from '../data/constants'
 import { ABILITY_KEYS, ABILITY_LABELS, ACTION_SECTIONS, abilityMod } from '../data/gameData'
 import { DMG_TYPES } from '../data/constants'
 
@@ -50,6 +50,31 @@ export function ConditionPicker({ id, onClose }) {
     toggleCondition(id, cond.id)
   }
 
+  function renderCond(cond) {
+    const isActive = combatant.conditions.includes(cond.id)
+    const isImmune = condImmunities.includes(cond.label)
+    const dotColor = cond.css.includes('red') ? '#f87171' : cond.css.includes('amber') ? '#f59e0b' : cond.css.includes('blue') ? '#60a5fa' : cond.css.includes('purple') ? '#a78bfa' : '#9ca3af'
+    return (
+      <div key={cond.id}
+        className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all"
+        style={{
+          background: isImmune ? 'rgba(96,165,250,0.06)' : isActive ? 'var(--gold-dim)' : 'var(--bg-row)',
+          border: `1px solid ${isImmune ? 'rgba(96,165,250,0.2)' : isActive ? 'rgba(226,201,126,0.4)' : 'var(--border)'}`,
+          color: isImmune ? 'var(--text-muted)' : isActive ? 'var(--gold)' : 'var(--text-dim)',
+          cursor: isImmune ? 'not-allowed' : 'pointer',
+          opacity: isImmune ? 0.6 : 1,
+        }}
+        onClick={() => handleToggle(cond)}
+        title={isImmune ? `Иммунитет к ${cond.label}` : ''}
+      >
+        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: dotColor }} />
+        <span className="font-cinzel text-[11px] flex-1">{cond.label}</span>
+        {isImmune && <span className="font-cinzel text-[9px]" style={{ color: '#60a5fa' }}>иммун.</span>}
+        {isActive && !isImmune && <IconCheck size={12} />}
+      </div>
+    )
+  }
+
   return (
     <div className="overlay">
       <div className="modal" style={{ width: 380 }}>
@@ -70,32 +95,20 @@ export function ConditionPicker({ id, onClose }) {
           </div>
         )}
 
+        <div className="grid grid-cols-2 gap-1.5 mb-3">
+          {CONDITIONS_BASE.map(cond => renderCond(cond))}
+        </div>
+
+        <div className="flex items-center gap-2 mb-3">
+          <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
+          <span className="font-cinzel text-[10px] tracking-widest uppercase px-2" style={{ color: 'var(--text-muted)' }}>
+            Боевые состояния
+          </span>
+          <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
+        </div>
+
         <div className="grid grid-cols-2 gap-1.5 mb-4">
-          {CONDITIONS.map(cond => {
-            const isActive  = combatant.conditions.includes(cond.id)
-            const isImmune  = condImmunities.includes(cond.label)
-            return (
-              <div
-                key={cond.id}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all"
-                style={{
-                  background: isImmune ? 'rgba(96,165,250,0.06)' : isActive ? 'var(--gold-dim)' : 'var(--bg-row)',
-                  border: `1px solid ${isImmune ? 'rgba(96,165,250,0.2)' : isActive ? 'rgba(226,201,126,0.4)' : 'var(--border)'}`,
-                  color: isImmune ? 'var(--text-muted)' : isActive ? 'var(--gold)' : 'var(--text-dim)',
-                  cursor: isImmune ? 'not-allowed' : 'pointer',
-                  opacity: isImmune ? 0.6 : 1,
-                }}
-                onClick={() => handleToggle(cond)}
-                title={isImmune ? `Иммунитет к ${cond.label}` : ''}
-              >
-                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${cond.css}`}
-                      style={{ background: cond.css.includes('red') ? '#f87171' : cond.css.includes('amber') ? '#f59e0b' : cond.css.includes('blue') ? '#60a5fa' : cond.css.includes('purple') ? '#a78bfa' : '#9ca3af' }} />
-                <span className="font-cinzel text-[11px] flex-1">{cond.label}</span>
-                {isImmune && <span className="font-cinzel text-[9px]" style={{ color: '#60a5fa' }}>иммун.</span>}
-                {isActive && !isImmune && <IconCheck size={12} />}
-              </div>
-            )
-          })}
+          {CONDITIONS_COMBAT.map(cond => renderCond(cond))}
         </div>
 
         <button className="btn btn-cancel w-full justify-center" onClick={onClose}>

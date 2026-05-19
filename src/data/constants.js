@@ -130,25 +130,33 @@ export function calcDamage(combatant, rawAmount, typeId, manualMult = 1) {
 
 // ─── СОСТОЯНИЯ ────────────────────────────────────────────────────────────────
 export const CONDITIONS = [
-  { id: 'charmed',       label: 'Очарован',        css: 'cond-purple' },
-  { id: 'frightened',    label: 'Испуган',          css: 'cond-red'    },
-  { id: 'paralyzed',     label: 'Парализован',      css: 'cond-red'    },
-  { id: 'petrified',     label: 'Окаменел',         css: 'cond-red'    },
-  { id: 'poisoned',      label: 'Отравлен',         css: 'cond-amber'  },
-  { id: 'stunned',       label: 'Оглушён',          css: 'cond-amber'  },
-  { id: 'exhaustion',    label: 'Истощён',          css: 'cond-amber'  },
-  { id: 'blinded',       label: 'Ослеплён',         css: 'cond-amber'  },
-  { id: 'deafened',      label: 'Оглохший',         css: 'cond-gray'   },
-  { id: 'prone',         label: 'Сбит с ног',       css: 'cond-gray'   },
-  { id: 'grappled',      label: 'Схвачен',          css: 'cond-gray'   },
-  { id: 'invisible',     label: 'Невидим',          css: 'cond-blue'   },
-  { id: 'incapacitated', label: 'Недееспособен',    css: 'cond-red'    },
-  { id: 'slowed',        label: 'Замедлен',         css: 'cond-blue'   },
-  // Бонусные состояния (не из RAW, но полезные)
-  { id: 'rage',          label: 'Ярость',           css: 'cond-red'    },
-  { id: 'hasted',        label: 'Ускорен',          css: 'cond-blue'   },
-  { id: 'concentrating', label: 'Концентрация',     css: 'cond-purple' },
+  { id: 'charmed',       label: 'Очарован',        css: 'cond-purple', group: 'base' },
+  { id: 'frightened',    label: 'Испуган',          css: 'cond-red',    group: 'base' },
+  { id: 'paralyzed',     label: 'Парализован',      css: 'cond-red',    group: 'base' },
+  { id: 'petrified',     label: 'Окаменел',         css: 'cond-red',    group: 'base' },
+  { id: 'poisoned',      label: 'Отравлен',         css: 'cond-amber',  group: 'base' },
+  { id: 'stunned',       label: 'Оглушён',          css: 'cond-amber',  group: 'base' },
+  { id: 'exhaustion',    label: 'Истощён',          css: 'cond-amber',  group: 'base' },
+  { id: 'blinded',       label: 'Ослеплён',         css: 'cond-amber',  group: 'base' },
+  { id: 'deafened',      label: 'Оглохший',         css: 'cond-gray',   group: 'base' },
+  { id: 'prone',         label: 'Сбит с ног',       css: 'cond-gray',   group: 'base' },
+  { id: 'grappled',      label: 'Схвачен',          css: 'cond-gray',   group: 'base' },
+  { id: 'invisible',     label: 'Невидим',          css: 'cond-blue',   group: 'base' },
+  { id: 'incapacitated', label: 'Недееспособен',    css: 'cond-red',    group: 'base' },
+  { id: 'slowed',        label: 'Замедлен',         css: 'cond-blue',   group: 'base' },
+  // Боевые состояния
+  { id: 'rage',          label: 'Ярость',           css: 'cond-red',    group: 'combat' },
+  { id: 'blessed',       label: 'Благословление',   css: 'cond-blue',   group: 'combat' },
+  { id: 'hasted',        label: 'Ускорение',        css: 'cond-blue',   group: 'combat' },
+  { id: 'concentrating', label: 'Концентрация',     css: 'cond-purple', group: 'combat' },
+  { id: 'cursed',        label: 'Порча',            css: 'cond-purple', group: 'combat' },
+  { id: 'guidance',      label: 'Наставление',      css: 'cond-blue',   group: 'combat' },
+  { id: 'bardic_insp',   label: 'Барт. вдохновение',css: 'cond-amber',  group: 'combat' },
+  { id: 'lethargy',      label: 'Летаргия',         css: 'cond-gray',   group: 'combat' },
 ]
+
+export const CONDITIONS_BASE   = CONDITIONS.filter(c => c.group === 'base')
+export const CONDITIONS_COMBAT = CONDITIONS.filter(c => c.group === 'combat')
 
 export const CONDITION_MAP = Object.fromEntries(CONDITIONS.map(c => [c.id, c]))
 
