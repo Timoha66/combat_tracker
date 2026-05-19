@@ -145,7 +145,7 @@ export const CONDITIONS = [
   { id: 'incapacitated', label: 'Недееспособен',    css: 'cond-red'    },
   { id: 'slowed',        label: 'Замедлен',         css: 'cond-blue'   },
   // Бонусные состояния (не из RAW, но полезные)
-  { id: 'blessed',       label: 'Благослов.',       css: 'cond-blue'   },
+  { id: 'rage',          label: 'Ярость',           css: 'cond-red'    },
   { id: 'hasted',        label: 'Ускорен',          css: 'cond-blue'   },
   { id: 'concentrating', label: 'Концентрация',     css: 'cond-purple' },
 ]
