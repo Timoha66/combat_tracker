@@ -30,8 +30,25 @@ function dmgName(id) { return DMG_LABEL[id] ?? id }
 export function ConditionPicker({ id, onClose }) {
   const combatant       = useBattleStore(s => s.combatants.find(c => c.id === id))
   const toggleCondition = useBattleStore(s => s.toggleCondition)
+  const [immuneMsg, setImmuneMsg] = useState(null)
 
   if (!combatant) return null
+
+  // Получаем иммунитеты к состояниям из бестиария (через sourceId) или из самого участника
+  const creatures  = useBestiaryStore.getState().creatures
+  const source     = creatures.find(c => c.id === combatant.sourceId)
+  const condImmunities = source?.conditionImmunities ?? combatant.conditionImmunities ?? []
+
+  function handleToggle(cond) {
+    const isActive = combatant.conditions.includes(cond.id)
+    if (!isActive && condImmunities.includes(cond.label)) {
+      setImmuneMsg(`Нельзя добавить — ${combatant.name} имеет иммунитет к состоянию «${cond.label}»`)
+      setTimeout(() => setImmuneMsg(null), 3000)
+      return
+    }
+    setImmuneMsg(null)
+    toggleCondition(id, cond.id)
+  }
 
   return (
     <div className="overlay">
@@ -43,26 +60,39 @@ export function ConditionPicker({ id, onClose }) {
           <span className="text-sm ml-1" style={{ color: 'var(--text-dim)' }}>{combatant.name}</span>
           <button className="icon-btn ml-auto" onClick={onClose}><IconX size={15} /></button>
         </div>
-        <p className="text-sm mb-4" style={{ color: 'var(--text-dim)' }}>Нажми для добавления / снятия</p>
+        <p className="text-sm mb-3" style={{ color: 'var(--text-dim)' }}>Нажми для добавления / снятия</p>
+
+        {/* Сообщение об иммунитете */}
+        {immuneMsg && (
+          <div className="rounded-lg px-3 py-2 mb-3 text-sm font-cinzel"
+               style={{ background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.35)', color: '#f87171' }}>
+            🛡 {immuneMsg}
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-1.5 mb-4">
           {CONDITIONS.map(cond => {
-            const isActive = combatant.conditions.includes(cond.id)
+            const isActive  = combatant.conditions.includes(cond.id)
+            const isImmune  = condImmunities.includes(cond.label)
             return (
               <div
                 key={cond.id}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all"
                 style={{
-                  background: isActive ? 'var(--gold-dim)' : 'var(--bg-row)',
-                  border: `1px solid ${isActive ? 'rgba(226,201,126,0.4)' : 'var(--border)'}`,
-                  color: isActive ? 'var(--gold)' : 'var(--text-dim)',
+                  background: isImmune ? 'rgba(96,165,250,0.06)' : isActive ? 'var(--gold-dim)' : 'var(--bg-row)',
+                  border: `1px solid ${isImmune ? 'rgba(96,165,250,0.2)' : isActive ? 'rgba(226,201,126,0.4)' : 'var(--border)'}`,
+                  color: isImmune ? 'var(--text-muted)' : isActive ? 'var(--gold)' : 'var(--text-dim)',
+                  cursor: isImmune ? 'not-allowed' : 'pointer',
+                  opacity: isImmune ? 0.6 : 1,
                 }}
-                onClick={() => toggleCondition(id, cond.id)}
+                onClick={() => handleToggle(cond)}
+                title={isImmune ? `Иммунитет к ${cond.label}` : ''}
               >
                 <span className={`w-2 h-2 rounded-full flex-shrink-0 ${cond.css}`}
                       style={{ background: cond.css.includes('red') ? '#f87171' : cond.css.includes('amber') ? '#f59e0b' : cond.css.includes('blue') ? '#60a5fa' : cond.css.includes('purple') ? '#a78bfa' : '#9ca3af' }} />
                 <span className="font-cinzel text-[11px] flex-1">{cond.label}</span>
-                {isActive && <IconCheck size={12} />}
+                {isImmune && <span className="font-cinzel text-[9px]" style={{ color: '#60a5fa' }}>иммун.</span>}
+                {isActive && !isImmune && <IconCheck size={12} />}
               </div>
             )
           })}
