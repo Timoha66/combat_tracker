@@ -18,13 +18,17 @@ export function createCombatant(source, overrides = {}) {
       current: source.ac ?? 10,
     },
     conditions:     [],
-    tempEffects:    [],                           // [{name, acBonus, expireOn, ownerId}]
-    deathSaves:     null,                         // {successes, failures} — только для игроков
+    tempEffects:    [],
+    deathSaves:     null,
     dead:           false,
     resistances:    source.resistances    ?? [],
     immunities:     source.immunities     ?? [],
     vulnerabilities:source.vulnerabilities ?? [],
-    sourceId:       source.id ?? null,            // ссылка на запись в бестиарии
+    sourceId:       source.id ?? null,
+    // ── Статистика боя ──
+    damageDealt:    0,
+    damageTaken:    0,
+    kills:          0,
     ...overrides,
   }
 }
@@ -130,30 +134,54 @@ export const useBattleStore = create((set, get) => ({
 
   // ── УРОН / ЛЕЧЕНИЕ ──────────────────────────────────────────────────────────
   applyDamage(targetIds, rawAmount, typeId, manualMult = 1) {
-    set(state => ({
-      combatants: state.combatants.map(c => {
+    set(state => {
+      const live      = getLiveOrder(state.combatants)
+      const attacker  = live[state.currentIdx % live.length]
+      let totalDealt  = 0
+
+      const combatants = state.combatants.map(c => {
         if (!targetIds.includes(c.id)) return c
         let dmg = calcDamage(c, rawAmount, typeId, manualMult)
-        let hp = { ...c.hp }
-        // Сначала временные хиты
+        let hp  = { ...c.hp }
         if (hp.temp > 0) {
           const absorbed = Math.min(hp.temp, dmg)
           hp.temp -= absorbed
           dmg -= absorbed
         }
+        const actualDmg = Math.min(hp.current, dmg)
         hp.current = Math.max(0, hp.current - dmg)
-        let dead = c.dead
+        totalDealt += actualDmg
+
+        let dead       = c.dead
         let deathSaves = c.deathSaves
+        let kills      = 0
         if (hp.current === 0) {
           if (c.type === 'player' && !dead && !deathSaves) {
             deathSaves = { successes: 0, failures: 0 }
-          } else if (c.type !== 'player') {
-            dead = true
+          } else if (c.type !== 'player' && !dead) {
+            dead  = true
+            kills = 1
           }
         }
-        return { ...c, hp, dead, deathSaves }
-      }),
-    }))
+        return { ...c, hp, dead, deathSaves, damageTaken: (c.damageTaken ?? 0) + actualDmg, _kills: kills }
+      })
+
+      // Записываем урон и убийства атакующему
+      const updatedKills = combatants.reduce((sum, c) => sum + (c._kills ?? 0), 0)
+      const final = combatants.map(c => {
+        const { _kills, ...rest } = c
+        if (attacker && c.id === attacker.id) {
+          return {
+            ...rest,
+            damageDealt: (rest.damageDealt ?? 0) + totalDealt,
+            kills:       (rest.kills ?? 0) + updatedKills,
+          }
+        }
+        return rest
+      })
+
+      return { combatants: final }
+    })
   },
 
   applyHeal(targetIds, amount) {
