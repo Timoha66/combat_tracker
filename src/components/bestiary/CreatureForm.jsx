@@ -22,6 +22,7 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
     : { ...EMPTY_CREATURE, ...initial }
 
   const [form, setForm] = useState(base)
+  const [tagsInput, setTagsInput] = useState((base.tags ?? []).join(', '))
   const [saving, setSaving] = useState(false)
 
   function set(field, value) {
@@ -65,13 +66,17 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
   async function handleSave() {
     if (!form.name.trim()) { alert('Введи имя'); return }
     setSaving(true)
+    const finalForm = {
+      ...form,
+      tags: tagsInput.split(',').map(t => t.trim()).filter(Boolean),
+    }
     try {
       let saved
       if (isNew) {
-        saved = await addCreature(form)
+        saved = await addCreature(finalForm)
       } else {
-        await updateCreature(form.id, form)
-        saved = form
+        await updateCreature(form.id, finalForm)
+        saved = finalForm
       }
       onSaved(saved)
     } finally {
@@ -549,11 +554,11 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
 
           {/* ── ТЕГИ И ЗАМЕТКИ ── */}
           <Section title="Теги и заметки">
-            <Field label="Теги (через запятую)">
+            <Field label="Теги (через запятую, например: лес, пещера, нежить)">
               <input className={inputCls} style={inputStyle}
-                value={(form.tags ?? []).join(', ')}
+                value={tagsInput}
                 placeholder="лес, пещера, нежить..."
-                onChange={e => set('tags', e.target.value.split(',').map(t => t.trim()).filter(Boolean))}
+                onChange={e => setTagsInput(e.target.value)}
                 onFocus={e => Object.assign(e.target.style, focusStyle)}
                 onBlur={e => Object.assign(e.target.style, inputStyle)}
               />
