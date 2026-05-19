@@ -1,6 +1,11 @@
-import { IconPencil, IconSword, IconPlus } from '@tabler/icons-react'
+import { IconPencil, IconSword } from '@tabler/icons-react'
 import { abilityMod, ABILITY_KEYS, ABILITY_LABELS, ACTION_SECTIONS } from '../../data/gameData'
-import { useBattleStore, createCombatant } from '../../store/battleStore'
+import { useBattleStore } from '../../store/battleStore'
+import { DMG_TYPES } from '../../data/constants'
+
+// id → русское название
+const DMG_LABEL = Object.fromEntries(DMG_TYPES.map(t => [t.id, t.label]))
+function dmgName(id) { return DMG_LABEL[id] ?? id }
 
 export default function StatblockView({ creature: c, onEdit }) {
   const addCombatants = useBattleStore(s => s.addCombatants)
@@ -90,13 +95,13 @@ export default function StatblockView({ creature: c, onEdit }) {
                 <StatLine label="Навыки" value={c.skills.map(s => `${s.name} ${s.bonus >= 0 ? '+' : ''}${s.bonus}`).join(', ')} />
               )}
               {c.immunities?.length > 0 && (
-                <StatLine label="Иммунитет к урону" value={c.immunities.join(', ')} color="#93c5fd" />
+                <StatLine label="Иммунитет к урону" value={c.immunities.map(dmgName).join(', ')} color="#93c5fd" />
               )}
               {c.resistances?.length > 0 && (
-                <StatLine label="Сопротивление" value={c.resistances.join(', ')} color="#4ade80" />
+                <StatLine label="Сопротивление" value={c.resistances.map(dmgName).join(', ')} color="#4ade80" />
               )}
               {c.vulnerabilities?.length > 0 && (
-                <StatLine label="Уязвимость" value={c.vulnerabilities.join(', ')} color="#f87171" />
+                <StatLine label="Уязвимость" value={c.vulnerabilities.map(dmgName).join(', ')} color="#f87171" />
               )}
               {c.conditionImmunities?.length > 0 && (
                 <StatLine label="Иммунитет к состояниям" value={c.conditionImmunities.join(', ')} />
@@ -157,7 +162,7 @@ export default function StatblockView({ creature: c, onEdit }) {
                       )}
                       {a.damage && (
                         <span className="text-sm" style={{ color: 'var(--text-dim)' }}>
-                          <em>Урон:</em> {a.damage}{a.damageType ? ` ${a.damageType}` : ''}.{' '}
+                          <em>Урон:</em> {a.damage}{a.damageType ? ` ${dmgName(a.damageType)}` : ''}.{' '}
                         </span>
                       )}
                       {a.description && (
