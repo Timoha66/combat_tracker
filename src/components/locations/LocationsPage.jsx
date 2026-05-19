@@ -9,11 +9,15 @@ export default function LocationsPage() {
   const { loadAll, loading, getFiltered, search, setSearch,
           filterCat, setFilterCat, deleteLocation, exportJSON, importJSON, resetToSeed } = useLocationsStore()
 
+  const locations = useLocationsStore(s => s.locations)
   const [viewTarget, setViewTarget] = useState(null)
   const [formOpen,   setFormOpen]   = useState(false)
   const [editTarget, setEditTarget] = useState(null)
 
   useEffect(() => { loadAll() }, [])
+
+  // Всегда берём актуальную версию из стора
+  const liveLocation = viewTarget ? locations.find(l => l.id === viewTarget.id) ?? viewTarget : null
 
   const filtered = getFiltered()
 
@@ -172,10 +176,10 @@ export default function LocationsPage() {
 
       {/* ── ПРАВАЯ ПАНЕЛЬ ── */}
       <div className="flex-1 overflow-hidden">
-        {viewTarget
+        {liveLocation
           ? <LocationView
-              location={viewTarget}
-              onEdit={() => { setEditTarget(viewTarget); setFormOpen(true) }}
+              location={liveLocation}
+              onEdit={() => { setEditTarget(liveLocation); setFormOpen(true) }}
             />
           : (
             <div className="flex items-center justify-center h-full" style={{ color: 'var(--text-muted)' }}>
