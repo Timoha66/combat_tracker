@@ -34,14 +34,16 @@ export default function StatblockView({ creature: c, onEdit }) {
     const initBonus = c.initiative ?? (c.abilities ? Math.floor((c.abilities.dex - 10) / 2) : 0)
     const initiative = Math.floor(Math.random() * 20) + 1 + initBonus
     addCombatants({
-      name:            c.name,
-      type:            c.type,
-      hp:              isPlayer ? c.hp?.max : c.hp?.average,
-      ac:              isPlayer ? c.ac : c.ac?.value,
-      resistances:     c.resistances ?? [],
-      immunities:      c.immunities ?? [],
-      vulnerabilities: c.vulnerabilities ?? [],
-      id:              c.id,
+      name:                 c.name,
+      type:                 c.type,
+      hp:                   isPlayer ? c.hp?.max : c.hp?.average,
+      ac:                   isPlayer ? c.ac : c.ac?.value,
+      resistances:          c.resistances    ?? [],
+      immunities:           c.immunities     ?? [],
+      vulnerabilities:      c.vulnerabilities ?? [],
+      legendaryActionCount: c.legendaryActionCount ?? 0,
+      legendaryResistances: c.legendaryResistances ?? 0,
+      id:                   c.id,
     }, 1, initiative)
     alert(`${c.name} добавлен в трекер с инициативой ${initiative}`)
   }
