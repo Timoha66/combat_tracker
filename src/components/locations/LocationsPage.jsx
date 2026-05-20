@@ -6,10 +6,18 @@ import LocationView from './LocationView'
 import LocationForm from './LocationForm'
 
 export default function LocationsPage() {
-  const { loadAll, loading, getFiltered, search, setSearch,
-          filterCat, setFilterCat, deleteLocation, exportJSON, importJSON, resetToSeed } = useLocationsStore()
-
-  const locations = useLocationsStore(s => s.locations)
+  const loadAll      = useLocationsStore(s => s.loadAll)
+  const loading      = useLocationsStore(s => s.loading)
+  const getFiltered  = useLocationsStore(s => s.getFiltered)
+  const search       = useLocationsStore(s => s.search)
+  const setSearch    = useLocationsStore(s => s.setSearch)
+  const filterCat    = useLocationsStore(s => s.filterCat)
+  const setFilterCat = useLocationsStore(s => s.setFilterCat)
+  const deleteLocation = useLocationsStore(s => s.deleteLocation)
+  const exportJSON   = useLocationsStore(s => s.exportJSON)
+  const importJSON   = useLocationsStore(s => s.importJSON)
+  const resetToSeed  = useLocationsStore(s => s.resetToSeed)
+  const locations    = useLocationsStore(s => s.locations)
   const [viewTarget, setViewTarget] = useState(null)
   const [formOpen,   setFormOpen]   = useState(false)
   const [editTarget, setEditTarget] = useState(null)

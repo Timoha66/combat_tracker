@@ -340,6 +340,27 @@ function FactionCard({ faction: f, onEdit, onStatusChange }) {
           </div>
         </div>
       )}
+
+      {/* Заметки ДМ */}
+      {f.dmNotes && <DmNotesBlock notes={f.dmNotes} />}
+    </div>
+  )
+}
+
+function DmNotesBlock({ notes }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="mx-4 mb-4 rounded-xl overflow-hidden" style={{ border: '1px solid rgba(167,139,250,0.3)' }}>
+      <button className="w-full flex items-center justify-between px-3 py-2 font-cinzel text-xs uppercase tracking-widest cursor-pointer"
+        style={{ background: open ? 'rgba(167,139,250,0.12)' : 'rgba(167,139,250,0.06)', color: '#c4b5fd', border: 'none' }}
+        onClick={() => setOpen(s => !s)}>
+        🔒 Заметки ДМ <span>{open ? '▲' : '▼'}</span>
+      </button>
+      {open && (
+        <div className="px-3 py-2.5" style={{ background: 'var(--bg-deep)' }}>
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-dim)', whiteSpace: 'pre-wrap' }}>{notes}</p>
+        </div>
+      )}
     </div>
   )
 }
