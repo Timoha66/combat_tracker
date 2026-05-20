@@ -15,18 +15,29 @@ export default function NpcPage() {
     search, setSearch, filterStatus, setFilterStatus,
     selectedFactionId, setSelectedFaction,
     deleteFaction, updateFactionStatus, exportJSON, resetToSeed,
-    factions,
+    factions, npcs,
   } = useNpcStore()
 
   const [viewNpc,       setViewNpc]       = useState(null)
-  const [factionForm,   setFactionForm]   = useState(null) // null | faction object | 'new'
-  const [npcForm,       setNpcForm]       = useState(null) // null | npc object | 'new'
+  const [factionForm,   setFactionForm]   = useState(null)
+  const [npcForm,       setNpcForm]       = useState(null)
+  const [mode,          setMode]          = useState('factions') // 'factions' | 'npcs'
+  const [npcSearch,     setNpcSearch]     = useState('')
 
   useEffect(() => { loadAll() }, [])
 
   const filtered    = getFilteredFactions()
   const selectedFac = factions.find(f => f.id === selectedFactionId)
   const facNpcs     = selectedFactionId ? getNpcsForFaction(selectedFactionId) : []
+
+  // Поиск по всем НПС
+  const allNpcsFiltered = npcSearch.trim()
+    ? npcs.filter(n => n.name.toLowerCase().includes(npcSearch.toLowerCase()) || n.nameEn?.toLowerCase().includes(npcSearch.toLowerCase()))
+    : npcs
+
+  function getFactionTitle(factionId) {
+    return factions.find(f => f.id === factionId)?.title ?? '—'
+  }
 
   async function handleDeleteFaction(f, e) {
     e.stopPropagation()
@@ -47,72 +58,128 @@ export default function NpcPage() {
       {/* ── ЛЕВАЯ ПАНЕЛЬ: фракции ── */}
       <div className="flex flex-col overflow-hidden shrink-0" style={{ width: 300, borderRight: '1px solid var(--border)', background: 'var(--bg-panel)' }}>
 
-        {/* Поиск */}
-        <div className="p-3 border-b" style={{ borderColor: 'var(--border)' }}>
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'var(--bg-row)', border: '1px solid var(--border-md)' }}>
-            <IconSearch size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
-            <input className="flex-1 bg-transparent outline-none text-sm" style={{ color: 'var(--text)' }}
-              placeholder="Поиск фракции..."
-              value={search} onChange={e => setSearch(e.target.value)} />
-          </div>
-        </div>
-
-        {/* Фильтр статуса */}
-        <div className="px-3 py-2 border-b flex flex-wrap gap-1" style={{ borderColor: 'var(--border)' }}>
-          <button onClick={() => setFilterStatus('all')}
-            className="font-cinzel text-[10px] px-2 py-1 rounded-md cursor-pointer"
-            style={{ background: filterStatus === 'all' ? 'var(--gold-dim)' : 'var(--bg-row)', color: filterStatus === 'all' ? 'var(--gold)' : 'var(--text-muted)', border: `1px solid ${filterStatus === 'all' ? 'rgba(226,201,126,0.4)' : 'var(--border)'}` }}>
-            Все
-          </button>
-          {FACTION_STATUSES.map(s => (
-            <button key={s.id} onClick={() => setFilterStatus(s.id)}
-              className="font-cinzel text-[10px] px-2 py-1 rounded-md cursor-pointer"
-              style={{ background: filterStatus === s.id ? `${s.color}22` : 'var(--bg-row)', color: filterStatus === s.id ? s.color : 'var(--text-muted)', border: `1px solid ${filterStatus === s.id ? s.color + '55' : 'var(--border)'}` }}>
-              {s.icon}
+        {/* Вкладки режима */}
+        <div className="flex border-b shrink-0" style={{ borderColor: 'var(--border)' }}>
+          {[{ id: 'factions', label: 'Фракции' }, { id: 'npcs', label: 'Все НПС' }].map(tab => (
+            <button key={tab.id} onClick={() => setMode(tab.id)}
+              className="flex-1 font-cinzel text-xs py-2.5 tracking-wide transition-colors cursor-pointer"
+              style={{
+                color: mode === tab.id ? 'var(--gold)' : 'var(--text-muted)',
+                borderBottom: `2px solid ${mode === tab.id ? 'var(--gold)' : 'transparent'}`,
+                background: 'none',
+              }}>
+              {tab.label}
             </button>
           ))}
         </div>
 
-        {/* Кнопка добавления */}
-        <div className="px-3 py-2 border-b" style={{ borderColor: 'var(--border)' }}>
-          <button className="btn btn-add w-full justify-center" style={{ fontSize: 12 }} onClick={() => setFactionForm('new')}>
-            <IconPlus size={13} /> Добавить фракцию
-          </button>
-        </div>
-
-        {/* Список фракций */}
-        <div className="flex-1 overflow-y-auto px-2 py-2">
-          {loading && <div className="text-center py-8 font-cinzel text-xs" style={{ color: 'var(--text-muted)' }}>Загрузка...</div>}
-          {filtered.map(f => {
-            const st       = FACTION_STATUS_MAP[f.status] ?? FACTION_STATUS_MAP['unknown']
-            const npcCount = getNpcsForFaction(f.id).length
-            const isActive = selectedFactionId === f.id
-            return (
-              <div key={f.id}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg mb-1 cursor-pointer transition-all"
-                style={{ background: isActive ? 'var(--gold-dim)' : 'var(--bg-row)', border: `1px solid ${isActive ? 'rgba(226,201,126,0.35)' : 'var(--border)'}` }}
-                onClick={() => setSelectedFaction(f.id)}
-              >
-                <span className="text-base shrink-0" title={st.label}>{st.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="font-cinzel text-sm font-semibold truncate" style={{ color: isActive ? 'var(--gold)' : 'var(--text)' }}>{f.title}</div>
-                  {f.type && <div className="font-cinzel text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>{f.type}</div>}
-                </div>
-                {npcCount > 0 && (
-                  <span className="font-cinzel text-[10px] shrink-0" style={{ color: 'var(--text-muted)' }}>{npcCount} НПС</span>
-                )}
-                <div className="flex gap-1 shrink-0">
-                  <button className="icon-btn" style={{ width: 20, height: 20 }} onClick={e => { e.stopPropagation(); setFactionForm(f) }} title="Редактировать"><IconPencil size={10} /></button>
-                  <button className="icon-btn" style={{ width: 20, height: 20 }} onClick={e => handleDeleteFaction(f, e)} title="Удалить"
-                    onMouseEnter={e => { e.currentTarget.style.color = '#f87171' }}
-                    onMouseLeave={e => { e.currentTarget.style.color = '' }}>
-                    <IconTrash size={10} />
-                  </button>
-                </div>
+        {mode === 'factions' ? (
+          <>
+            {/* Поиск фракций */}
+            <div className="p-3 border-b" style={{ borderColor: 'var(--border)' }}>
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'var(--bg-row)', border: '1px solid var(--border-md)' }}>
+                <IconSearch size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                <input className="flex-1 bg-transparent outline-none text-sm" style={{ color: 'var(--text)' }}
+                  placeholder="Поиск фракции..." value={search} onChange={e => setSearch(e.target.value)} />
               </div>
-            )
-          })}
-        </div>
+            </div>
+
+            {/* Фильтр статуса */}
+            <div className="px-3 py-2 border-b flex flex-wrap gap-1" style={{ borderColor: 'var(--border)' }}>
+              <button onClick={() => setFilterStatus('all')}
+                className="font-cinzel text-[10px] px-2 py-1 rounded-md cursor-pointer"
+                style={{ background: filterStatus === 'all' ? 'var(--gold-dim)' : 'var(--bg-row)', color: filterStatus === 'all' ? 'var(--gold)' : 'var(--text-muted)', border: `1px solid ${filterStatus === 'all' ? 'rgba(226,201,126,0.4)' : 'var(--border)'}` }}>
+                Все
+              </button>
+              {FACTION_STATUSES.map(s => (
+                <button key={s.id} onClick={() => setFilterStatus(s.id)}
+                  className="font-cinzel text-[10px] px-2 py-1 rounded-md cursor-pointer"
+                  style={{ background: filterStatus === s.id ? `${s.color}22` : 'var(--bg-row)', color: filterStatus === s.id ? s.color : 'var(--text-muted)', border: `1px solid ${filterStatus === s.id ? s.color + '55' : 'var(--border)'}` }}>
+                  {s.icon}
+                </button>
+              ))}
+            </div>
+
+            {/* Кнопка добавления фракции */}
+            <div className="px-3 py-2 border-b" style={{ borderColor: 'var(--border)' }}>
+              <button className="btn btn-add w-full justify-center" style={{ fontSize: 12 }} onClick={() => setFactionForm('new')}>
+                <IconPlus size={13} /> Добавить фракцию
+              </button>
+            </div>
+
+            {/* Список фракций */}
+            <div className="flex-1 overflow-y-auto px-2 py-2">
+              {loading && <div className="text-center py-8 font-cinzel text-xs" style={{ color: 'var(--text-muted)' }}>Загрузка...</div>}
+              {filtered.map(f => {
+                const st       = FACTION_STATUS_MAP[f.status] ?? FACTION_STATUS_MAP['unknown']
+                const npcCount = getNpcsForFaction(f.id).length
+                const isActive = selectedFactionId === f.id
+                return (
+                  <div key={f.id}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg mb-1 cursor-pointer transition-all"
+                    style={{ background: isActive ? 'var(--gold-dim)' : 'var(--bg-row)', border: `1px solid ${isActive ? 'rgba(226,201,126,0.35)' : 'var(--border)'}` }}
+                    onClick={() => setSelectedFaction(f.id)}
+                  >
+                    <span className="text-base shrink-0" title={st.label}>{st.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-cinzel text-sm font-semibold truncate" style={{ color: isActive ? 'var(--gold)' : 'var(--text)' }}>{f.title}</div>
+                      {f.type && <div className="font-cinzel text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>{f.type}</div>}
+                    </div>
+                    {npcCount > 0 && <span className="font-cinzel text-[10px] shrink-0" style={{ color: 'var(--text-muted)' }}>{npcCount} НПС</span>}
+                    <div className="flex gap-1 shrink-0">
+                      <button className="icon-btn" style={{ width: 20, height: 20 }} onClick={e => { e.stopPropagation(); setFactionForm(f) }}><IconPencil size={10} /></button>
+                      <button className="icon-btn" style={{ width: 20, height: 20 }} onClick={e => handleDeleteFaction(f, e)}
+                        onMouseEnter={e => { e.currentTarget.style.color = '#f87171' }}
+                        onMouseLeave={e => { e.currentTarget.style.color = '' }}>
+                        <IconTrash size={10} />
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Поиск по НПС */}
+            <div className="p-3 border-b" style={{ borderColor: 'var(--border)' }}>
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'var(--bg-row)', border: '1px solid var(--border-md)' }}>
+                <IconSearch size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                <input className="flex-1 bg-transparent outline-none text-sm" style={{ color: 'var(--text)' }}
+                  placeholder="Поиск по имени НПС..."
+                  autoFocus
+                  value={npcSearch}
+                  onChange={e => setNpcSearch(e.target.value)} />
+              </div>
+            </div>
+            <div className="px-3 py-2 border-b" style={{ borderColor: 'var(--border)' }}>
+              <button className="btn btn-add w-full justify-center" style={{ fontSize: 12 }} onClick={() => setNpcForm('new')}>
+                <IconUserPlus size={13} /> Добавить НПС
+              </button>
+            </div>
+            {/* Список всех НПС */}
+            <div className="flex-1 overflow-y-auto px-2 py-2">
+              {allNpcsFiltered.length === 0 && (
+                <div className="text-center py-8" style={{ color: 'var(--text-muted)' }}>
+                  <div className="font-cinzel text-xs">Ничего не найдено</div>
+                </div>
+              )}
+              {allNpcsFiltered.map(npc => (
+                <div key={npc.id}
+                  className="px-3 py-2 rounded-lg mb-1 cursor-pointer transition-all"
+                  style={{ background: 'var(--bg-row)', border: '1px solid var(--border)' }}
+                  onClick={() => setViewNpc(npc)}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(226,201,126,0.3)'}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+                >
+                  <div className="font-cinzel text-sm font-semibold" style={{ color: 'var(--text)' }}>{npc.name}</div>
+                  {npc.role && <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{npc.role}</div>}
+                  <div className="font-cinzel text-[9px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{getFactionTitle(npc.factionId)}</div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
 
         {/* Экспорт / Сброс */}
         <div className="px-3 py-2 border-t flex gap-2" style={{ borderColor: 'var(--border)' }}>
