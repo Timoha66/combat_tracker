@@ -227,11 +227,27 @@ export default function WeatherPage() {
 
         {/* Итоговая СЛ */}
         <div className="rounded-xl px-5 py-4 text-center" style={{ background: 'var(--bg-panel)', border: '1px solid var(--border)' }}>
-          <div className="font-cinzel text-xs uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Итоговая СЛ навигации</div>
-          <div className="font-cinzel text-5xl font-bold mb-1" style={{ color: 'var(--gold)' }}>{dc}</div>
-          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-            СЛ {pace?.dc} (темп) + {weather?.dcMod} (погода)
-          </div>
+          {weather?.maxPace === 0 ? (
+            <>
+              <div className="font-cinzel text-xs uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Навигация</div>
+              <div className="font-cinzel text-xl font-bold mb-1" style={{ color: '#ef4444' }}>⛔ Движение невозможно</div>
+              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>Катастрофа — укрытие обязательно</div>
+            </>
+          ) : (
+            <>
+              <div className="font-cinzel text-xs uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Итоговая СЛ навигации</div>
+              <div className="font-cinzel text-5xl font-bold mb-1" style={{ color: 'var(--gold)' }}>{dc}</div>
+              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                СЛ {pace?.dc} (темп) + {weather?.dcMod} (погода)
+              </div>
+              {weather?.disadv && (
+                <div className="mt-2 font-cinzel text-xs px-3 py-1.5 rounded-lg"
+                  style={{ background: 'rgba(167,139,250,0.15)', color: '#c4b5fd', border: '0.5px solid rgba(167,139,250,0.4)' }}>
+                  ⚠️ Помеха на бросок навигации
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {/* Бросок */}
