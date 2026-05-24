@@ -311,3 +311,31 @@
   float: left;
   height: 0;
 }
+
+/* ── JOURNAL TABLES ── */
+.journal-editor .ProseMirror table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+  font-size: 13px;
+}
+.journal-editor .ProseMirror th,
+.journal-editor .ProseMirror td {
+  border: 1px solid var(--border-md);
+  padding: 6px 10px;
+  text-align: left;
+  color: var(--text-dim);
+  min-width: 80px;
+}
+.journal-editor .ProseMirror th {
+  background: rgba(226,201,126,0.08);
+  color: var(--gold);
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+.journal-editor .ProseMirror td.selectedCell,
+.journal-editor .ProseMirror th.selectedCell {
+  background: rgba(226,201,126,0.12);
+}
