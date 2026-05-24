@@ -8,7 +8,6 @@ import LocationForm from './LocationForm'
 export default function LocationsPage() {
   const loadAll      = useLocationsStore(s => s.loadAll)
   const loading      = useLocationsStore(s => s.loading)
-  const getFiltered  = useLocationsStore(s => s.getFiltered)
   const search       = useLocationsStore(s => s.search)
   const setSearch    = useLocationsStore(s => s.setSearch)
   const filterCat    = useLocationsStore(s => s.filterCat)
@@ -27,7 +26,6 @@ export default function LocationsPage() {
   // Всегда берём актуальную версию из стора
   const liveLocation = viewTarget ? locations.find(l => l.id === viewTarget.id) ?? viewTarget : null
 
-  const filtered = getFiltered()
 
   // Группируем по категориям для отображения
   const byCat = {}
@@ -64,12 +62,20 @@ export default function LocationsPage() {
     }
   }
 
-  const [localSearch, setLocalSearch] = useState(search)
+  const [localSearch, setLocalSearch] = useState('')
 
   function handleSearchChange(e) {
     setLocalSearch(e.target.value)
     setSearch(e.target.value)
   }
+
+  // Фильтруем прямо здесь — реактивно по localSearch и filterCat
+  const filtered = locations.filter(l => {
+    if (localSearch && !l.title.toLowerCase().includes(localSearch.toLowerCase()) &&
+        !l.en?.toLowerCase().includes(localSearch.toLowerCase())) return false
+    if (filterCat !== 'all' && l.cat !== filterCat) return false
+    return true
+  })
 
   return (
     <div className="flex flex-1 overflow-hidden">
