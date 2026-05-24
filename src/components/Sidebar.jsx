@@ -1,11 +1,12 @@
-import { IconHome, IconSword, IconMap, IconUsers, IconBook } from '@tabler/icons-react'
+import { IconHome, IconSword, IconMap, IconUsers, IconBook, IconCloud } from '@tabler/icons-react'
 
 const NAV_ITEMS = [
-  { id: 'home',      icon: <IconHome size={20} />,  label: 'Домой' },
-  { id: 'tracker',   icon: <IconSword size={20} />, label: 'Трекер' },
-  { id: 'locations', icon: <IconMap size={20} />,   label: 'Локации' },
-  { id: 'npcs',      icon: <IconUsers size={20} />, label: 'НПС и фракции' },
-  { id: 'journal',   icon: <IconBook size={20} />,  label: 'Журнал кампании' },
+  { id: 'home',      icon: <IconHome size={20} />,   label: 'Домой' },
+  { id: 'tracker',   icon: <IconSword size={20} />,  label: 'Трекер' },
+  { id: 'locations', icon: <IconMap size={20} />,    label: 'Локации' },
+  { id: 'npcs',      icon: <IconUsers size={20} />,  label: 'НПС и фракции' },
+  { id: 'journal',   icon: <IconBook size={20} />,   label: 'Журнал кампании' },
+  { id: 'weather',   icon: <IconCloud size={20} />,  label: 'Погода и навигация' },
 ]
 
 export default function Sidebar({ page, onNavigate }) {
