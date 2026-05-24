@@ -197,6 +197,7 @@ export default function LocationsPage() {
       <div className="flex-1 overflow-hidden">
         {liveLocation
           ? <LocationView
+              key={liveLocation.id}
               location={liveLocation}
               onEdit={() => { setEditTarget(liveLocation); setFormOpen(true) }}
             />
