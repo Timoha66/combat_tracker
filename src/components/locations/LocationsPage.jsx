@@ -27,6 +27,19 @@ export default function LocationsPage() {
   const liveLocation = viewTarget ? locations.find(l => l.id === viewTarget.id) ?? viewTarget : null
 
 
+  const [localSearch, setLocalSearch] = useState('')
+
+  function handleSearchChange(e) {
+    setLocalSearch(e.target.value)
+  }
+
+  const filtered = locations.filter(l => {
+    if (localSearch && !l.title.toLowerCase().includes(localSearch.toLowerCase()) &&
+        !l.en?.toLowerCase().includes(localSearch.toLowerCase())) return false
+    if (filterCat !== 'all' && l.cat !== filterCat) return false
+    return true
+  })
+
   // Группируем по категориям для отображения
   const byCat = {}
   filtered.forEach(l => {
@@ -61,21 +74,6 @@ export default function LocationsPage() {
       setViewTarget(null)
     }
   }
-
-  const [localSearch, setLocalSearch] = useState('')
-
-  function handleSearchChange(e) {
-    setLocalSearch(e.target.value)
-    setSearch(e.target.value)
-  }
-
-  // Фильтруем прямо здесь — реактивно по localSearch и filterCat
-  const filtered = locations.filter(l => {
-    if (localSearch && !l.title.toLowerCase().includes(localSearch.toLowerCase()) &&
-        !l.en?.toLowerCase().includes(localSearch.toLowerCase())) return false
-    if (filterCat !== 'all' && l.cat !== filterCat) return false
-    return true
-  })
 
   return (
     <div className="flex flex-1 overflow-hidden">
