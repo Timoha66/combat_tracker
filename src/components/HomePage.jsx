@@ -15,7 +15,7 @@ export default function HomePage({ onNavigate }) {
         <div className="font-cinzel text-4xl font-bold tracking-widest mb-2" style={{ color: 'var(--gold)' }}>⚔ DM Toolkit</div>
         <div className="font-cinzel text-sm tracking-widest uppercase" style={{ color: 'var(--text-muted)' }}>Инструментарий Мастера подземелий</div>
       </div>
-      <div className="grid gap-3 w-full" style={{ maxWidth: 1000, gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
+      <div className="grid gap-3 w-full" style={{ maxWidth: 900, gridTemplateColumns: 'repeat(4, 1fr)' }}>
         {SECTIONS.map(s => (
           <button key={s.id} onClick={() => onNavigate(s.id)}
             className="flex flex-col items-start gap-3 p-5 rounded-2xl text-left transition-all cursor-pointer"
