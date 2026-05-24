@@ -103,7 +103,12 @@ export function FactionForm({ initial, onClose, onSaved }) {
 export function NpcForm({ initial, factionId, factions, onClose, onSaved }) {
   const { addNpc, updateNpc } = useNpcStore()
   const isNew = !initial?.id
-  const [form,   setForm]   = useState({ ...EMPTY_NPC, factionId: factionId ?? null, ...initial })
+
+  // Совместимость: старый factionId → новый factionIds
+  const initFactionIds = initial?.factionIds
+    ?? (initial?.factionId ? [initial.factionId] : factionId ? [factionId] : [])
+
+  const [form,   setForm]   = useState({ ...EMPTY_NPC, ...initial, factionIds: initFactionIds })
   const [saving, setSaving] = useState(false)
 
   function set(field, val) { setForm(f => ({ ...f, [field]: val })) }
@@ -141,11 +146,23 @@ export function NpcForm({ initial, factionId, factions, onClose, onSaved }) {
               <FormField label="Имя (англ.)"><input className={iCls} style={iStyle} value={form.nameEn} onChange={e => set('nameEn', e.target.value)} /></FormField>
               <FormField label="Роль / Должность"><input className={iCls} style={iStyle} value={form.role} placeholder="Торговый принц, Проводник..." onChange={e => set('role', e.target.value)} /></FormField>
               <FormField label="Мировоззрение"><input className={iCls} style={iStyle} value={form.alignment} placeholder="ЗД, НЗ, Н..." onChange={e => set('alignment', e.target.value)} /></FormField>
-              <FormField label="Фракция">
-                <select className={iCls} style={{ ...iStyle, cursor: 'pointer' }} value={form.factionId ?? ''} onChange={e => set('factionId', Number(e.target.value) || null)}>
-                  <option value="">— Без фракции —</option>
-                  {factions.map(f => <option key={f.id} value={f.id}>{f.title}</option>)}
-                </select>
+              <FormField label="Фракции">
+                <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-md)', maxHeight: 160, overflowY: 'auto' }}>
+                  {factions.map(f => {
+                    const checked = (form.factionIds ?? []).includes(f.id)
+                    return (
+                      <label key={f.id} className="flex items-center gap-2 px-3 py-1.5 cursor-pointer transition-colors"
+                        style={{ background: checked ? 'var(--gold-dim)' : 'transparent', borderBottom: '0.5px solid var(--border)' }}>
+                        <input type="checkbox" checked={checked}
+                          onChange={e => {
+                            const ids = form.factionIds ?? []
+                            set('factionIds', e.target.checked ? [...ids, f.id] : ids.filter(id => id !== f.id))
+                          }} />
+                        <span className="font-cinzel text-xs" style={{ color: checked ? 'var(--gold)' : 'var(--text-dim)' }}>{f.title}</span>
+                      </label>
+                    )
+                  })}
+                </div>
               </FormField>
               <FormField label="Теги (через запятую)">
                 <input className={iCls} style={iStyle} value={(form.tags ?? []).join(', ')}

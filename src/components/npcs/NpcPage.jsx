@@ -35,8 +35,9 @@ export default function NpcPage() {
     ? npcs.filter(n => n.name.toLowerCase().includes(npcSearch.toLowerCase()) || n.nameEn?.toLowerCase().includes(npcSearch.toLowerCase()))
     : npcs
 
-  function getFactionTitle(factionId) {
-    return factions.find(f => f.id === factionId)?.title ?? '—'
+  function getFactionTitles(npc) {
+    const ids = Array.isArray(npc.factionIds) ? npc.factionIds : (npc.factionId ? [npc.factionId] : [])
+    return ids.map(id => factions.find(f => f.id === id)?.title).filter(Boolean).join(', ') || '—'
   }
 
   async function handleDeleteFaction(f, e) {
@@ -174,7 +175,7 @@ export default function NpcPage() {
                 >
                   <div className="font-cinzel text-sm font-semibold" style={{ color: 'var(--text)' }}>{npc.name}</div>
                   {npc.role && <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{npc.role}</div>}
-                  <div className="font-cinzel text-[9px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{getFactionTitle(npc.factionId)}</div>
+                  <div className="font-cinzel text-[9px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{getFactionTitles(npc)}</div>
                 </div>
               ))}
             </div>

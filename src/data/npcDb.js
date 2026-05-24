@@ -32,8 +32,7 @@ export const EMPTY_FACTION = {
 }
 
 export const EMPTY_NPC = {
-  factionId:   null,
-  factionSlug: '',
+  factionIds:  [],
   name:        '',
   nameEn:      '',
   role:        '',

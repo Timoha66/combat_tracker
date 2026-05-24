@@ -71,7 +71,10 @@ export const useNpcStore = create((set, get) => ({
   },
 
   getNpcsForFaction(factionId) {
-    return get().npcs.filter(n => n.factionId === factionId)
+    return get().npcs.filter(n => {
+      const ids = Array.isArray(n.factionIds) ? n.factionIds : (n.factionId ? [n.factionId] : [])
+      return ids.includes(factionId)
+    })
   },
 
   // ── ФИЛЬТРЫ ─────────────────────────────────────────────────────────────────
