@@ -10,6 +10,7 @@ import CombatLog from './components/CombatLog'
 import BestiaryPage from './components/bestiary/BestiaryPage'
 import LocationsPage from './components/locations/LocationsPage'
 import NpcPage from './components/npcs/NpcPage'
+import JournalPage from './components/journal/JournalPage'
 import {
   ConditionPicker, AcPopover, ReviveModal, StatblockModal, BattleSummary,
 } from './components/modals.jsx'
@@ -97,6 +98,7 @@ export default function App() {
         {/* ── ЛОКАЦИИ ── */}
         {page === 'locations' && <LocationsPage />}
         {page === 'npcs' && <NpcPage />}
+        {page === 'journal' && <JournalPage />}
 
       </div>
     </div>
