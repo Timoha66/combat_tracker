@@ -64,6 +64,13 @@ export default function LocationsPage() {
     }
   }
 
+  const [localSearch, setLocalSearch] = useState(search)
+
+  function handleSearchChange(e) {
+    setLocalSearch(e.target.value)
+    setSearch(e.target.value)
+  }
+
   return (
     <div className="flex flex-1 overflow-hidden">
       {/* ── ЛЕВАЯ ПАНЕЛЬ ── */}
@@ -75,7 +82,7 @@ export default function LocationsPage() {
             <IconSearch size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
             <input className="flex-1 bg-transparent outline-none text-sm" style={{ color: 'var(--text)' }}
               placeholder="Поиск..."
-              value={search} onChange={e => setSearch(e.target.value)} />
+              value={localSearch} onChange={handleSearchChange} />
           </div>
         </div>
 
