@@ -1,16 +1,49 @@
 import { useState } from 'react'
-import { IconX, IconPencil, IconTrash } from '@tabler/icons-react'
+import { IconX, IconPencil, IconTrash, IconBook2 } from '@tabler/icons-react'
 import { useNpcStore } from '../../store/npcStore'
+import { useBestiaryStore } from '../../store/bestiaryStore'
+import StatblockView from '../bestiary/StatblockView'
 
 export default function NpcModal({ npc, onClose, onEdit }) {
-  const [showSecret, setShowSecret] = useState(false)
-  const deleteNpc = useNpcStore(s => s.deleteNpc)
+  const [showSecret,    setShowSecret]    = useState(false)
+  const [showStatblock, setShowStatblock] = useState(null) // creature object | null
+  const deleteNpc  = useNpcStore(s => s.deleteNpc)
+  const creatures  = useBestiaryStore(s => s.creatures)
+  const loadAll    = useBestiaryStore(s => s.loadAll)
+
+  // Частичное совпадение в обе стороны
+  const bestiaryMatches = creatures.filter(c => {
+    const cName   = c.name.toLowerCase()
+    const npcName = npc.name.toLowerCase()
+    return cName.includes(npcName) || npcName.includes(cName)
+  })
+
+  useState(() => { loadAll() }, [])
 
   async function handleDelete() {
     if (confirm(`Удалить НПС «${npc.name}»?`)) {
       await deleteNpc(npc.id)
       onClose()
     }
+  }
+
+  // Показываем статблок из бестиария
+  if (showStatblock) {
+    return (
+      <div className="overlay" style={{ zIndex: 300 }}>
+        <div className="flex flex-col rounded-2xl overflow-hidden"
+          style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-md)', width: 600, maxWidth: '95vw', maxHeight: '88vh' }}>
+          <div className="flex items-center gap-3 px-5 py-3 border-b shrink-0" style={{ borderColor: 'var(--border)' }}>
+            <span className="font-cinzel text-sm font-semibold" style={{ color: 'var(--text)' }}>Статблок — {showStatblock.name}</span>
+            <button className="btn btn-ghost ml-auto" style={{ fontSize: 11 }} onClick={() => setShowStatblock(null)}>← Назад</button>
+            <button className="icon-btn" onClick={onClose}><IconX size={15} /></button>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <StatblockView creature={showStatblock} onEdit={() => {}} />
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -33,7 +66,12 @@ export default function NpcModal({ npc, onClose, onEdit }) {
               ))}
             </div>
           </div>
-          <div className="flex gap-1 shrink-0">
+          <div className="flex gap-1 shrink-0 flex-wrap">
+            {bestiaryMatches.map(c => (
+              <button key={c.id} className="btn btn-ghost" style={{ fontSize: 11 }} onClick={() => setShowStatblock(c)}>
+                <IconBook2 size={13} /> {bestiaryMatches.length > 1 ? c.name : 'Статблок'}
+              </button>
+            ))}
             <button className="btn btn-ghost" style={{ fontSize: 11 }} onClick={onEdit}><IconPencil size={13} /> Изменить</button>
             <button className="icon-btn" onClick={handleDelete} title="Удалить"
               onMouseEnter={e => { e.currentTarget.style.color = '#f87171'; e.currentTarget.style.borderColor = 'rgba(248,113,113,0.4)' }}
