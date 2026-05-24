@@ -104,9 +104,10 @@ export const useWeatherStore = create(
       resolveNavigation() {
         const { navRoll, selectedPace, currentWeather } = get()
         const roll = parseInt(navRoll)
-        if (isNaN(roll) || roll < 1 || roll > 20) return
+        if (isNaN(roll) || roll < 1) return
         const dc = (PACE[selectedPace]?.dc ?? 15) + (WEATHER[currentWeather]?.dcMod ?? 0)
-        const result = getNavResult(roll, dc)
+        const natural = roll <= 20 ? roll : 19
+        const result = getNavResult(natural, roll, dc)
         set({ navResult: result })
       },
 

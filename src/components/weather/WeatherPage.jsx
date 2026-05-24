@@ -37,9 +37,11 @@ export default function WeatherPage() {
   }
 
   function handleResolve() {
-    const roll = parseInt(localRoll)
-    if (isNaN(roll) || roll < 1 || roll > 20) return
-    const result = getNavResult(roll, dc)
+    const total = parseInt(localRoll)
+    if (isNaN(total) || total < 2) return
+    // Натуральный бросок для крит-проверки — только если значение 2-19
+    const natural = total <= 19 ? total : 19
+    const result = getNavResult(natural, total, dc)
     useWeatherStore.setState({ navResult: result })
   }
 
@@ -197,7 +199,8 @@ export default function WeatherPage() {
             {PACE_SCALE.map(key => {
               const p        = PACE[key]
               const isActive = selectedPace === key
-              const disabled = WEATHER_SCALE.indexOf(currentWeather) >= (weather?.maxPace ?? 4)
+              const paceIdx  = PACE_SCALE.indexOf(key)
+              const disabled = paceIdx >= (weather?.maxPace ?? 4)
               return (
                 <button key={key}
                   onClick={() => setSelectedPace(key)}
@@ -233,14 +236,33 @@ export default function WeatherPage() {
 
         {/* Бросок */}
         <div className="rounded-xl p-4" style={{ background: 'var(--bg-panel)', border: '1px solid var(--border)' }}>
-          <div className="font-cinzel text-xs uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>Результат броска (1–20)</div>
+          <div className="font-cinzel text-xs uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>Результат проверки</div>
+
+          {/* Крит кнопки */}
+          <div className="flex gap-2 mb-2">
+            <button className="flex-1 btn font-cinzel text-xs py-2 justify-center rounded-lg cursor-pointer"
+              style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.35)' }}
+              onClick={() => { setLocalRoll('1'); useWeatherStore.setState({ navResult: getNavResult(1, 1, dc) }) }}>
+              💀 Крит-провал (1)
+            </button>
+            <button className="flex-1 btn font-cinzel text-xs py-2 justify-center rounded-lg cursor-pointer"
+              style={{ background: 'rgba(52,211,153,0.15)', color: '#34d399', border: '1px solid rgba(52,211,153,0.35)' }}
+              onClick={() => { setLocalRoll('20'); useWeatherStore.setState({ navResult: getNavResult(20, 20, dc) }) }}>
+              ⭐ Крит-успех (20)
+            </button>
+          </div>
+
+          {/* Обычный бросок */}
+          <div className="font-cinzel text-[10px] mb-1.5" style={{ color: 'var(--text-muted)' }}>
+            Или введи результат (может быть выше 20 с бонусами):
+          </div>
           <div className="flex gap-2 mb-3">
             <input
-              type="number" min="1" max="20"
+              type="number" min="2" max="99"
               value={localRoll}
               onChange={handleRollInput}
               onKeyDown={e => e.key === 'Enter' && handleResolve()}
-              placeholder="Введи бросок"
+              placeholder="Итог броска"
               className="flex-1 rounded-lg px-4 py-3 text-center font-cinzel text-2xl font-bold outline-none"
               style={{ background: 'var(--bg-deep)', border: '1px solid var(--border-md)', color: 'var(--text)' }}
             />
