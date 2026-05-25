@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
   IconSearch, IconPlus, IconPencil, IconTrash,
-  IconDownload, IconRefresh, IconUsers, IconUserPlus,
+  IconDownload, IconUpload, IconRefresh, IconUsers, IconUserPlus,
 } from '@tabler/icons-react'
 import { useNpcStore } from '../../store/npcStore'
 import { FACTION_STATUSES, FACTION_STATUS_MAP } from '../../data/npcDb'
@@ -14,7 +14,7 @@ export default function NpcPage() {
     loadAll, loading, getFilteredFactions, getNpcsForFaction,
     search, setSearch, filterStatus, setFilterStatus,
     selectedFactionId, setSelectedFaction,
-    deleteFaction, updateFactionStatus, exportJSON, resetToSeed,
+    deleteFaction, updateFactionStatus, exportJSON, importJSON, resetToSeed,
     factions, npcs,
   } = useNpcStore()
 
@@ -182,9 +182,20 @@ export default function NpcPage() {
           </>
         )}
 
-        {/* Экспорт / Сброс */}
+        {/* Экспорт / Импорт / Сброс */}
         <div className="px-3 py-2 border-t flex gap-2" style={{ borderColor: 'var(--border)' }}>
-          <button className="btn btn-ghost flex-1 justify-center" style={{ fontSize: 11 }} onClick={exportJSON}><IconDownload size={13} /> Экспорт</button>
+          <button className="btn btn-ghost flex-1 justify-center" style={{ fontSize: 11 }} onClick={exportJSON}>
+            <IconDownload size={13} /> Экспорт
+          </button>
+          <label className="btn btn-ghost flex-1 justify-center cursor-pointer" style={{ fontSize: 11 }}>
+            <IconUpload size={13} /> Импорт
+            <input type="file" accept=".json" className="hidden"
+              onChange={e => {
+                const f = e.target.files[0]
+                if (f) importJSON(f).catch(err => alert('Ошибка импорта: ' + err.message))
+                e.target.value = ''
+              }} />
+          </label>
         </div>
         <div className="px-3 pb-3">
           <button className="btn w-full justify-center" style={{ fontSize: 11, background: 'none', color: 'var(--text-muted)', borderColor: 'var(--border)' }} onClick={handleReset}>

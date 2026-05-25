@@ -106,6 +106,24 @@ export const useNpcStore = create((set, get) => ({
     URL.revokeObjectURL(url)
   },
 
+  async importJSON(file) {
+    const text = await file.text()
+    const data = JSON.parse(text)
+    if (!data.factions || !data.npcs) throw new Error('Неверный формат файла')
+    const toFactions = data.factions.map(({ id, ...rest }) => rest)
+    const newIds = await npcDb.factions.bulkAdd(toFactions, { allKeys: true })
+    // Маппим старые id фракций на новые
+    const idMap = {}
+    data.factions.forEach((f, i) => { idMap[f.id] = newIds[i] })
+    const toNpcs = data.npcs.map(({ id, factionId, factionIds, ...rest }) => ({
+      ...rest,
+      factionId:  factionId  ? (idMap[factionId]  ?? factionId)  : null,
+      factionIds: factionIds ? factionIds.map(fid => idMap[fid] ?? fid) : [],
+    }))
+    await npcDb.npcs.bulkAdd(toNpcs)
+    await get().loadAll()
+  },
+
   async resetToSeed() {
     await npcDb.factions.clear()
     await npcDb.npcs.clear()
