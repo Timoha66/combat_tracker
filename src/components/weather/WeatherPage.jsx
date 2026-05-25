@@ -71,7 +71,7 @@ export default function WeatherPage() {
     <div className="flex flex-1 overflow-hidden">
 
       {/* ── ЛЕВАЯ КОЛОНКА: Погода ── */}
-      <div className="flex flex-col overflow-y-auto p-5 gap-4" style={{ width: 440, borderRight: '1px solid var(--border)' }}>
+      <div className="flex flex-col overflow-y-auto p-5 gap-4" style={{ width: 500, borderRight: '1px solid var(--border)' }}>
 
         {/* Шапка с текущей погодой */}
         <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${weatherScaleColors[currentWeather]}55`, background: `${weatherScaleColors[currentWeather]}0a` }}>
@@ -107,16 +107,27 @@ export default function WeatherPage() {
             )}
 
             {/* Теги по группам */}
-            <div className="flex flex-wrap gap-1 mb-3">
+            <div className="flex flex-wrap gap-1.5 mb-3">
               {(weather?.tags ?? []).map((tag, i) => {
                 const grp = TAG_GROUPS[tag.g] ?? TAG_GROUPS.danger
                 return (
-                  <span key={i} className="font-cinzel text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1"
-                    style={{ background: `${grp.color}15`, color: grp.color, border: `0.5px solid ${grp.color}44` }}>
-                    <span style={{ fontSize: 8 }}>{grp.dot}</span>{tag.t}
+                  <span key={i} className="font-cinzel text-xs px-2.5 py-1 rounded-full flex items-center gap-1"
+                    style={{ background: `${grp.color}18`, color: grp.color, border: `1px solid ${grp.color}55` }}>
+                    <span style={{ fontSize: 10 }}>{grp.dot}</span>{tag.t}
                   </span>
                 )
               })}
+            </div>
+
+            {/* Легенда */}
+            <div className="flex flex-wrap gap-2">
+              {Object.values(TAG_GROUPS).map(grp => (
+                <span key={grp.label} className="font-cinzel flex items-center gap-1"
+                  style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+                  <span style={{ fontSize: 9 }}>{grp.dot}</span>
+                  <span style={{ color: grp.color }}>{grp.label}</span>
+                </span>
+              ))}
             </div>
 
             {/* Характеристики погоды */}
