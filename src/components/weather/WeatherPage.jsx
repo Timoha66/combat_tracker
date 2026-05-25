@@ -107,7 +107,7 @@ export default function WeatherPage() {
             )}
 
             {/* Теги по группам */}
-            <div className="flex flex-wrap gap-1.5 mb-3">
+            <div className="flex flex-wrap gap-1.5 mb-3 overflow-y-auto" style={{ maxHeight: 140 }}>
               {(weather?.tags ?? []).map((tag, i) => {
                 const grp = TAG_GROUPS[tag.g] ?? TAG_GROUPS.danger
                 return (
