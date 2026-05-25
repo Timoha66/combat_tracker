@@ -168,7 +168,7 @@ export default function WeatherPage() {
                 )
               })}
             </div>
-            <div className="font-cinzel text-[9px] text-center" style={{ color: 'var(--text-muted)', maxWidth: 320 }}>
+            <div className="font-cinzel text-[10px] text-center mt-1" style={{ color: 'var(--text-dim)', maxWidth: 320 }}>
               Нажмите на иконку для форсированной смены погоды
             </div>
           </div>
