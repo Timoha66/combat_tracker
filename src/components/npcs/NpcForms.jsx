@@ -108,8 +108,9 @@ export function NpcForm({ initial, factionId, factions, onClose, onSaved }) {
   const initFactionIds = initial?.factionIds
     ?? (initial?.factionId ? [initial.factionId] : factionId ? [factionId] : [])
 
-  const [form,   setForm]   = useState({ ...EMPTY_NPC, ...initial, factionIds: initFactionIds })
-  const [saving, setSaving] = useState(false)
+  const [form,    setForm]    = useState({ ...EMPTY_NPC, ...initial, factionIds: initFactionIds })
+  const [tagsStr, setTagsStr] = useState((initial?.tags ?? []).join(', '))
+  const [saving,  setSaving]  = useState(false)
 
   function set(field, val) { setForm(f => ({ ...f, [field]: val })) }
   function addToArray(field, item) { setForm(f => ({ ...f, [field]: [...(f[field] ?? []), item] })) }
@@ -121,10 +122,11 @@ export function NpcForm({ initial, factionId, factions, onClose, onSaved }) {
   async function handleSave() {
     if (!form.name.trim()) { alert('Введи имя'); return }
     setSaving(true)
+    const finalForm = { ...form, tags: tagsStr.split(',').map(t => t.trim()).filter(Boolean) }
     try {
       let saved
-      if (isNew) saved = await addNpc(form)
-      else saved = await updateNpc(form.id, form)
+      if (isNew) saved = await addNpc(finalForm)
+      else saved = await updateNpc(form.id, finalForm)
       onSaved(saved)
     } finally { setSaving(false) }
   }
@@ -165,8 +167,9 @@ export function NpcForm({ initial, factionId, factions, onClose, onSaved }) {
                 </div>
               </FormField>
               <FormField label="Теги (через запятую)">
-                <input className={iCls} style={iStyle} value={(form.tags ?? []).join(', ')}
-                  onChange={e => set('tags', e.target.value.split(',').map(t => t.trim()).filter(Boolean))} />
+                <input className={iCls} style={iStyle} value={tagsStr}
+                  placeholder="тег1, тег2, тег3"
+                  onChange={e => setTagsStr(e.target.value)} />
               </FormField>
             </div>
           </FormSection>
