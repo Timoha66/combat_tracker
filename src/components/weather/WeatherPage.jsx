@@ -223,11 +223,25 @@ export default function WeatherPage() {
                   }}>
                   <span style={{ fontSize: 18 }}>{p.icon}</span>
                   <div className="flex-1">
-                    <div className="font-cinzel text-sm font-semibold" style={{ color: isActive ? 'var(--gold)' : 'var(--text)' }}>{p.name}</div>
-                    <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                      {p.hexes} гекс/день · Базовая СЛ {p.dc}
-                      {p.perks.length > 0 && ` · ${p.perks.join(', ')}`}
-                    </div>
+                    <div className="font-cinzel text-sm font-semibold mb-0.5" style={{ color: isActive ? 'var(--gold)' : 'var(--text)' }}>{p.name}</div>
+                    <div className="font-cinzel text-xs mb-0.5" style={{ color: 'var(--text-muted)' }}>{p.hexes} гекс/день</div>
+                    <div className="font-cinzel text-xs mb-1" style={{ color: 'var(--text-dim)' }}>Базовая СЛ {p.dc}</div>
+                    {p.perks.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {p.perks.map(perk => {
+                          const isHide   = perk.includes('Скрытное')
+                          const isPerc   = perk.includes('Восприятию')
+                          const isExhaust= perk.includes('истощения')
+                          const color    = isHide ? '#4ade80' : isPerc ? '#f59e0b' : '#f87171'
+                          return (
+                            <span key={perk} className="font-cinzel text-[9px] px-1.5 py-0.5 rounded"
+                              style={{ background: `${color}18`, color, border: `0.5px solid ${color}44` }}>
+                              {isHide ? '👁 ' : isPerc ? '⚠️ ' : '💀 '}{perk}
+                            </span>
+                          )
+                        })}
+                      </div>
+                    )}
                   </div>
                 </button>
               )
