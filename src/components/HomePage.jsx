@@ -1,11 +1,12 @@
-import { IconSword, IconMap, IconUsers, IconBook, IconCloud } from '@tabler/icons-react'
+import { IconSword, IconMap, IconUsers, IconBook, IconCloud, IconMap2 } from '@tabler/icons-react'
 
 const SECTIONS = [
   { id: 'tracker',   icon: <IconSword size={28} />, title: 'Трекер инициативы',   desc: 'Управление боем, инициатива, урон, состояния', color: 'rgba(226,201,126,0.12)', border: 'rgba(226,201,126,0.3)', iconColor: 'var(--gold)' },
   { id: 'locations', icon: <IconMap size={28} />,   title: 'Справочник локаций',  desc: 'Описания мест, НПС, квесты, точки интереса',  color: 'rgba(96,165,250,0.1)',   border: 'rgba(96,165,250,0.3)',   iconColor: '#60a5fa' },
   { id: 'npcs',      icon: <IconUsers size={28} />, title: 'НПС и фракции',       desc: 'Карточки персонажей, фракции, отношения',     color: 'rgba(167,139,250,0.1)',  border: 'rgba(167,139,250,0.3)', iconColor: '#a78bfa' },
   { id: 'journal',   icon: <IconBook size={28} />,  title: 'Журнал кампании',     desc: 'Записи по сессиям, заметки, события',         color: 'rgba(74,222,128,0.08)',  border: 'rgba(74,222,128,0.25)', iconColor: '#4ade80' },
-  { id: 'weather',   icon: <IconCloud size={28} />, title: 'Погода и навигация',  desc: 'Погодный фронт, навигация, история дней',     color: 'rgba(96,165,250,0.08)', border: 'rgba(96,165,250,0.25)',  iconColor: '#7dd3fc' },
+  { id: 'weather',   icon: <IconCloud size={28} />, title: 'Погода и навигация',  desc: 'Погодный фронт, навигация, история дней',     color: 'rgba(96,165,250,0.08)',  border: 'rgba(96,165,250,0.25)', iconColor: '#7dd3fc' },
+  { id: 'map',       icon: <IconMap2 size={28} />,  title: 'Карта Чульта',        desc: 'Интерактивная карта, жетон партии, пины',     color: 'rgba(74,222,128,0.06)',  border: 'rgba(74,222,128,0.2)',  iconColor: '#86efac' },
 ]
 
 export default function HomePage({ onNavigate }) {

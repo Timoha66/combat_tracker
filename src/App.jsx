@@ -12,6 +12,7 @@ import LocationsPage from './components/locations/LocationsPage'
 import NpcPage from './components/npcs/NpcPage'
 import JournalPage from './components/journal/JournalPage'
 import WeatherPage from './components/weather/WeatherPage'
+import MapPage from './components/map/MapPage'
 import {
   ConditionPicker, AcPopover, ReviveModal, StatblockModal, BattleSummary,
 } from './components/modals.jsx'
@@ -101,6 +102,7 @@ export default function App() {
         {page === 'npcs' && <NpcPage />}
         {page === 'journal' && <JournalPage />}
         {page === 'weather' && <WeatherPage />}
+        {page === 'map'     && <MapPage onNavigateToLocation={loc => { handleNavigate('locations') }} />}
 
       </div>
     </div>
