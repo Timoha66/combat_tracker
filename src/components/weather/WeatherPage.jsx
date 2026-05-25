@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { IconSun, IconRefresh, IconAnchor, IconX, IconPlayerPlay } from '@tabler/icons-react'
+import { IconRefresh, IconAnchor, IconX, IconPlayerPlay } from '@tabler/icons-react'
 import { useWeatherStore } from '../../store/weatherStore'
-import { WEATHER, WEATHER_SCALE, PACE, PACE_SCALE, STABILITY_LEVELS, getNavResult } from '../../data/weatherData'
+import { WEATHER, WEATHER_SCALE, PACE, PACE_SCALE, STABILITY_LEVELS, TAG_GROUPS, getNavResult } from '../../data/weatherData'
 
 export default function WeatherPage() {
   const {
@@ -106,14 +106,17 @@ export default function WeatherPage() {
               </p>
             )}
 
-            {/* Теги */}
+            {/* Теги по группам */}
             <div className="flex flex-wrap gap-1 mb-3">
-              {weather?.tags?.map(t => (
-                <span key={t} className="font-cinzel text-[10px] px-2 py-0.5 rounded-full"
-                  style={{ background: `${weatherScaleColors[currentWeather]}15`, color: weatherScaleColors[currentWeather], border: `0.5px solid ${weatherScaleColors[currentWeather]}44` }}>
-                  {t}
-                </span>
-              ))}
+              {(weather?.tags ?? []).map((tag, i) => {
+                const grp = TAG_GROUPS[tag.g] ?? TAG_GROUPS.danger
+                return (
+                  <span key={i} className="font-cinzel text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1"
+                    style={{ background: `${grp.color}15`, color: grp.color, border: `0.5px solid ${grp.color}44` }}>
+                    <span style={{ fontSize: 8 }}>{grp.dot}</span>{tag.t}
+                  </span>
+                )
+              })}
             </div>
 
             {/* Характеристики погоды */}
