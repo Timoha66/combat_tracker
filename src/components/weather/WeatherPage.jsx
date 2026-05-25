@@ -139,51 +139,56 @@ export default function WeatherPage() {
           </div>
         </div>
 
-        {/* Шкала погодного фронта */}
-        <div className="rounded-xl p-4" style={{ background: 'var(--bg-panel)', border: '1px solid var(--border)' }}>
-          <div className="font-cinzel text-xs uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>Погодный фронт</div>
-          <div className="flex gap-1 mb-3">
-            {WEATHER_SCALE.map(key => {
-              const isActive  = key === currentWeather
-              const isAnchor  = key === anchorWeather
-              const w         = WEATHER[key]
-              return (
-                <button key={key}
-                  onClick={() => setWeatherManual(key)}
-                  title={w.name}
-                  className="flex-1 flex flex-col items-center gap-1 py-2 rounded-lg transition-all cursor-pointer"
-                  style={{
-                    background: isActive ? `${weatherScaleColors[key]}25` : 'var(--bg-row)',
-                    border: `1px solid ${isActive ? weatherScaleColors[key] : isAnchor ? 'rgba(167,139,250,0.5)' : 'var(--border)'}`,
-                    transform: isActive ? 'scale(1.05)' : 'scale(1)',
-                  }}>
-                  <span style={{ fontSize: 16 }}>{w.icon}</span>
-                  {isAnchor && <span style={{ fontSize: 8, color: '#c4b5fd' }}>⚓</span>}
-                </button>
-              )
-            })}
-          </div>
-          <div className="font-cinzel text-[10px] text-center" style={{ color: 'var(--text-muted)' }}>
-            Нажми на иконку чтобы сменить погоду принудительно
-          </div>
-        </div>
+        {/* Погодный фронт + Жёсткость — рядом */}
+        <div className="flex gap-3">
 
-        {/* Жёсткость фронта */}
-        <div className="rounded-xl p-4" style={{ background: 'var(--bg-panel)', border: '1px solid var(--border)' }}>
-          <div className="font-cinzel text-xs uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Жёсткость фронта</div>
-          <div className="flex flex-col gap-1">
-            {STABILITY_LEVELS.map(s => (
-              <button key={s.id} onClick={() => setStability(s.id)}
-                className="flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all cursor-pointer"
-                style={{
-                  background: stability === s.id ? 'var(--gold-dim)' : 'var(--bg-row)',
-                  border: `1px solid ${stability === s.id ? 'rgba(226,201,126,0.4)' : 'var(--border)'}`,
-                }}>
-                <span className="font-cinzel text-xs font-semibold" style={{ color: stability === s.id ? 'var(--gold)' : 'var(--text)', minWidth: 90 }}>{s.name}</span>
-                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{s.desc}</span>
-              </button>
-            ))}
+          {/* Шкала погодного фронта */}
+          <div className="rounded-xl p-3 flex-1" style={{ background: 'var(--bg-panel)', border: '1px solid var(--border)' }}>
+            <div className="font-cinzel text-xs uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Погодный фронт</div>
+            <div className="flex gap-1 mb-2">
+              {WEATHER_SCALE.map(key => {
+                const isActive = key === currentWeather
+                const isAnchor = key === anchorWeather
+                const w        = WEATHER[key]
+                return (
+                  <button key={key}
+                    onClick={() => setWeatherManual(key)}
+                    title={w.name}
+                    className="flex-1 flex flex-col items-center gap-1 py-1.5 rounded-lg transition-all cursor-pointer"
+                    style={{
+                      background: isActive ? `${weatherScaleColors[key]}25` : 'var(--bg-row)',
+                      border: `1px solid ${isActive ? weatherScaleColors[key] : isAnchor ? 'rgba(167,139,250,0.5)' : 'var(--border)'}`,
+                      transform: isActive ? 'scale(1.05)' : 'scale(1)',
+                    }}>
+                    <span style={{ fontSize: 14 }}>{w.icon}</span>
+                    {isAnchor && <span style={{ fontSize: 7, color: '#c4b5fd' }}>⚓</span>}
+                  </button>
+                )
+              })}
+            </div>
+            <div className="font-cinzel text-[9px] text-center" style={{ color: 'var(--text-muted)' }}>
+              Нажми на иконку для смены
+            </div>
           </div>
+
+          {/* Жёсткость фронта */}
+          <div className="rounded-xl p-3" style={{ background: 'var(--bg-panel)', border: '1px solid var(--border)', minWidth: 180 }}>
+            <div className="font-cinzel text-xs uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Жёсткость</div>
+            <div className="flex flex-col gap-1">
+              {STABILITY_LEVELS.map(s => (
+                <button key={s.id} onClick={() => setStability(s.id)}
+                  className="flex items-center gap-2 px-2 py-1 rounded-lg text-left transition-all cursor-pointer"
+                  style={{
+                    background: stability === s.id ? 'var(--gold-dim)' : 'var(--bg-row)',
+                    border: `1px solid ${stability === s.id ? 'rgba(226,201,126,0.4)' : 'var(--border)'}`,
+                  }}>
+                  <span className="font-cinzel text-xs font-semibold" style={{ color: stability === s.id ? 'var(--gold)' : 'var(--text)', minWidth: 80 }}>{s.name}</span>
+                  <span className="text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>{s.desc}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
         </div>
 
         {/* Якорь и сброс */}
