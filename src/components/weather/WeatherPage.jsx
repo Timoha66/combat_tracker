@@ -130,19 +130,11 @@ export default function WeatherPage() {
               ))}
             </div>
 
-            {/* Характеристики погоды */}
-            <div className="flex gap-3 text-xs font-cinzel" style={{ color: 'var(--text-muted)' }}>
+          {/* Характеристики погоды */}
+            <div className="flex gap-3 text-xs font-cinzel pb-4" style={{ color: 'var(--text-muted)' }}>
               <span>Мод. СЛ: <strong style={{ color: weather?.dcMod > 0 ? '#f87171' : 'var(--text)' }}>+{weather?.dcMod}</strong></span>
               <span>Макс. темп: <strong style={{ color: 'var(--text)' }}>{PACE[PACE_SCALE[weather?.maxPace - 1]]?.name}</strong></span>
             </div>
-          </div>
-
-          {/* Кнопки */}
-          <div className="flex gap-2 px-4 pb-4">
-            <button className="btn btn-add flex-1 justify-center"
-              onClick={nextDay}>
-              ☀️ Следующий день
-            </button>
           </div>
         </div>
 
@@ -337,7 +329,7 @@ export default function WeatherPage() {
 
           {/* Результат */}
           {navResult && (
-            <div className="rounded-xl px-4 py-3" style={{ background: `${navResult.color}12`, border: `1px solid ${navResult.color}44` }}>
+            <div className="rounded-xl px-4 py-3 mb-3" style={{ background: `${navResult.color}12`, border: `1px solid ${navResult.color}44` }}>
               <div className="flex items-center gap-2 mb-1">
                 <span style={{ fontSize: 20 }}>{navResult.icon}</span>
                 <span className="font-cinzel text-sm font-bold" style={{ color: navResult.color }}>{navResult.label}</span>
@@ -345,6 +337,11 @@ export default function WeatherPage() {
               <p className="text-sm" style={{ color: 'var(--text-dim)' }}>{navResult.text}</p>
             </div>
           )}
+
+          {/* Следующий день */}
+          <button className="btn btn-add w-full justify-center" onClick={nextDay}>
+            ☀️ Следующий день
+          </button>
         </div>
       </div>
 
