@@ -71,7 +71,7 @@ export default function WeatherPage() {
     <div className="flex flex-1 overflow-hidden" style={{ minWidth: 0 }}>
 
       {/* ── ЛЕВАЯ КОЛОНКА: Погода ── */}
-      <div className="flex flex-col overflow-y-auto p-4 gap-4" style={{ width: 650, minWidth: 650, borderRight: '1px solid var(--border)', flexShrink: 0 }}>
+      <div className="flex flex-col overflow-y-auto p-4 gap-4" style={{ width: '50%', minWidth: 340, borderRight: '1px solid var(--border)', flexShrink: 0 }}>
 
         {/* Шапка с текущей погодой */}
         <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${weatherScaleColors[currentWeather]}55`, background: `${weatherScaleColors[currentWeather]}0a` }}>
@@ -205,13 +205,13 @@ export default function WeatherPage() {
       </div>
 
       {/* ── СРЕДНЯЯ КОЛОНКА: Навигация ── */}
-      <div className="flex flex-col overflow-y-auto p-4 gap-4" style={{ width: 400, minWidth: 300, borderRight: '1px solid var(--border)', flexShrink: 0 }}>
+      <div className="flex flex-col overflow-y-auto p-4 gap-4" style={{ flex: 1, minWidth: 280, borderRight: '1px solid var(--border)', flexShrink: 1 }}>
         <div className="font-cinzel text-xs uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Навигация</div>
 
         {/* Темп */}
-        <div className="rounded-xl p-4" style={{ background: 'var(--bg-panel)', border: '1px solid var(--border)' }}>
+        <div className="rounded-xl p-3" style={{ background: 'var(--bg-panel)', border: '1px solid var(--border)' }}>
           <div className="font-cinzel text-xs uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Темп передвижения</div>
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1">
             {PACE_SCALE.map(key => {
               const p        = PACE[key]
               const isActive = selectedPace === key
@@ -221,34 +221,35 @@ export default function WeatherPage() {
                 <button key={key}
                   onClick={() => setSelectedPace(key)}
                   disabled={disabled && !isActive}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all cursor-pointer"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-all cursor-pointer"
                   style={{
                     background: isActive ? 'var(--gold-dim)' : 'var(--bg-row)',
                     border: `1px solid ${isActive ? 'rgba(226,201,126,0.4)' : 'var(--border)'}`,
                     opacity: (disabled && !isActive) ? 0.4 : 1,
                   }}>
-                  <span style={{ fontSize: 18 }}>{p.icon}</span>
-                  <div className="flex-1">
-                    <div className="font-cinzel text-sm font-semibold mb-0.5" style={{ color: isActive ? 'var(--gold)' : 'var(--text)' }}>{p.name}</div>
-                    <div className="font-cinzel text-xs mb-0.5" style={{ color: 'var(--text-muted)' }}>{p.hexes} гекс/день</div>
-                    <div className="font-cinzel text-xs mb-1" style={{ color: 'var(--text-dim)' }}>Базовая СЛ {p.dc}</div>
-                    {p.perks.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {p.perks.map(perk => {
-                          const isHide   = perk.includes('Скрытное')
-                          const isPerc   = perk.includes('Восприятию')
-                          const isExhaust= perk.includes('истощения')
-                          const color    = isHide ? '#4ade80' : isPerc ? '#f59e0b' : '#f87171'
-                          return (
-                            <span key={perk} className="font-cinzel text-[9px] px-1.5 py-0.5 rounded"
-                              style={{ background: `${color}18`, color, border: `0.5px solid ${color}44` }}>
-                              {isHide ? '👁 ' : isPerc ? '⚠️ ' : '💀 '}{perk}
-                            </span>
-                          )
-                        })}
-                      </div>
-                    )}
+                  <span style={{ fontSize: 16, flexShrink: 0 }}>{p.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-cinzel text-sm font-semibold" style={{ color: isActive ? 'var(--gold)' : 'var(--text)' }}>{p.name}</div>
+                    <div className="font-cinzel text-xs" style={{ color: isActive ? 'var(--gold)' : '#7dd3fc' }}>
+                      {p.hexes} гекс/день · СЛ {p.dc}
+                    </div>
                   </div>
+                  {p.perks.length > 0 && (
+                    <div className="flex flex-wrap gap-1 justify-end shrink-0">
+                      {p.perks.map(perk => {
+                        const isHide    = perk.includes('Скрытное')
+                        const isPerc    = perk.includes('Восприятию')
+                        const isExhaust = perk.includes('истощения')
+                        const color     = isHide ? '#4ade80' : isPerc ? '#f59e0b' : '#f87171'
+                        return (
+                          <span key={perk} className="font-cinzel text-[9px] px-1.5 py-0.5 rounded"
+                            style={{ background: `${color}18`, color, border: `0.5px solid ${color}44` }}>
+                            {isHide ? '👁 ' : isPerc ? '⚠️ ' : '💀 '}{perk}
+                          </span>
+                        )
+                      })}
+                    </div>
+                  )}
                 </button>
               )
             })}
@@ -256,22 +257,22 @@ export default function WeatherPage() {
         </div>
 
         {/* Итоговая СЛ */}
-        <div className="rounded-xl px-5 py-4 text-center" style={{ background: 'var(--bg-panel)', border: '1px solid var(--border)' }}>
+        <div className="rounded-xl px-4 py-3 text-center" style={{ background: 'var(--bg-panel)', border: '1px solid var(--border)' }}>
           {weather?.maxPace === 0 ? (
             <>
-              <div className="font-cinzel text-xs uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Навигация</div>
-              <div className="font-cinzel text-2xl font-bold mb-1" style={{ color: '#ef4444' }}>⛔ Движение невозможно</div>
+              <div className="font-cinzel text-xs uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Навигация</div>
+              <div className="font-cinzel text-xl font-bold" style={{ color: '#ef4444' }}>⛔ Движение невозможно</div>
               <div className="text-xs" style={{ color: 'var(--text-muted)' }}>Катастрофа — укрытие обязательно</div>
             </>
           ) : (
             <>
               <div className="font-cinzel text-xs uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Итоговая СЛ навигации</div>
-              <div className="font-cinzel text-6xl font-bold mb-1" style={{ color: 'var(--gold)' }}>{dc}</div>
-              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+              <div className="font-cinzel text-5xl font-bold" style={{ color: 'var(--gold)' }}>{dc}</div>
+              <div className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
                 СЛ {pace?.dc} (темп) + {weather?.dcMod} (погода)
               </div>
               {hasDisadv && (
-                <div className="mt-2 font-cinzel text-xs px-3 py-1.5 rounded-lg"
+                <div className="mt-2 font-cinzel text-xs px-3 py-1 rounded-lg"
                   style={{ background: 'rgba(167,139,250,0.15)', color: '#c4b5fd', border: '0.5px solid rgba(167,139,250,0.4)' }}>
                   ⚠️ Помеха на бросок навигации
                 </div>
@@ -318,7 +319,7 @@ export default function WeatherPage() {
               onChange={handleRollInput}
               onKeyDown={e => e.key === 'Enter' && handleResolve()}
               placeholder="Итог броска"
-              className="flex-1 rounded-lg px-4 py-3 text-center font-cinzel text-2xl font-bold outline-none"
+              className="flex-1 rounded-lg px-3 py-2 text-center font-cinzel text-xl font-bold outline-none"
               style={{ background: 'var(--bg-deep)', border: '1px solid var(--border-md)', color: 'var(--text)' }}
             />
             <button className="btn btn-add px-4" onClick={handleResolve} title="Применить (Enter)"
@@ -346,7 +347,7 @@ export default function WeatherPage() {
       </div>
 
       {/* ── ПРАВАЯ КОЛОНКА: История ── */}
-      <div className="flex-1 overflow-y-auto p-4" style={{ minWidth: 200 }}>
+      <div className="flex-1 overflow-y-auto p-4" style={{ minWidth: 180 }}>
         <div className="font-cinzel text-xs uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>История дней</div>
 
         {history.length === 0 ? (
