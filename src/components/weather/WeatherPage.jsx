@@ -393,7 +393,15 @@ export default function WeatherPage() {
                     <span>{w?.icon}</span>
                     <span className="font-cinzel text-sm" style={{ color: col }}>{w?.name}</span>
                     {entry.streak > 1 && (
-                      <span className="font-cinzel text-[10px] ml-auto" style={{ color: 'var(--text-muted)' }}>×{entry.streak}</span>
+                      <span className="font-cinzel text-[10px] ml-auto px-2 py-0.5 rounded-full"
+                        style={{
+                          background: `${col}22`,
+                          color: col,
+                          border: `1px solid ${col}55`,
+                          fontWeight: 600,
+                        }}>
+                        🔁 {entry.streak} дня подряд
+                      </span>
                     )}
                   </div>
                   {(entry.pace || entry.roll) && (
