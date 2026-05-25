@@ -61,6 +61,12 @@ export default function WeatherPage() {
   const currentPaceIdx = PACE_SCALE.indexOf(selectedPace)
   const paceBlocked = weather?.maxPace === 0 || currentPaceIdx >= (weather?.maxPace ?? 4)
 
+  // Помеха: либо погодная, либо комбинация погода+темп
+  const comboDisadv =
+    (currentWeather === 'rain'  && selectedPace === 'fast')   ||
+    (currentWeather === 'storm' && selectedPace === 'normal')
+  const hasDisadv = weather?.disadv || comboDisadv
+
   return (
     <div className="flex flex-1 overflow-hidden">
 
@@ -244,7 +250,7 @@ export default function WeatherPage() {
               <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
                 СЛ {pace?.dc} (темп) + {weather?.dcMod} (погода)
               </div>
-              {weather?.disadv && (
+              {hasDisadv && (
                 <div className="mt-2 font-cinzel text-xs px-3 py-1.5 rounded-lg"
                   style={{ background: 'rgba(167,139,250,0.15)', color: '#c4b5fd', border: '0.5px solid rgba(167,139,250,0.4)' }}>
                   ⚠️ Помеха на бросок навигации
