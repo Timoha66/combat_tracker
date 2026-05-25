@@ -37,6 +37,7 @@ export const EMPTY_NPC = {
   nameEn:      '',
   role:        '',
   alignment:   '',
+  race:        '',
   classTags:   [],
   character:   '',
   secret:      '',

@@ -388,6 +388,7 @@ function NpcCard({ npc, onClick, onEdit }) {
         <div className="flex flex-wrap gap-1 px-3 pb-2">
           {npc.alignment && <span className="font-cinzel text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'var(--bg-row)', color: 'var(--text-muted)', border: '0.5px solid var(--border)' }}>{npc.alignment}</span>}
           {npc.classTags?.slice(0,1).map((t, i) => <span key={i} className="font-cinzel text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'var(--bg-row)', color: 'var(--text-muted)', border: '0.5px solid var(--border)' }}>{t}</span>)}
+          {npc.race && <span className="font-cinzel text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'var(--bg-row)', color: 'var(--text-muted)', border: '0.5px solid var(--border)' }}>{npc.race}</span>}
           {npc.secret && <span className="font-cinzel text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(167,139,250,0.1)', color: '#a78bfa', border: '0.5px solid rgba(167,139,250,0.3)' }}>🔒 Секрет</span>}
         </div>
       )}

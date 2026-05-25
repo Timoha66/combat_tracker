@@ -148,6 +148,18 @@ export function NpcForm({ initial, factionId, factions, onClose, onSaved }) {
               <FormField label="Имя (англ.)"><input className={iCls} style={iStyle} value={form.nameEn} onChange={e => set('nameEn', e.target.value)} /></FormField>
               <FormField label="Роль / Должность"><input className={iCls} style={iStyle} value={form.role} placeholder="Торговый принц, Проводник..." onChange={e => set('role', e.target.value)} /></FormField>
               <FormField label="Мировоззрение"><input className={iCls} style={iStyle} value={form.alignment} placeholder="ЗД, НЗ, Н..." onChange={e => set('alignment', e.target.value)} /></FormField>
+              <FormField label="Класс / Тип">
+                <input className={iCls} style={iStyle}
+                  value={(form.classTags ?? []).join(', ')}
+                  placeholder="Маг [Mage], Наёмный убийца [Assassin]..."
+                  onChange={e => set('classTags', e.target.value.split(',').map(t => t.trim()).filter(Boolean))} />
+              </FormField>
+              <FormField label="Раса / Вид">
+                <input className={iCls} style={iStyle}
+                  value={form.race ?? ''}
+                  placeholder="Мужчина · Чультанец, Женщина · Балдуранка..."
+                  onChange={e => set('race', e.target.value)} />
+              </FormField>
               <FormField label="Фракции">
                 <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-md)', maxHeight: 160, overflowY: 'auto' }}>
                   {factions.map(f => {
