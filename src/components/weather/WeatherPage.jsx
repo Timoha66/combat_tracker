@@ -71,7 +71,7 @@ export default function WeatherPage() {
     <div className="flex flex-1 overflow-hidden" style={{ minWidth: 0 }}>
 
       {/* ── ЛЕВАЯ КОЛОНКА: Погода ── */}
-      <div className="flex flex-col overflow-y-auto p-4 gap-4" style={{ width: 460, minWidth: 340, borderRight: '1px solid var(--border)', flexShrink: 0 }}>
+      <div className="flex flex-col overflow-y-auto p-4 gap-4" style={{ width: 650, minWidth: 650, borderRight: '1px solid var(--border)', flexShrink: 0 }}>
 
         {/* Шапка с текущей погодой */}
         <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${weatherScaleColors[currentWeather]}55`, background: `${weatherScaleColors[currentWeather]}0a` }}>
@@ -205,7 +205,7 @@ export default function WeatherPage() {
       </div>
 
       {/* ── СРЕДНЯЯ КОЛОНКА: Навигация ── */}
-      <div className="flex flex-col overflow-y-auto p-4 gap-4" style={{ width: 360, minWidth: 300, borderRight: '1px solid var(--border)', flexShrink: 0 }}>
+      <div className="flex flex-col overflow-y-auto p-4 gap-4" style={{ width: 400, minWidth: 300, borderRight: '1px solid var(--border)', flexShrink: 0 }}>
         <div className="font-cinzel text-xs uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Навигация</div>
 
         {/* Темп */}
