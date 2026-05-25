@@ -139,13 +139,13 @@ export default function WeatherPage() {
           </div>
         </div>
 
-        {/* Погодный фронт + Жёсткость — рядом */}
+        {/* Погодный фронт + Жёсткость — рядом 50/50 */}
         <div className="flex gap-3">
 
           {/* Шкала погодного фронта */}
-          <div className="rounded-xl p-3 flex-1" style={{ background: 'var(--bg-panel)', border: '1px solid var(--border)' }}>
-            <div className="font-cinzel text-xs uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Погодный фронт</div>
-            <div className="flex gap-1 mb-2">
+          <div className="rounded-xl p-3" style={{ flex: 1, background: 'var(--bg-panel)', border: '1px solid var(--border)' }}>
+            <div className="font-cinzel text-[9px] uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Погодный фронт</div>
+            <div className="flex gap-1 mb-1 justify-between">
               {WEATHER_SCALE.map(key => {
                 const isActive = key === currentWeather
                 const isAnchor = key === anchorWeather
@@ -154,36 +154,37 @@ export default function WeatherPage() {
                   <button key={key}
                     onClick={() => setWeatherManual(key)}
                     title={w.name}
-                    className="flex-1 flex flex-col items-center gap-1 py-1.5 rounded-lg transition-all cursor-pointer"
+                    className="flex flex-col items-center justify-center rounded-lg transition-all cursor-pointer"
                     style={{
+                      width: 36, height: 36, flexShrink: 0,
                       background: isActive ? `${weatherScaleColors[key]}25` : 'var(--bg-row)',
                       border: `1px solid ${isActive ? weatherScaleColors[key] : isAnchor ? 'rgba(167,139,250,0.5)' : 'var(--border)'}`,
-                      transform: isActive ? 'scale(1.05)' : 'scale(1)',
+                      transform: isActive ? 'scale(1.08)' : 'scale(1)',
                     }}>
-                    <span style={{ fontSize: 14 }}>{w.icon}</span>
-                    {isAnchor && <span style={{ fontSize: 7, color: '#c4b5fd' }}>⚓</span>}
+                    <span style={{ fontSize: 16 }}>{w.icon}</span>
+                    {isAnchor && <span style={{ fontSize: 7, color: '#c4b5fd', lineHeight: 1 }}>⚓</span>}
                   </button>
                 )
               })}
             </div>
             <div className="font-cinzel text-[9px] text-center" style={{ color: 'var(--text-muted)' }}>
-              Нажми на иконку для смены
+              Нажми для смены
             </div>
           </div>
 
           {/* Жёсткость фронта */}
-          <div className="rounded-xl p-3" style={{ background: 'var(--bg-panel)', border: '1px solid var(--border)', minWidth: 180 }}>
-            <div className="font-cinzel text-xs uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Жёсткость</div>
-            <div className="flex flex-col gap-1">
+          <div className="rounded-xl p-3" style={{ flex: 1, background: 'var(--bg-panel)', border: '1px solid var(--border)' }}>
+            <div className="font-cinzel text-[9px] uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Жёсткость</div>
+            <div className="flex flex-col gap-0.5">
               {STABILITY_LEVELS.map(s => (
                 <button key={s.id} onClick={() => setStability(s.id)}
                   className="flex items-center gap-2 px-2 py-1 rounded-lg text-left transition-all cursor-pointer"
                   style={{
-                    background: stability === s.id ? 'var(--gold-dim)' : 'var(--bg-row)',
-                    border: `1px solid ${stability === s.id ? 'rgba(226,201,126,0.4)' : 'var(--border)'}`,
+                    background: stability === s.id ? 'var(--gold-dim)' : 'transparent',
+                    border: `1px solid ${stability === s.id ? 'rgba(226,201,126,0.4)' : 'transparent'}`,
                   }}>
-                  <span className="font-cinzel text-xs font-semibold" style={{ color: stability === s.id ? 'var(--gold)' : 'var(--text)', minWidth: 80 }}>{s.name}</span>
-                  <span className="text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>{s.desc}</span>
+                  <span className="font-cinzel text-[11px] font-semibold" style={{ color: stability === s.id ? 'var(--gold)' : 'var(--text)', minWidth: 72 }}>{s.name}</span>
+                  <span className="text-[9px] truncate" style={{ color: 'var(--text-muted)' }}>{s.desc}</span>
                 </button>
               ))}
             </div>
@@ -191,32 +192,30 @@ export default function WeatherPage() {
 
         </div>
 
-        {/* Якорь и сброс */}
-        <div className="flex gap-2">
-          <button className="btn btn-ghost flex-1 justify-center" style={{ fontSize: 11 }}
-            onClick={() => setAnchorModal(true)}>
-            <IconAnchor size={13} /> Установить якорь
+        {/* Компактная строка действий */}
+        <div className="flex gap-1 mt-auto">
+          <button className="btn btn-ghost flex-1 justify-center" style={{ fontSize: 10 }}
+            onClick={() => setAnchorModal(true)} title="Установить якорь">
+            <IconAnchor size={12} /> Якорь
           </button>
           {anchorWeather && (
-            <button className="btn btn-ghost justify-center" style={{ fontSize: 11, color: '#f87171', borderColor: 'rgba(248,113,113,0.3)' }}
-              onClick={clearAnchor}>
-              <IconX size={13} /> Снять якорь
+            <button className="btn btn-ghost justify-center px-2" style={{ fontSize: 10, color: '#f87171', borderColor: 'rgba(248,113,113,0.3)' }}
+              onClick={clearAnchor} title="Снять якорь">
+              <IconX size={12} />
             </button>
           )}
-        </div>
-        <div className="flex gap-2">
-          <button className="btn btn-ghost flex-1 justify-center" style={{ fontSize: 11 }} onClick={exportHistory}>
-            <IconDownload size={13} /> Экспорт истории
+          <button className="btn btn-ghost flex-1 justify-center" style={{ fontSize: 10 }} onClick={exportHistory} title="Экспорт истории">
+            <IconDownload size={12} /> Экспорт
           </button>
-          <label className="btn btn-ghost flex-1 justify-center cursor-pointer" style={{ fontSize: 11 }}>
-            <IconUpload size={13} /> Импорт истории
+          <label className="btn btn-ghost flex-1 justify-center cursor-pointer" style={{ fontSize: 10 }} title="Импорт истории">
+            <IconUpload size={12} /> Импорт
             <input type="file" accept=".json" className="hidden" onChange={e => { const f = e.target.files[0]; if (f) importHistory(f); e.target.value = '' }} />
           </label>
+          <button className="btn btn-ghost justify-center px-2" style={{ fontSize: 10, color: 'var(--text-muted)' }}
+            onClick={() => { if (confirm('Сбросить всё — день 1, история, якорь?')) resetAll() }} title="Сбросить кампанию">
+            <IconRefresh size={12} />
+          </button>
         </div>
-        <button className="btn btn-ghost w-full justify-center" style={{ fontSize: 11, color: 'var(--text-muted)' }}
-          onClick={() => { if (confirm('Сбросить всё — день 1, история, якорь?')) resetAll() }}>
-          <IconRefresh size={13} /> Сбросить кампанию
-        </button>
       </div>
 
       {/* ── СРЕДНЯЯ КОЛОНКА: Навигация ── */}
