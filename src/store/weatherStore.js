@@ -119,6 +119,10 @@ export const useWeatherStore = create(
         })
       },
 
+      clearHistory() {
+        set({ history: [] })
+      },
+
       exportHistory() {
         const { history, dayCount, currentWeather, weatherStreak } = get()
         const data = { history, dayCount, currentWeather, weatherStreak, exportedAt: new Date().toISOString() }
