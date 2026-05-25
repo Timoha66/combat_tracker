@@ -118,6 +118,37 @@ export const useWeatherStore = create(
           selectedPace: 'normal', navRoll: '', navResult: null, history: [],
         })
       },
+
+      exportHistory() {
+        const { history, dayCount, currentWeather, weatherStreak } = get()
+        const data = { history, dayCount, currentWeather, weatherStreak, exportedAt: new Date().toISOString() }
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+        const url  = URL.createObjectURL(blob)
+        const a    = document.createElement('a')
+        a.href     = url
+        a.download = `dm-weather-history-${new Date().toISOString().slice(0,10)}.json`
+        a.click()
+        URL.revokeObjectURL(url)
+      },
+
+      importHistory(file) {
+        const reader = new FileReader()
+        reader.onload = e => {
+          try {
+            const data = JSON.parse(e.target.result)
+            if (!Array.isArray(data.history)) throw new Error('Неверный формат')
+            set({
+              history:        data.history,
+              dayCount:       data.dayCount       ?? get().dayCount,
+              currentWeather: data.currentWeather ?? get().currentWeather,
+              weatherStreak:  data.weatherStreak  ?? 1,
+            })
+          } catch {
+            alert('Ошибка импорта: неверный формат файла')
+          }
+        }
+        reader.readAsText(file)
+      },
     }),
     { name: 'dm-weather' }
   )

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { IconRefresh, IconAnchor, IconX, IconPlayerPlay } from '@tabler/icons-react'
+import { IconRefresh, IconAnchor, IconX, IconPlayerPlay, IconDownload, IconUpload } from '@tabler/icons-react'
 import { useWeatherStore } from '../../store/weatherStore'
 import { WEATHER, WEATHER_SCALE, PACE, PACE_SCALE, STABILITY_LEVELS, TAG_GROUPS, getNavResult } from '../../data/weatherData'
 
@@ -12,6 +12,7 @@ export default function WeatherPage() {
     navRoll, setNavRoll, navResult,
     history,
     nextDay, setWeatherManual, rerollFlavour, setAnchor, clearAnchor, resetAll,
+    exportHistory, importHistory,
   } = useWeatherStore()
 
   const [anchorModal,  setAnchorModal]  = useState(false)
@@ -197,6 +198,15 @@ export default function WeatherPage() {
               <IconX size={13} /> Снять якорь
             </button>
           )}
+        </div>
+        <div className="flex gap-2">
+          <button className="btn btn-ghost flex-1 justify-center" style={{ fontSize: 11 }} onClick={exportHistory}>
+            <IconDownload size={13} /> Экспорт истории
+          </button>
+          <label className="btn btn-ghost flex-1 justify-center cursor-pointer" style={{ fontSize: 11 }}>
+            <IconUpload size={13} /> Импорт истории
+            <input type="file" accept=".json" className="hidden" onChange={e => { const f = e.target.files[0]; if (f) importHistory(f); e.target.value = '' }} />
+          </label>
         </div>
         <button className="btn btn-ghost w-full justify-center" style={{ fontSize: 11, color: 'var(--text-muted)' }}
           onClick={() => { if (confirm('Сбросить всё — день 1, история, якорь?')) resetAll() }}>

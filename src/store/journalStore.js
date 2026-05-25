@@ -38,4 +38,24 @@ export const useJournalStore = create((set, get) => ({
     const { sessions, selectedSessionId } = get()
     return sessions.find(s => s.id === selectedSessionId) ?? null
   },
+
+  async exportJournal() {
+    const all  = await journalDb.sessions.toArray()
+    const blob = new Blob([JSON.stringify(all, null, 2)], { type: 'application/json' })
+    const url  = URL.createObjectURL(blob)
+    const a    = document.createElement('a')
+    a.href     = url
+    a.download = `dm-journal-${new Date().toISOString().slice(0,10)}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  },
+
+  async importJournal(file) {
+    const text = await file.text()
+    const data = JSON.parse(text)
+    if (!Array.isArray(data)) throw new Error('Неверный формат файла')
+    const toImport = data.map(({ id, ...rest }) => rest)
+    await journalDb.sessions.bulkAdd(toImport)
+    await get().loadAll()
+  },
 }))
