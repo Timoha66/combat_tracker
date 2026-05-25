@@ -71,7 +71,7 @@ export default function WeatherPage() {
     <div className="flex flex-1 overflow-hidden">
 
       {/* ── ЛЕВАЯ КОЛОНКА: Погода ── */}
-      <div className="flex flex-col overflow-y-auto p-5 gap-4" style={{ width: 380, borderRight: '1px solid var(--border)' }}>
+      <div className="flex flex-col overflow-y-auto p-5 gap-4" style={{ width: 440, borderRight: '1px solid var(--border)' }}>
 
         {/* Шапка с текущей погодой */}
         <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${weatherScaleColors[currentWeather]}55`, background: `${weatherScaleColors[currentWeather]}0a` }}>
@@ -79,7 +79,7 @@ export default function WeatherPage() {
             <div className="flex items-start justify-between mb-2">
               <div>
                 <div className="font-cinzel text-3xl mb-1">{weather?.icon}</div>
-                <h2 className="font-cinzel text-xl font-bold" style={{ color: 'var(--gold)' }}>{weather?.name}</h2>
+                <h2 className="font-cinzel text-2xl font-bold" style={{ color: 'var(--gold)' }}>{weather?.name}</h2>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="font-cinzel text-xs" style={{ color: 'var(--text-muted)' }}>{formatDay(dayCount)}</span>
                   {weatherStreak > 1 && (
@@ -101,7 +101,7 @@ export default function WeatherPage() {
 
             {/* Флейвор */}
             {currentFlavour && (
-              <p className="text-sm leading-relaxed italic mb-3" style={{ color: 'var(--text-dim)', borderLeft: `2px solid ${weatherScaleColors[currentWeather]}66`, paddingLeft: 10 }}>
+              <p className="text-base leading-relaxed italic mb-3" style={{ color: 'var(--text-dim)', borderLeft: `2px solid ${weatherScaleColors[currentWeather]}66`, paddingLeft: 10 }}>
                 {currentFlavour}
               </p>
             )}
@@ -199,7 +199,7 @@ export default function WeatherPage() {
       </div>
 
       {/* ── СРЕДНЯЯ КОЛОНКА: Навигация ── */}
-      <div className="flex flex-col overflow-y-auto p-5 gap-4" style={{ width: 340, borderRight: '1px solid var(--border)' }}>
+      <div className="flex flex-col overflow-y-auto p-5 gap-4" style={{ width: 400, borderRight: '1px solid var(--border)' }}>
         <div className="font-cinzel text-xs uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Навигация</div>
 
         {/* Темп */}
@@ -254,13 +254,13 @@ export default function WeatherPage() {
           {weather?.maxPace === 0 ? (
             <>
               <div className="font-cinzel text-xs uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Навигация</div>
-              <div className="font-cinzel text-xl font-bold mb-1" style={{ color: '#ef4444' }}>⛔ Движение невозможно</div>
+              <div className="font-cinzel text-2xl font-bold mb-1" style={{ color: '#ef4444' }}>⛔ Движение невозможно</div>
               <div className="text-xs" style={{ color: 'var(--text-muted)' }}>Катастрофа — укрытие обязательно</div>
             </>
           ) : (
             <>
               <div className="font-cinzel text-xs uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Итоговая СЛ навигации</div>
-              <div className="font-cinzel text-5xl font-bold mb-1" style={{ color: 'var(--gold)' }}>{dc}</div>
+              <div className="font-cinzel text-6xl font-bold mb-1" style={{ color: 'var(--gold)' }}>{dc}</div>
               <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
                 СЛ {pace?.dc} (темп) + {weather?.dcMod} (погода)
               </div>
@@ -335,7 +335,7 @@ export default function WeatherPage() {
       </div>
 
       {/* ── ПРАВАЯ КОЛОНКА: История ── */}
-      <div className="flex-1 overflow-y-auto p-5">
+      <div className="overflow-y-auto p-4 shrink-0" style={{ width: 220, borderLeft: '1px solid var(--border)' }}>
         <div className="font-cinzel text-xs uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>История дней</div>
 
         {history.length === 0 ? (
