@@ -208,6 +208,10 @@ export default function WeatherPage() {
             onClick={() => { if (confirm('Очистить историю дней?')) clearHistory() }}>
             <IconRefresh size={13} /> Сбросить историю
           </button>
+          <button className="btn btn-ghost w-full justify-center" style={{ fontSize: 11, color: '#f87171', borderColor: 'rgba(248,113,113,0.2)' }}
+            onClick={() => { if (confirm('Сбросить всю кампанию?\nДень 1, история, якорь, погода — всё будет обнулено.')) resetAll() }}>
+            <IconRefresh size={13} /> Сбросить кампанию
+          </button>
           <div className="flex gap-1.5">
             <button className="btn btn-ghost flex-1 justify-center" style={{ fontSize: 11 }} onClick={exportHistory}>
               <IconDownload size={13} /> Экспорт
