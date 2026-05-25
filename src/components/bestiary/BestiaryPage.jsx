@@ -117,7 +117,7 @@ export default function BestiaryPage() {
             </button>
           ))}
           <div style={{ width: '100%', height: 1 }} />
-          {[{ id: 'all', label: 'Все источники' }, { id: 'official', label: 'Официальные' }, { id: 'homebrew', label: 'Homebrew' }].map(s => (
+          {[{ id: 'all', label: 'Все источники' }, { id: 'official', label: 'Официальные' }, { id: 'HB', label: 'Homebrew' }].map(s => (
             <button
               key={s.id}
               onClick={() => setFilterSource(s.id)}

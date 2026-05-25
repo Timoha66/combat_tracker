@@ -6,7 +6,7 @@ export const useBestiaryStore = create((set, get) => ({
   loading:    false,
   search:     '',
   filterType: 'all',   // 'all' | 'player' | 'enemy' | 'npc' | 'companion' | 'pet'
-  filterSource: 'all', // 'all' | 'official' | 'homebrew'
+  filterSource: 'all', // 'all' | 'official' | 'HB'
   filterTag:  '',
 
   // ── ЗАГРУЗКА ────────────────────────────────────────────────────────────────
@@ -46,7 +46,11 @@ export const useBestiaryStore = create((set, get) => ({
     return creatures.filter(c => {
       if (search && !c.name.toLowerCase().includes(search.toLowerCase())) return false
       if (filterType !== 'all' && c.type !== filterType) return false
-      if (filterSource !== 'all' && c.source !== filterSource) return false
+      if (filterSource !== 'all') {
+        const isHB = c.source === 'HB' || c.source === 'homebrew'
+        if (filterSource === 'HB'       && !isHB) return false
+        if (filterSource === 'official' &&  isHB) return false
+      }
       if (filterTag && !(c.tags ?? []).includes(filterTag)) return false
       return true
     })

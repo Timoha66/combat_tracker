@@ -216,14 +216,22 @@ export default function StatblockView({ creature: c, onEdit }) {
             </>
           )}
 
-          {/* Tags */}
-          {c.tags?.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-4">
-              {c.tags.map(t => (
-                <span key={t} className="font-cinzel text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'var(--bg-row)', color: 'var(--text-muted)', border: '0.5px solid var(--border)' }}>
-                  {t}
+          {/* Tags + Source */}
+          {(c.tags?.length > 0 || c.source) && (
+            <div className="flex flex-wrap items-center gap-1 mt-4">
+              <div className="flex flex-wrap gap-1 flex-1">
+                {c.tags?.map(t => (
+                  <span key={t} className="font-cinzel text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'var(--bg-row)', color: 'var(--text-muted)', border: '0.5px solid var(--border)' }}>
+                    {t}
+                  </span>
+                ))}
+              </div>
+              {c.source && (
+                <span className="font-cinzel text-[10px] px-2 py-0.5 rounded-full ml-auto shrink-0"
+                  style={{ background: c.source === 'HB' ? 'rgba(167,139,250,0.12)' : 'rgba(226,201,126,0.08)', color: c.source === 'HB' ? '#c4b5fd' : 'var(--gold)', border: `0.5px solid ${c.source === 'HB' ? 'rgba(167,139,250,0.3)' : 'rgba(226,201,126,0.25)'}` }}>
+                  {c.source}
                 </span>
-              ))}
+              )}
             </div>
           )}
         </div>

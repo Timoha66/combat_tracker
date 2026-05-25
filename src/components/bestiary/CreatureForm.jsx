@@ -161,7 +161,20 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
                     />
                   </Field>
                   <Field label="Источник">
-                    <Select value={form.source} onChange={v => set('source', v)} options={[{ id: 'homebrew', label: 'Homebrew' }, { id: 'official', label: 'Официальный' }]} />
+                    <Select value={form.source ?? 'HB'} onChange={v => set('source', v)} options={[
+                      { id: 'HB',   label: 'HB — Homebrew' },
+                      { id: 'DMG',  label: 'DMG — Dungeon Master\'s Guide' },
+                      { id: 'MM',   label: 'MM — Monster Manual' },
+                      { id: 'VGM',  label: 'VGM — Volo\'s Guide to Monsters' },
+                      { id: 'XGE',  label: 'XGE — Xanathar\'s Guide to Everything' },
+                      { id: 'MTF',  label: 'MTF — Mordenkainen\'s Tome of Foes' },
+                      { id: 'TCE',  label: 'TCE — Tasha\'s Cauldron of Everything' },
+                      { id: 'MPMM', label: 'MPMM — Monsters of the Multiverse' },
+                      { id: 'UA',   label: 'UA — Unearthed Arcana' },
+                      { id: 'TOA',  label: 'TOA — Tomb of Annihilation' },
+                      { id: 'OoTA', label: 'OoTA — Out of the Abyss' },
+                      { id: 'PoTA', label: 'PoTA — Princes of the Apocalypse' },
+                    ]} />
                   </Field>
                 </>
               )}
