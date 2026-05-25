@@ -7,6 +7,9 @@ export const useBestiaryStore = create((set, get) => ({
   search:     '',
   filterType: 'all',   // 'all' | 'player' | 'enemy' | 'npc' | 'companion' | 'pet'
   filterSource: 'all', // 'all' | 'official' | 'HB'
+  filterSources: [],   // [] = все, иначе массив аббревиатур
+  filterCRs:     [],   // [] = все, иначе массив CR значений
+  filterCreatureTypes: [], // [] = все, иначе массив типов существ
   filterTag:  '',
 
   // ── ЗАГРУЗКА ────────────────────────────────────────────────────────────────
@@ -40,17 +43,33 @@ export const useBestiaryStore = create((set, get) => ({
   setFilterType(v)   { set({ filterType: v }) },
   setFilterSource(v) { set({ filterSource: v }) },
   setFilterTag(v)    { set({ filterTag: v }) },
+  setFilterSources(v)       { set({ filterSources: v }) },
+  setFilterCRs(v)           { set({ filterCRs: v }) },
+  setFilterCreatureTypes(v) { set({ filterCreatureTypes: v }) },
 
   getFiltered() {
-    const { creatures, search, filterType, filterSource, filterTag } = get()
+    const { creatures, search, filterType, filterSource, filterTag,
+            filterSources, filterCRs, filterCreatureTypes } = get()
     return creatures.filter(c => {
       if (search && !c.name.toLowerCase().includes(search.toLowerCase())) return false
       if (filterType !== 'all' && c.type !== filterType) return false
+
+      // Старый фильтр HB/официальные
       if (filterSource !== 'all') {
         const isHB = c.source === 'HB' || c.source === 'homebrew'
         if (filterSource === 'HB'       && !isHB) return false
         if (filterSource === 'official' &&  isHB) return false
       }
+
+      // Новый фильтр по конкретным источникам
+      if (filterSources.length > 0 && !filterSources.includes(c.source ?? 'HB')) return false
+
+      // Фильтр по CR
+      if (filterCRs.length > 0 && !filterCRs.includes(String(c.cr ?? '0'))) return false
+
+      // Фильтр по типу существа
+      if (filterCreatureTypes.length > 0 && !filterCreatureTypes.includes(c.creatureType ?? '')) return false
+
       if (filterTag && !(c.tags ?? []).includes(filterTag)) return false
       return true
     })

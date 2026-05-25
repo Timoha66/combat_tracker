@@ -1,25 +1,46 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import {
   IconPlus, IconSearch, IconUpload, IconDownload,
   IconPencil, IconTrash, IconSword, IconUser, IconRefresh,
+  IconFilter, IconX, IconChevronDown,
 } from '@tabler/icons-react'
 import { useBestiaryStore } from '../../store/bestiaryStore'
-import { ENTITY_TYPES } from '../../data/gameData'
+import { ENTITY_TYPES, CREATURE_TYPES, CR_VALUES } from '../../data/gameData'
 import { db } from '../../data/bestiaryDb'
 import seedData from '../../data/seedBestiary.json'
 import CreatureForm from './CreatureForm'
 import StatblockView from './StatblockView'
 
+const SOURCES = [
+  'HB','DMG','MM','VGM','XGE','MTF','TCE','MPMM','UA','TOA','OoTA','PoTA',
+]
+
 export default function BestiaryPage() {
   const { loadAll, loading, getFiltered, search, setSearch,
           filterType, setFilterType, filterSource, setFilterSource,
+          filterSources, setFilterSources,
+          filterCRs, setFilterCRs,
+          filterCreatureTypes, setFilterCreatureTypes,
           deleteCreature, exportJSON, importJSON } = useBestiaryStore()
 
   const [formOpen,    setFormOpen]    = useState(false)
   const [editTarget,  setEditTarget]  = useState(null)
   const [viewTarget,  setViewTarget]  = useState(null)
   const [addType,     setAddType]     = useState('enemy')
-  const [sortBy,      setSortBy]      = useState('name') // 'name' | 'type' | 'cr'
+  const [sortBy,      setSortBy]      = useState('name')
+  const [showFilters, setShowFilters] = useState(false)
+
+  const hasActiveFilters = filterSources.length > 0 || filterCRs.length > 0 || filterCreatureTypes.length > 0
+
+  function toggleArr(arr, setArr, val) {
+    setArr(arr.includes(val) ? arr.filter(x => x !== val) : [...arr, val])
+  }
+
+  function clearAllFilters() {
+    setFilterSources([])
+    setFilterCRs([])
+    setFilterCreatureTypes([])
+  }
 
   useEffect(() => { loadAll() }, [])
 
@@ -100,7 +121,7 @@ export default function BestiaryPage() {
           </div>
         </div>
 
-        {/* Фильтры */}
+        {/* Тип участника */}
         <div className="px-3 py-2 border-b flex flex-wrap gap-1" style={{ borderColor: 'var(--border)' }}>
           {[{ id: 'all', label: 'Все' }, ...ENTITY_TYPES].map(t => (
             <button
@@ -116,21 +137,55 @@ export default function BestiaryPage() {
               {t.label}
             </button>
           ))}
-          <div style={{ width: '100%', height: 1 }} />
-          {[{ id: 'all', label: 'Все источники' }, { id: 'official', label: 'Официальные' }, { id: 'HB', label: 'Homebrew' }].map(s => (
+        </div>
+
+        {/* Расширенные фильтры */}
+        <div className="border-b" style={{ borderColor: 'var(--border)' }}>
+          <div className="px-3 py-2 flex items-center gap-2">
             <button
-              key={s.id}
-              onClick={() => setFilterSource(s.id)}
-              className="font-cinzel text-[10px] px-2 py-1 rounded-md transition-all cursor-pointer"
-              style={{
-                background: filterSource === s.id ? 'var(--gold-dim)' : 'var(--bg-row)',
-                color: filterSource === s.id ? 'var(--gold)' : 'var(--text-muted)',
-                border: `1px solid ${filterSource === s.id ? 'rgba(226,201,126,0.4)' : 'var(--border)'}`,
-              }}
+              className="btn btn-ghost flex items-center gap-1.5"
+              style={{ fontSize: 11, color: hasActiveFilters ? 'var(--gold)' : 'var(--text-muted)', borderColor: hasActiveFilters ? 'rgba(226,201,126,0.4)' : 'var(--border)', background: hasActiveFilters ? 'var(--gold-dim)' : 'transparent' }}
+              onClick={() => setShowFilters(s => !s)}
             >
-              {s.label}
+              <IconFilter size={12} />
+              Фильтры
+              {hasActiveFilters && (
+                <span className="font-cinzel text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: 'var(--gold)', color: '#1a1208' }}>
+                  {filterSources.length + filterCRs.length + filterCreatureTypes.length}
+                </span>
+              )}
+              <IconChevronDown size={11} style={{ transform: showFilters ? 'rotate(180deg)' : 'none', transition: '0.2s' }} />
             </button>
-          ))}
+            {hasActiveFilters && (
+              <button className="btn btn-ghost" style={{ fontSize: 10, color: '#f87171', borderColor: 'rgba(248,113,113,0.3)' }} onClick={clearAllFilters}>
+                <IconX size={11} /> Сбросить
+              </button>
+            )}
+          </div>
+          {showFilters && (
+            <div className="px-3 pb-3 flex flex-col gap-3">
+              <div>
+                <div className="font-cinzel text-[9px] uppercase tracking-widest mb-1.5" style={{ color: 'var(--text-muted)' }}>Источник</div>
+                <div className="flex flex-wrap gap-1">
+                  {SOURCES.map(src => {
+                    const active = filterSources.includes(src)
+                    return (
+                      <button key={src}
+                        className="font-cinzel text-[10px] px-2 py-0.5 rounded-md cursor-pointer transition-all"
+                        style={{ background: active ? 'var(--gold-dim)' : 'var(--bg-row)', color: active ? 'var(--gold)' : 'var(--text-muted)', border: `1px solid ${active ? 'rgba(226,201,126,0.4)' : 'var(--border)'}` }}
+                        onClick={() => toggleArr(filterSources, setFilterSources, src)}>
+                        {src}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <MultiSelect label="CR" options={CR_VALUES} selected={filterCRs} onChange={setFilterCRs} />
+                <MultiSelect label="Тип существа" options={CREATURE_TYPES} selected={filterCreatureTypes} onChange={setFilterCreatureTypes} />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Сортировка */}
@@ -276,6 +331,59 @@ export default function BestiaryPage() {
           onClose={() => { setFormOpen(false); setEditTarget(null) }}
           onSaved={c => { setViewTarget(c); setFormOpen(false); setEditTarget(null) }}
         />
+      )}
+    </div>
+  )
+}
+
+// ─── MultiSelect ──────────────────────────────────────────────────────────────
+function MultiSelect({ label, options, selected, onChange }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+
+  useEffect(() => {
+    function onClick(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', onClick)
+    return () => document.removeEventListener('mousedown', onClick)
+  }, [])
+
+  function toggle(val) {
+    onChange(selected.includes(val) ? selected.filter(x => x !== val) : [...selected, val])
+  }
+
+  return (
+    <div ref={ref} className="relative flex-1">
+      <button
+        className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg font-cinzel text-[10px] cursor-pointer"
+        style={{ background: selected.length ? 'var(--gold-dim)' : 'var(--bg-row)', color: selected.length ? 'var(--gold)' : 'var(--text-muted)', border: `1px solid ${selected.length ? 'rgba(226,201,126,0.4)' : 'var(--border)'}` }}
+        onClick={() => setOpen(s => !s)}
+      >
+        <span>{label}{selected.length > 0 ? ` (${selected.length})` : ''}</span>
+        <IconChevronDown size={10} style={{ transform: open ? 'rotate(180deg)' : 'none', transition: '0.15s' }} />
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full mt-1 rounded-xl overflow-hidden shadow-xl z-50"
+          style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-md)', minWidth: 160, maxHeight: 220, overflowY: 'auto' }}>
+          {selected.length > 0 && (
+            <button className="w-full text-left px-3 py-1.5 font-cinzel text-[10px] border-b cursor-pointer"
+              style={{ borderColor: 'var(--border)', color: '#f87171' }}
+              onClick={() => onChange([])}>
+              Сбросить
+            </button>
+          )}
+          {options.map(opt => {
+            const active = selected.includes(opt)
+            return (
+              <button key={opt}
+                className="w-full text-left px-3 py-1.5 font-cinzel text-[10px] cursor-pointer flex items-center gap-2"
+                style={{ background: active ? 'var(--gold-dim)' : 'transparent', color: active ? 'var(--gold)' : 'var(--text-dim)' }}
+                onClick={() => toggle(opt)}>
+                <span style={{ width: 8, height: 8, borderRadius: 2, background: active ? 'var(--gold)' : 'var(--border-md)', border: `1px solid ${active ? 'var(--gold)' : 'var(--border)'}`, display: 'inline-block', flexShrink: 0 }} />
+                {opt}
+              </button>
+            )
+          })}
+        </div>
       )}
     </div>
   )
