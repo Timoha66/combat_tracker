@@ -335,11 +335,11 @@ export default function WeatherPage() {
       </div>
 
       {/* ── ПРАВАЯ КОЛОНКА: История ── */}
-      <div className="overflow-y-auto p-4 shrink-0" style={{ width: 220, borderLeft: '1px solid var(--border)' }}>
+      <div className="flex-1 overflow-y-auto p-4" style={{ minWidth: 200 }}>
         <div className="font-cinzel text-xs uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>История дней</div>
 
         {history.length === 0 ? (
-          <div className="text-center py-12" style={{ color: 'var(--text-muted)' }}>
+          <div className="flex flex-col items-center justify-center h-full" style={{ color: 'var(--text-muted)', minHeight: 200 }}>
             <div className="text-3xl mb-2">📅</div>
             <div className="font-cinzel text-xs">История пуста</div>
             <div className="text-xs mt-1">Начни новый день чтобы вести лог</div>
