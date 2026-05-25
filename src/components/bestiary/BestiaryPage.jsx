@@ -188,27 +188,6 @@ export default function BestiaryPage() {
           )}
         </div>
 
-        {/* Сортировка */}
-        <div className="px-3 py-2 border-b flex items-center gap-1" style={{ borderColor: 'var(--border)' }}>
-          <span className="font-cinzel text-[10px] uppercase tracking-wide mr-1" style={{ color: 'var(--text-muted)' }}>
-            Сортировка:
-          </span>
-          {[{ id: 'name', label: 'Имя' }, { id: 'type', label: 'Тип' }, { id: 'cr', label: 'CR' }].map(s => (
-            <button
-              key={s.id}
-              onClick={() => setSortBy(s.id)}
-              className="font-cinzel text-[10px] px-2 py-1 rounded-md transition-all cursor-pointer"
-              style={{
-                background: sortBy === s.id ? 'var(--gold-dim)' : 'var(--bg-row)',
-                color: sortBy === s.id ? 'var(--gold)' : 'var(--text-muted)',
-                border: `1px solid ${sortBy === s.id ? 'rgba(226,201,126,0.4)' : 'var(--border)'}`,
-              }}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
-
         {/* Кнопки добавления */}
         <div className="px-3 py-2 flex gap-2 border-b" style={{ borderColor: 'var(--border)' }}>
           <button className="btn btn-add flex-1 justify-center" style={{ fontSize: 11 }} onClick={() => openAdd('enemy')}>
