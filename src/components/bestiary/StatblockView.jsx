@@ -52,9 +52,11 @@ export default function StatblockView({ creature: c, onEdit }) {
     <div className="p-6 max-w-2xl mx-auto">
       {/* Header actions */}
       <div className="flex items-center gap-2 mb-4">
-        <button className="btn btn-ghost" onClick={onEdit}>
-          <IconPencil size={14} /> Редактировать
-        </button>
+        {onEdit && (
+          <button className="btn btn-ghost" onClick={onEdit}>
+            <IconPencil size={14} /> Редактировать
+          </button>
+        )}
         <button className="btn btn-add ml-auto" onClick={handleAddToTracker}>
           <IconSword size={14} /> Добавить в трекер
         </button>

@@ -39,7 +39,7 @@ export default function NpcModal({ npc, onClose, onEdit }) {
             <button className="icon-btn" onClick={onClose}><IconX size={15} /></button>
           </div>
           <div className="flex-1 overflow-y-auto">
-            <StatblockView creature={showStatblock} onEdit={() => {}} />
+            <StatblockView creature={showStatblock} onEdit={null} hideEdit />
           </div>
         </div>
       </div>
@@ -155,6 +155,11 @@ export default function NpcModal({ npc, onClose, onEdit }) {
                     <span key={i} className="font-cinzel text-[10px] px-2 py-0.5 rounded-full italic" style={{ background: 'var(--gold-dim)', color: 'var(--gold)', border: '0.5px solid rgba(226,201,126,0.3)' }}>{t}</span>
                   ))}
                 </div>
+              )}
+              {!npc.tags?.length && (
+                <span className="font-cinzel text-[10px] italic" style={{ color: 'var(--text-muted)' }}>
+                  Теги не заданы — нажми «Изменить» чтобы добавить
+                </span>
               )}
             </div>
           </div>
