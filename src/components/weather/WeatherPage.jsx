@@ -57,6 +57,10 @@ export default function WeatherPage() {
     rain: '#60a5fa', storm: '#818cf8', front: '#a78bfa', disaster: '#f87171',
   }
 
+  // Проверяем что текущий темп разрешён погодой
+  const currentPaceIdx = PACE_SCALE.indexOf(selectedPace)
+  const paceBlocked = weather?.maxPace === 0 || currentPaceIdx >= (weather?.maxPace ?? 4)
+
   return (
     <div className="flex flex-1 overflow-hidden">
 
@@ -257,16 +261,25 @@ export default function WeatherPage() {
           {/* Крит кнопки */}
           <div className="flex gap-2 mb-2">
             <button className="flex-1 btn font-cinzel text-xs py-2 justify-center rounded-lg cursor-pointer"
-              style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.35)' }}
+              style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.35)', opacity: paceBlocked ? 0.35 : 1, cursor: paceBlocked ? 'not-allowed' : 'pointer' }}
+              disabled={paceBlocked}
               onClick={() => { setLocalRoll('1'); useWeatherStore.setState({ navResult: getNavResult(1, 1, dc) }) }}>
               💀 Крит-провал (1)
             </button>
             <button className="flex-1 btn font-cinzel text-xs py-2 justify-center rounded-lg cursor-pointer"
-              style={{ background: 'rgba(52,211,153,0.15)', color: '#34d399', border: '1px solid rgba(52,211,153,0.35)' }}
+              style={{ background: 'rgba(52,211,153,0.15)', color: '#34d399', border: '1px solid rgba(52,211,153,0.35)', opacity: paceBlocked ? 0.35 : 1, cursor: paceBlocked ? 'not-allowed' : 'pointer' }}
+              disabled={paceBlocked}
               onClick={() => { setLocalRoll('20'); useWeatherStore.setState({ navResult: getNavResult(20, 20, dc) }) }}>
               ⭐ Крит-успех (20)
             </button>
           </div>
+
+          {paceBlocked && (
+            <div className="font-cinzel text-xs text-center mb-2 py-1.5 rounded-lg"
+              style={{ background: 'rgba(248,113,113,0.1)', color: '#f87171', border: '0.5px solid rgba(248,113,113,0.3)' }}>
+              ⚠️ {weather?.maxPace === 0 ? 'Движение невозможно при катастрофе' : `Выбранный темп недоступен при ${weather?.name}`}
+            </div>
+          )}
 
           {/* Обычный бросок */}
           <div className="font-cinzel text-[10px] mb-1.5" style={{ color: 'var(--text-muted)' }}>
@@ -282,7 +295,8 @@ export default function WeatherPage() {
               className="flex-1 rounded-lg px-4 py-3 text-center font-cinzel text-2xl font-bold outline-none"
               style={{ background: 'var(--bg-deep)', border: '1px solid var(--border-md)', color: 'var(--text)' }}
             />
-            <button className="btn btn-add px-4" onClick={handleResolve} title="Применить (Enter)">
+            <button className="btn btn-add px-4" onClick={handleResolve} title="Применить (Enter)"
+              disabled={paceBlocked} style={{ opacity: paceBlocked ? 0.35 : 1 }}>
               <IconPlayerPlay size={18} />
             </button>
           </div>
