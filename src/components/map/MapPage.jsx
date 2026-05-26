@@ -45,21 +45,6 @@ function PinMarker({ pin, onClick, onDelete, selected }) {
         zIndex:    selected ? 20 : 10,
       }}
     >
-      {/* Delete button */}
-      <div
-        onClick={e => { e.stopPropagation(); onDelete(pin.id) }}
-        style={{
-          position: 'absolute', top: -6, right: -6, zIndex: 30,
-          width: 16, height: 16, borderRadius: '50%',
-          background: '#ef4444', border: '1.5px solid #1a1208',
-          color: '#fff', fontSize: 9, cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontWeight: 'bold', lineHeight: 1,
-          boxShadow: '0 1px 4px rgba(0,0,0,0.5)',
-        }}
-        title="Удалить пин"
-      >✕</div>
-
       {/* Pin body */}
       <div
         onClick={e => { e.stopPropagation(); onClick(pin) }}
@@ -132,7 +117,7 @@ function Token({ x, y, onDragEnd }) {
       }}
       title="Жетон партии (перетаскивай)"
     >
-      <svg width="30" height="30" viewBox="0 0 48 48">
+      <svg width="26" height="26" viewBox="0 0 48 48">
         <defs>
           <linearGradient id="hexGold" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%"   stopColor="#f5e6a0" />
@@ -241,7 +226,7 @@ function PinModal({ pin, onClose, onSave, onDelete, locations }) {
 }
 
 // ─── VIEW PIN CARD ────────────────────────────────────────────────────────────
-function PinCard({ pin, locations, onEdit, onClose, onOpenLocation }) {
+function PinCard({ pin, locations, onEdit, onDelete, onClose, onOpenLocation }) {
   const pt  = PIN_TYPES.find(p => p.id === pin.type) ?? PIN_TYPES[9]
   const loc = locations.find(l => l.id === pin.locationId)
   return (
@@ -257,6 +242,10 @@ function PinCard({ pin, locations, onEdit, onClose, onOpenLocation }) {
         <span className="font-cinzel text-sm font-bold flex-1" style={{ color: pt.accent }}>{pin.label || pt.label}</span>
         <button className="btn btn-ghost" style={{ fontSize: 10, padding: '2px 8px' }} onClick={onEdit}>
           <IconPencil size={12} /> Изменить
+        </button>
+        <button className="btn btn-ghost" style={{ fontSize: 10, padding: '2px 8px', color: '#f87171', borderColor: 'rgba(248,113,113,0.3)' }}
+          onClick={() => onDelete(pin.id)}>
+          <IconTrash size={12} /> Удалить
         </button>
         <button className="icon-btn" style={{ width: 22, height: 22 }} onClick={onClose}><IconX size={12} /></button>
       </div>
@@ -359,10 +348,14 @@ export default function MapPage({ onNavigateToLocation }) {
   }
 
   async function handleDeletePin(id) {
-    if (!confirm('Удалить пин?')) return
     await deletePin(id)
     if (selectedPin?.id === id) setSelectedPin(null)
     if (editingPin?.id  === id) setEditingPin(null)
+  }
+
+  async function handleDeletePinWithConfirm(id) {
+    if (!confirm('Удалить пин?')) return
+    await handleDeletePin(id)
   }
 
   const btnStyle = (active, danger) => ({
@@ -445,7 +438,6 @@ export default function MapPage({ onNavigateToLocation }) {
                 pin={pin}
                 selected={selectedPin?.id === pin.id}
                 onClick={p => setSelectedPin(selectedPin?.id === p.id ? null : p)}
-                onDelete={handleDeletePin}
               />
             </div>
           ))}
@@ -456,6 +448,7 @@ export default function MapPage({ onNavigateToLocation }) {
         <PinCard
           pin={selectedPin} locations={locations}
           onEdit={() => setEditingPin(selectedPin)}
+          onDelete={handleDeletePin}
           onClose={() => setSelectedPin(null)}
           onOpenLocation={onNavigateToLocation}
         />
@@ -466,7 +459,7 @@ export default function MapPage({ onNavigateToLocation }) {
           pin={editingPin} locations={locations}
           onClose={() => { setEditingPin(null); setNewPinCoords(null) }}
           onSave={handleSavePin}
-          onDelete={() => handleDeletePin(editingPin.id)}
+          onDelete={() => handleDeletePinWithConfirm(editingPin.id)}
         />
       )}
 
