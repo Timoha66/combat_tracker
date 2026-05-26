@@ -7,6 +7,7 @@ export const useMapStore = create(
     (set, get) => ({
       pins:       [],
       showPins:   true,
+      mapView:    'dm',
       tokenX:     0.35,
       tokenY:     0.25,
       transformX:     0,
@@ -37,6 +38,7 @@ export const useMapStore = create(
       },
 
       setTokenPos(x, y) { set({ tokenX: x, tokenY: y }) },
+      toggleMapView()    { set(s => ({ mapView: s.mapView === 'dm' ? 'player' : 'dm' })) },
       setMapTransform(x, y, scale) { set({ transformX: x, transformY: y, transformScale: scale }) },
       togglePins()       { set(s => ({ showPins: !s.showPins })) },
 
@@ -66,7 +68,7 @@ export const useMapStore = create(
     }),
     {
       name: 'dm-map',
-      partialize: s => ({ tokenX: s.tokenX, tokenY: s.tokenY, showPins: s.showPins, transformX: s.transformX, transformY: s.transformY, transformScale: s.transformScale }),
+      partialize: s => ({ mapView: s.mapView, tokenX: s.tokenX, tokenY: s.tokenY, showPins: s.showPins, transformX: s.transformX, transformY: s.transformY, transformScale: s.transformScale }),
     }
   )
 )

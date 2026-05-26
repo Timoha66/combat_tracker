@@ -4,14 +4,15 @@ import {
   IconBuildingCastle, IconSword, IconBuildingArch, IconAnchor, IconTree,
   IconTool, IconSkull, IconTent, IconAlertTriangle, IconQuestionMark,
   IconNote, IconBolt, IconShip, IconPaw, IconDiamond, IconCheck,
-  IconDownload, IconUpload,
+  IconDownload, IconUpload, IconEye, IconUsers,
 } from '@tabler/icons-react'
 import { useMapStore } from '../../store/mapStore'
 import { useLocationsStore } from '../../store/locationsStore'
 
-const MAP_URL = `${import.meta.env.BASE_URL}chult_map.jpg`
-const IMG_W   = 1611
-const IMG_H   = 2160
+const DM_MAP_URL     = `${import.meta.env.BASE_URL}chult_map.jpg`
+const PLAYER_MAP_URL = `${import.meta.env.BASE_URL}chult_map_player.jpg`
+const IMG_W = 1611
+const IMG_H = 2160
 
 export const PIN_TYPES = [
   { id: 'city',       label: 'Город',           Icon: IconBuildingCastle, color: '#1e3a5f', accent: '#60a5fa' },
@@ -295,8 +296,8 @@ function PinCard({ pin, locations, onEdit, onDelete, onClose, onOpenLocation }) 
 
 // ─── MAIN MAP PAGE ────────────────────────────────────────────────────────────
 export default function MapPage({ onNavigateToLocation }) {
-  const { pins, showPins, tokenX, tokenY, transformX, transformY, transformScale,
-          loadPins, addPin, updatePin, deletePin, setTokenPos, togglePins,
+  const { pins, showPins, mapView, tokenX, tokenY, transformX, transformY, transformScale,
+          loadPins, addPin, updatePin, deletePin, setTokenPos, togglePins, toggleMapView,
           setMapTransform, exportMap, importMap } = useMapStore()
   const locations    = useLocationsStore(s => s.locations)
   const loadLocations = useLocationsStore(s => s.loadAll)
@@ -414,6 +415,13 @@ export default function MapPage({ onNavigateToLocation }) {
         borderRadius: 14, padding: '8px 14px',
         boxShadow: '0 4px 20px rgba(0,0,0,0.6)',
       }}>
+        <button style={btnStyle(mapView === 'player', false)} onClick={toggleMapView}>
+          {mapView === 'dm' ? <IconEye size={15} /> : <IconUsers size={15} />}
+          {mapView === 'dm' ? 'DM карта' : 'Карта игроков'}
+        </button>
+
+        <div style={{ width: 1, height: 22, background: 'rgba(255,255,255,0.12)' }} />
+
         <button style={btnStyle(addMode, false)}
           onClick={() => setAddMode(m => !m)}>
           <IconPlus size={15} />
@@ -458,7 +466,7 @@ export default function MapPage({ onNavigateToLocation }) {
           style={{ position: 'absolute', transformOrigin: '0 0', transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})` }}
           onClick={onMapClick}
         >
-          <img data-mapimg src={MAP_URL} alt="Карта Чульта"
+          <img data-mapimg src={mapView === 'dm' ? DM_MAP_URL : PLAYER_MAP_URL} alt="Карта Чульта"
             width={IMG_W} height={IMG_H}
             style={{ display: 'block', userSelect: 'none', pointerEvents: 'none' }}
             draggable={false} />
