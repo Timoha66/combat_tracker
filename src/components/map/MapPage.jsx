@@ -32,39 +32,70 @@ export const PIN_TYPES = [
 ]
 
 // ─── PIN MARKER ───────────────────────────────────────────────────────────────
-function PinMarker({ pin, onClick, onDelete, selected }) {
+function PinMarker({ pin, onClick, onDrag, selected }) {
   const pt = PIN_TYPES.find(p => p.id === pin.type) ?? PIN_TYPES[9]
   const { Icon } = pt
+  const isDragging = useRef(false)
+  const didDrag    = useRef(false)
+
+  function onMouseDown(e) {
+    if (e.button !== 0) return
+    e.stopPropagation()
+    isDragging.current = true
+    didDrag.current    = false
+
+    function onMove(ev) {
+      if (!isDragging.current) return
+      didDrag.current = true
+      const img  = document.querySelector('[data-mapimg]')
+      if (!img) return
+      const rect = img.getBoundingClientRect()
+      const nx   = (ev.clientX - rect.left) / rect.width
+      const ny   = (ev.clientY - rect.top)  / rect.height
+      onDrag(pin.id, Math.max(0, Math.min(1, nx)), Math.max(0, Math.min(1, ny)))
+    }
+    function onUp(ev) {
+      isDragging.current = false
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup',   onUp)
+      // Если не было перемещения — считаем кликом
+      if (!didDrag.current) onClick(pin)
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup',   onUp)
+  }
+
   return (
     <div
+      onMouseDown={onMouseDown}
       style={{
         position:  'absolute',
         left:      pin.x * IMG_W,
         top:       pin.y * IMG_H,
         transform: 'translate(-50%, -100%)',
+        cursor:    'grab',
         zIndex:    selected ? 20 : 10,
       }}
     >
       {/* Pin body */}
       <div
-        onClick={e => { e.stopPropagation(); onClick(pin) }}
-        style={{ cursor: 'pointer', filter: selected ? 'drop-shadow(0 0 6px rgba(226,201,126,0.8))' : 'drop-shadow(0 2px 3px rgba(0,0,0,0.7))', transition: 'filter 0.15s' }}
+        style={{ cursor: 'grab', filter: selected ? 'drop-shadow(0 0 6px rgba(226,201,126,0.8))' : 'drop-shadow(0 2px 3px rgba(0,0,0,0.7))', transition: 'filter 0.15s' }}
         title={pin.label || pt.label}
       >
-        <svg width="26" height="32" viewBox="0 0 26 32">
+        <svg width="20" height="26" viewBox="0 0 26 32">
           <path d="M13 0 C5.8 0 0 5.8 0 13 C0 21 13 32 13 32 C13 32 26 21 26 13 C26 5.8 20.2 0 13 0Z"
             fill={pt.color} stroke={selected ? '#e2c97e' : `${pt.accent}99`} strokeWidth={selected ? 1.5 : 1}/>
           <circle cx="13" cy="13" r="7" fill={`${pt.accent}20`}/>
         </svg>
-        <div style={{ position: 'absolute', top: 4, left: '50%', transform: 'translateX(-50%)', pointerEvents: 'none' }}>
-          <Icon size={12} color={pt.accent} />
+        <div style={{ position: 'absolute', top: 3, left: '50%', transform: 'translateX(-50%)', pointerEvents: 'none' }}>
+          <Icon size={10} color={pt.accent} />
         </div>
       </div>
 
       {/* Label */}
       {pin.label && (
         <div style={{
-          position: 'absolute', top: 34, left: '50%', transform: 'translateX(-50%)',
+          position: 'absolute', top: 27, left: '50%', transform: 'translateX(-50%)',
           whiteSpace: 'nowrap', fontFamily: 'Cinzel, serif', fontSize: 9,
           color: pt.accent, background: 'rgba(13,17,23,0.88)',
           padding: '1px 5px', borderRadius: 3,
@@ -341,6 +372,10 @@ export default function MapPage({ onNavigateToLocation }) {
     setAddMode(false)
   }
 
+  async function handleDragPin(id, x, y) {
+    await updatePin(id, { x, y })
+  }
+
   async function handleSavePin(formData) {
     if (editingPin?.id) { await updatePin(editingPin.id, formData); setSelectedPin(null) }
     else if (newPinCoords) { await addPin({ ...formData, x: newPinCoords.x, y: newPinCoords.y }); setNewPinCoords(null) }
@@ -438,6 +473,7 @@ export default function MapPage({ onNavigateToLocation }) {
                 pin={pin}
                 selected={selectedPin?.id === pin.id}
                 onClick={p => setSelectedPin(selectedPin?.id === p.id ? null : p)}
+                onDrag={handleDragPin}
               />
             </div>
           ))}
