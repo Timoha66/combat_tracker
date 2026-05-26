@@ -173,10 +173,11 @@ function Token({ x, y, onDragEnd }) {
 function PinModal({ pin, onClose, onSave, onDelete, locations }) {
   const isNew = !pin.id
   const [form, setForm] = useState({
-    type:       pin.type       ?? 'unknown',
-    label:      pin.label      ?? '',
-    notes:      pin.notes      ?? '',
-    locationId: pin.locationId ?? null,
+    type:             pin.type             ?? 'unknown',
+    label:            pin.label            ?? '',
+    notes:            pin.notes            ?? '',
+    locationId:       pin.locationId       ?? null,
+    visibleToPlayers: pin.visibleToPlayers ?? false,
   })
 
   return (
@@ -247,8 +248,22 @@ function PinModal({ pin, onClose, onSave, onDelete, locations }) {
               <IconTrash size={14} /> Удалить
             </button>
           )}
-          <button className="btn btn-cancel flex-1 justify-center" onClick={onClose}><IconX size={14} /> Отмена</button>
-          <button className="btn btn-gold flex-1 justify-center" onClick={() => onSave(form)}>
+          {/* Видно игрокам */}
+          <label style={{
+            display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',
+            fontFamily: 'Cinzel, serif', fontSize: 11, color: form.visibleToPlayers ? '#4ade80' : 'var(--text-muted)',
+            marginRight: 'auto',
+          }}>
+            <input
+              type="checkbox"
+              checked={form.visibleToPlayers}
+              onChange={e => setForm(f => ({ ...f, visibleToPlayers: e.target.checked }))}
+              style={{ accentColor: '#4ade80', width: 14, height: 14, cursor: 'pointer' }}
+            />
+            Видно игрокам
+          </label>
+          <button className="btn btn-cancel justify-center" onClick={onClose}><IconX size={14} /> Отмена</button>
+          <button className="btn btn-gold justify-center" onClick={() => onSave(form)}>
             <IconCheck size={14} /> Сохранить
           </button>
         </div>
@@ -308,6 +323,7 @@ export default function MapPage({ onNavigateToLocation }) {
   const [selectedPin,  setSelectedPin]  = useState(null)
   const [editingPin,   setEditingPin]   = useState(null)
   const [newPinCoords, setNewPinCoords] = useState(null)
+  const [showToolbar,  setShowToolbar]  = useState(true)
 
   const isPanning = useRef(false)
   const panStart  = useRef({ mx: 0, my: 0, tx: 0, ty: 0 })
@@ -407,7 +423,25 @@ export default function MapPage({ onNavigateToLocation }) {
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', background: '#0d1117' }}>
 
+      {/* ── TOOLBAR TOGGLE TAB ── */}
+      <button
+        onClick={() => setShowToolbar(v => !v)}
+        style={{
+          position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
+          zIndex: 101, cursor: 'pointer',
+          background: 'rgba(10,12,20,0.95)', border: '1px solid rgba(255,255,255,0.12)',
+          borderTop: 'none', borderRadius: '0 0 8px 8px',
+          padding: '3px 16px 4px',
+          fontFamily: 'Cinzel, serif', fontSize: 10, color: '#64748b',
+          letterSpacing: '0.05em',
+        }}
+        title={showToolbar ? 'Скрыть панель' : 'Показать панель'}
+      >
+        {showToolbar ? '▲ скрыть' : '▼ панель'}
+      </button>
+
       {/* ── TOOLBAR ── */}
+      {showToolbar && (
       <div style={{
         position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)',
         zIndex: 100, display: 'flex', gap: 8, alignItems: 'center',
@@ -452,6 +486,7 @@ export default function MapPage({ onNavigateToLocation }) {
           🖱 Колёсико — зум · Drag — перемещение · ⚔ перетаскивается
         </span>
       </div>
+      )}
 
       {/* ── MAP CONTAINER ── */}
       <div
@@ -475,7 +510,9 @@ export default function MapPage({ onNavigateToLocation }) {
             <Token x={tokenX} y={tokenY} onDragEnd={setTokenPos} />
           </div>
 
-          {showPins && pins.map(pin => (
+          {showPins && pins
+            .filter(pin => mapView === 'dm' || pin.visibleToPlayers)
+            .map(pin => (
             <div key={pin.id} data-pin style={{ position: 'absolute', top: 0, left: 0 }}>
               <PinMarker
                 pin={pin}
