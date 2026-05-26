@@ -92,8 +92,8 @@ function PinMarker({ pin, onClick, onDrag, selected }) {
         </div>
       </div>
 
-      {/* Label */}
-      {pin.label && (
+      {/* Label — только когда пин выбран */}
+      {selected && pin.label && (
         <div style={{
           position: 'absolute', top: 27, left: '50%', transform: 'translateX(-50%)',
           whiteSpace: 'nowrap', fontFamily: 'Cinzel, serif', fontSize: 9,
@@ -263,7 +263,7 @@ function PinCard({ pin, locations, onEdit, onDelete, onClose, onOpenLocation }) 
   return (
     <div style={{
       position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
-      zIndex: 300, width: 340,
+      zIndex: 300, width: 520,
       background: 'var(--bg-panel)', border: `1px solid ${pt.accent}55`,
       borderRadius: 16, overflow: 'hidden',
       boxShadow: `0 8px 32px rgba(0,0,0,0.6)`,
