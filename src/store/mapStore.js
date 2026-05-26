@@ -35,6 +35,30 @@ export const useMapStore = create(
 
       setTokenPos(x, y) { set({ tokenX: x, tokenY: y }) },
       togglePins()       { set(s => ({ showPins: !s.showPins })) },
+
+      async exportMap() {
+        const pins = await mapDb.pins.toArray()
+        const { tokenX, tokenY } = get()
+        const data = { pins, tokenX, tokenY, exportedAt: new Date().toISOString() }
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+        const url  = URL.createObjectURL(blob)
+        const a    = document.createElement('a')
+        a.href     = url
+        a.download = `dm-map-${new Date().toISOString().slice(0,10)}.json`
+        a.click()
+        URL.revokeObjectURL(url)
+      },
+
+      async importMap(file) {
+        const text = await file.text()
+        const data = JSON.parse(text)
+        if (!Array.isArray(data.pins)) throw new Error('Неверный формат файла')
+        await mapDb.pins.clear()
+        const toImport = data.pins.map(({ id, ...rest }) => rest)
+        await mapDb.pins.bulkAdd(toImport)
+        set({ tokenX: data.tokenX ?? 0.35, tokenY: data.tokenY ?? 0.25 })
+        await get().loadPins()
+      },
     }),
     {
       name: 'dm-map',
