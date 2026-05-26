@@ -33,6 +33,7 @@ function ComingSoon({ title }) {
 export default function App() {
   const [page, setPage] = useState('home')
   const view = useBattleStore(s => s.view)
+  const [locationTarget, setLocationTarget] = useState(null)
 
   const [showBestiary,     setShowBestiary]     = useState(false)
   const [addModalOpen,     setAddModalOpen]     = useState(false)
@@ -98,11 +99,11 @@ export default function App() {
         )}
 
         {/* ── ЛОКАЦИИ ── */}
-        {page === 'locations' && <LocationsPage />}
+        {page === 'locations' && <LocationsPage initialLocation={locationTarget} onLocationOpened={() => setLocationTarget(null)} />}
         {page === 'npcs' && <NpcPage />}
         {page === 'journal' && <JournalPage />}
         {page === 'weather' && <WeatherPage />}
-        {page === 'map'     && <MapPage onNavigateToLocation={loc => { handleNavigate('locations') }} />}
+        {page === 'map'     && <MapPage onNavigateToLocation={loc => { setLocationTarget(loc); handleNavigate('locations') }} />}
 
       </div>
     </div>

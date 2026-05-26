@@ -5,7 +5,7 @@ import { LOCATION_CATEGORIES, CAT_MAP } from '../../data/locationsDb'
 import LocationView from './LocationView'
 import LocationForm from './LocationForm'
 
-export default function LocationsPage() {
+export default function LocationsPage({ initialLocation, onLocationOpened }) {
   const loadAll      = useLocationsStore(s => s.loadAll)
   const loading      = useLocationsStore(s => s.loading)
   const search       = useLocationsStore(s => s.search)
@@ -22,6 +22,13 @@ export default function LocationsPage() {
   const [editTarget, setEditTarget] = useState(null)
 
   useEffect(() => { loadAll() }, [])
+
+  useEffect(() => {
+    if (initialLocation) {
+      setViewTarget(initialLocation)
+      onLocationOpened?.()
+    }
+  }, [initialLocation])
 
   // Всегда берём актуальную версию из стора
   const liveLocation = viewTarget ? locations.find(l => l.id === viewTarget.id) ?? viewTarget : null
