@@ -132,7 +132,7 @@ function Token({ x, y, onDragEnd }) {
       }}
       title="Жетон партии (перетаскивай)"
     >
-      <svg width="36" height="36" viewBox="0 0 48 48">
+      <svg width="30" height="30" viewBox="0 0 48 48">
         <defs>
           <linearGradient id="hexGold" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%"   stopColor="#f5e6a0" />
@@ -275,12 +275,14 @@ function PinCard({ pin, locations, onEdit, onClose, onOpenLocation }) {
 
 // ─── MAIN MAP PAGE ────────────────────────────────────────────────────────────
 export default function MapPage({ onNavigateToLocation }) {
-  const { pins, showPins, tokenX, tokenY, loadPins, addPin, updatePin, deletePin, setTokenPos, togglePins, exportMap, importMap } = useMapStore()
+  const { pins, showPins, tokenX, tokenY, transformX, transformY, transformScale,
+          loadPins, addPin, updatePin, deletePin, setTokenPos, togglePins,
+          setMapTransform, exportMap, importMap } = useMapStore()
   const locations    = useLocationsStore(s => s.locations)
   const loadLocations = useLocationsStore(s => s.loadAll)
 
   const containerRef = useRef(null)
-  const [transform,    setTransform]    = useState({ x: 0, y: 0, scale: 0.35 })
+  const [transform, setTransform] = useState({ x: transformX, y: transformY, scale: transformScale })
   const [addMode,      setAddMode]      = useState(false)
   const [selectedPin,  setSelectedPin]  = useState(null)
   const [editingPin,   setEditingPin]   = useState(null)
@@ -292,11 +294,22 @@ export default function MapPage({ onNavigateToLocation }) {
   useEffect(() => {
     loadPins()
     loadLocations()
-    if (containerRef.current) {
-      const { width, height } = containerRef.current.getBoundingClientRect()
-      setTransform({ x: width / 2 - IMG_W * 0.35 / 2, y: 20, scale: 0.35 })
+    // Центрируем только если зум ещё не был сохранён (первый визит)
+    if (transformScale === 0.35 && transformX === 0 && containerRef.current) {
+      const { width } = containerRef.current.getBoundingClientRect()
+      const initX = width / 2 - IMG_W * 0.35 / 2
+      setTransform({ x: initX, y: 20, scale: 0.35 })
+      setMapTransform(initX, 20, 0.35)
     }
   }, [])
+
+  const saveTimer = useRef(null)
+  useEffect(() => {
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    saveTimer.current = setTimeout(() => {
+      setMapTransform(transform.x, transform.y, transform.scale)
+    }, 500)
+  }, [transform.x, transform.y, transform.scale])
 
   const handleWheel = useCallback(e => {
     e.preventDefault()

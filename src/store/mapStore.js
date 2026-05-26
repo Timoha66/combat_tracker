@@ -9,6 +9,9 @@ export const useMapStore = create(
       showPins:   true,
       tokenX:     0.35,
       tokenY:     0.25,
+      transformX:     0,
+      transformY:     20,
+      transformScale: 0.35,
 
       async loadPins() {
         const pins = await mapDb.pins.toArray()
@@ -34,6 +37,7 @@ export const useMapStore = create(
       },
 
       setTokenPos(x, y) { set({ tokenX: x, tokenY: y }) },
+      setMapTransform(x, y, scale) { set({ transformX: x, transformY: y, transformScale: scale }) },
       togglePins()       { set(s => ({ showPins: !s.showPins })) },
 
       async exportMap() {
@@ -62,7 +66,7 @@ export const useMapStore = create(
     }),
     {
       name: 'dm-map',
-      partialize: s => ({ tokenX: s.tokenX, tokenY: s.tokenY, showPins: s.showPins }),
+      partialize: s => ({ tokenX: s.tokenX, tokenY: s.tokenY, showPins: s.showPins, transformX: s.transformX, transformY: s.transformY, transformScale: s.transformScale }),
     }
   )
 )
