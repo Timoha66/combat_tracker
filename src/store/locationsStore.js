@@ -1,6 +1,5 @@
 import { create } from 'zustand'
 import { locDb } from '../data/locationsDb'
-import seedData from '../data/seedLocations.json'
 
 export const useLocationsStore = create((set, get) => ({
   locations: [],
@@ -82,7 +81,6 @@ export const useLocationsStore = create((set, get) => ({
 
   async resetToSeed() {
     await locDb.locations.clear()
-    await locDb.locations.bulkAdd(seedData)
     await get().loadAll()
   },
 }))
