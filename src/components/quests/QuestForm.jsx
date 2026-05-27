@@ -1,7 +1,134 @@
-import { useState } from 'react'
-import { IconX, IconCheck } from '@tabler/icons-react'
+import { useState, useRef, useEffect } from 'react'
+import { IconX, IconCheck, IconSearch, IconChevronDown } from '@tabler/icons-react'
 import { useQuestStore } from '../../store/questStore'
 import { QUEST_TYPES, QUEST_STATUSES, EMPTY_QUEST } from '../../data/questDb'
+
+// ─── Одиночный выбор с поиском ────────────────────────────────────────────────
+function SearchableSelect({ value, onChange, options, placeholder = '— Не указан —', labelKey = 'name', idKey = 'id' }) {
+  const [query,  setQuery]  = useState('')
+  const [open,   setOpen]   = useState(false)
+  const ref = useRef(null)
+
+  const selected = options.find(o => o[idKey] === value)
+  const filtered = options.filter(o =>
+    !query || o[labelKey].toLowerCase().includes(query.toLowerCase())
+  )
+
+  useEffect(() => {
+    function handler(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const iStyle = { background: 'var(--bg-deep)', border: '1px solid var(--border-md)', color: 'var(--text)' }
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <div style={{ ...iStyle, borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px' }}
+        onClick={() => { setOpen(o => !o); setQuery('') }}>
+        <span className="flex-1 text-sm" style={{ color: selected ? 'var(--text)' : 'var(--text-muted)' }}>
+          {selected ? selected[labelKey] : placeholder}
+        </span>
+        {selected && (
+          <button style={{ color: 'var(--text-muted)', lineHeight: 1 }} onClick={e => { e.stopPropagation(); onChange(null) }}>
+            <IconX size={13} />
+          </button>
+        )}
+        <IconChevronDown size={14} style={{ color: 'var(--text-muted)', flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }} />
+      </div>
+      {open && (
+        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50, marginTop: 4,
+          background: 'var(--bg-panel)', border: '1px solid var(--border-md)', borderRadius: 8,
+          boxShadow: '0 8px 24px rgba(0,0,0,0.5)', overflow: 'hidden' }}>
+          <div style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-deep)', borderRadius: 6, padding: '4px 8px' }}>
+              <IconSearch size={12} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+              <input autoFocus className="bg-transparent outline-none text-sm flex-1" style={{ color: 'var(--text)' }}
+                placeholder="Поиск..." value={query} onChange={e => setQuery(e.target.value)} />
+            </div>
+          </div>
+          <div style={{ maxHeight: 180, overflowY: 'auto' }}>
+            <div style={{ padding: '4px 12px 6px', cursor: 'pointer', borderBottom: '0.5px solid var(--border)' }}
+              className="text-sm" onClick={() => { onChange(null); setOpen(false) }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-row)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              style={{ color: 'var(--text-muted)', paddingTop: 8, paddingBottom: 8 }}>
+              — Не указан —
+            </div>
+            {filtered.map(o => (
+              <div key={o[idKey]} onClick={() => { onChange(o[idKey]); setOpen(false) }}
+                style={{ padding: '6px 12px', cursor: 'pointer', background: value === o[idKey] ? 'var(--gold-dim)' : 'transparent',
+                  borderBottom: '0.5px solid var(--border)' }}
+                onMouseEnter={e => { if (value !== o[idKey]) e.currentTarget.style.background = 'var(--bg-row)' }}
+                onMouseLeave={e => { if (value !== o[idKey]) e.currentTarget.style.background = 'transparent' }}>
+                <span className="font-cinzel text-xs" style={{ color: value === o[idKey] ? 'var(--gold)' : 'var(--text-dim)' }}>
+                  {o[labelKey]}
+                </span>
+              </div>
+            ))}
+            {filtered.length === 0 && <div className="text-xs px-3 py-3" style={{ color: 'var(--text-muted)' }}>Ничего не найдено</div>}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Множественный выбор с поиском ───────────────────────────────────────────
+function SearchableMulti({ ids, onChange, options, labelKey = 'name', idKey = 'id' }) {
+  const [query, setQuery] = useState('')
+  const filtered = options.filter(o =>
+    !query || o[labelKey].toLowerCase().includes(query.toLowerCase())
+  )
+  const iStyle = { background: 'var(--bg-deep)', border: '1px solid var(--border-md)', color: 'var(--text)' }
+
+  function toggle(id) {
+    onChange(ids.includes(id) ? ids.filter(x => x !== id) : [...ids, id])
+  }
+
+  return (
+    <div style={{ border: '1px solid var(--border-md)', borderRadius: 8, overflow: 'hidden' }}>
+      <div style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)', background: 'var(--bg-deep)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <IconSearch size={12} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+          <input className="bg-transparent outline-none text-sm flex-1" style={{ color: 'var(--text)' }}
+            placeholder="Поиск..." value={query} onChange={e => setQuery(e.target.value)} />
+          {query && <button onClick={() => setQuery('')}><IconX size={11} style={{ color: 'var(--text-muted)' }} /></button>}
+        </div>
+      </div>
+      <div style={{ maxHeight: 150, overflowY: 'auto' }}>
+        {filtered.map(o => {
+          const checked = ids.includes(o[idKey])
+          return (
+            <label key={o[idKey]} className="flex items-center gap-2 px-3 py-1.5 cursor-pointer"
+              style={{ background: checked ? 'var(--gold-dim)' : 'transparent', borderBottom: '0.5px solid var(--border)' }}>
+              <input type="checkbox" checked={checked} onChange={() => toggle(o[idKey])} style={{ accentColor: 'var(--gold)' }} />
+              <span className="font-cinzel text-xs" style={{ color: checked ? 'var(--gold)' : 'var(--text-dim)' }}>
+                {o[labelKey]}
+              </span>
+            </label>
+          )
+        })}
+        {filtered.length === 0 && <div className="text-xs px-3 py-3" style={{ color: 'var(--text-muted)' }}>Ничего не найдено</div>}
+      </div>
+      {ids.length > 0 && (
+        <div style={{ padding: '4px 10px', borderTop: '1px solid var(--border)', background: 'var(--bg-deep)', display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+          {ids.map(id => {
+            const o = options.find(x => x[idKey] === id)
+            if (!o) return null
+            return (
+              <span key={id} className="font-cinzel text-[10px] flex items-center gap-1 px-2 py-0.5 rounded-full"
+                style={{ background: 'var(--gold-dim)', color: 'var(--gold)', border: '0.5px solid rgba(226,201,126,0.3)' }}>
+                {o[labelKey]}
+                <button onClick={() => toggle(id)}><IconX size={9} /></button>
+              </span>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function QuestForm({ initial, onClose, onSaved, npcs = [], locations = [] }) {
   const { addQuest, updateQuest } = useQuestStore()
@@ -116,12 +243,12 @@ export default function QuestForm({ initial, onClose, onSaved, npcs = [], locati
           {npcs.length > 0 && (
             <div>
               <label className="font-cinzel text-[10px] uppercase tracking-widest block mb-1" style={{ color: 'var(--text-muted)' }}>Квестодатель (НПС)</label>
-              <select className={iCls} style={{ ...iStyle, cursor: 'pointer' }}
-                value={form.questGiverNpcId ?? ''}
-                onChange={e => set('questGiverNpcId', e.target.value ? Number(e.target.value) : null)}>
-                <option value="">— Не указан —</option>
-                {npcs.map(n => <option key={n.id} value={n.id}>{n.name}{n.role ? ` (${n.role})` : ''}</option>)}
-              </select>
+              <SearchableSelect
+                value={form.questGiverNpcId ?? null}
+                onChange={v => set('questGiverNpcId', v)}
+                options={npcs.map(n => ({ id: n.id, name: n.name + (n.role ? ` (${n.role})` : '') }))}
+                placeholder="— Не указан —"
+              />
             </div>
           )}
 
@@ -129,21 +256,11 @@ export default function QuestForm({ initial, onClose, onSaved, npcs = [], locati
           {npcs.length > 0 && (
             <div>
               <label className="font-cinzel text-[10px] uppercase tracking-widest block mb-1.5" style={{ color: 'var(--text-muted)' }}>Связанные НПС</label>
-              <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-md)', maxHeight: 140, overflowY: 'auto' }}>
-                {npcs.map(n => {
-                  const checked = (form.relatedNpcIds ?? []).includes(n.id)
-                  return (
-                    <label key={n.id} className="flex items-center gap-2 px-3 py-1.5 cursor-pointer"
-                      style={{ background: checked ? 'var(--gold-dim)' : 'transparent', borderBottom: '0.5px solid var(--border)' }}>
-                      <input type="checkbox" checked={checked}
-                        onChange={() => toggleArr('relatedNpcIds', n.id)} />
-                      <span className="font-cinzel text-xs" style={{ color: checked ? 'var(--gold)' : 'var(--text-dim)' }}>
-                        {n.name}{n.role ? ` — ${n.role}` : ''}
-                      </span>
-                    </label>
-                  )
-                })}
-              </div>
+              <SearchableMulti
+                ids={form.relatedNpcIds ?? []}
+                onChange={v => set('relatedNpcIds', v)}
+                options={npcs.map(n => ({ id: n.id, name: n.name + (n.role ? ` — ${n.role}` : '') }))}
+              />
             </div>
           )}
 
@@ -151,19 +268,11 @@ export default function QuestForm({ initial, onClose, onSaved, npcs = [], locati
           {locations.length > 0 && (
             <div>
               <label className="font-cinzel text-[10px] uppercase tracking-widest block mb-1.5" style={{ color: 'var(--text-muted)' }}>Связанные локации</label>
-              <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-md)', maxHeight: 140, overflowY: 'auto' }}>
-                {locations.map(l => {
-                  const checked = (form.relatedLocationIds ?? []).includes(l.id)
-                  return (
-                    <label key={l.id} className="flex items-center gap-2 px-3 py-1.5 cursor-pointer"
-                      style={{ background: checked ? 'var(--gold-dim)' : 'transparent', borderBottom: '0.5px solid var(--border)' }}>
-                      <input type="checkbox" checked={checked}
-                        onChange={() => toggleArr('relatedLocationIds', l.id)} />
-                      <span className="font-cinzel text-xs" style={{ color: checked ? 'var(--gold)' : 'var(--text-dim)' }}>{l.title}</span>
-                    </label>
-                  )
-                })}
-              </div>
+              <SearchableMulti
+                ids={form.relatedLocationIds ?? []}
+                onChange={v => set('relatedLocationIds', v)}
+                options={locations.map(l => ({ id: l.id, name: l.title }))}
+              />
             </div>
           )}
 
