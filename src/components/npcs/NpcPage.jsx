@@ -5,7 +5,6 @@ import {
 } from '@tabler/icons-react'
 import { useNpcStore } from '../../store/npcStore'
 import { FACTION_STATUSES, FACTION_STATUS_MAP } from '../../data/npcDb'
-import { QUEST_STATUS_MAP } from '../../data/locationsDb'
 import NpcModal from './NpcModal'
 import { FactionForm, NpcForm } from './NpcForms'
 
@@ -333,25 +332,6 @@ function FactionCard({ faction: f, onEdit, onStatusChange }) {
           </div>
         )}
       </div>
-
-      {/* Квесты */}
-      {f.quests?.length > 0 && (
-        <div className="px-4 pb-4">
-          <div className="font-cinzel text-[10px] uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Квесты</div>
-          <div className="flex flex-col gap-1">
-            {f.quests.map((q, i) => {
-              const qs = QUEST_STATUS_MAP[q.status] ?? QUEST_STATUS_MAP['inactive']
-              return (
-                <div key={i} className="flex items-center gap-2 text-sm px-2 py-1.5 rounded" style={{ background: 'var(--bg-row)' }}>
-                  <span>{qs.icon}</span>
-                  <span style={{ color: 'var(--text-dim)' }}>{q.title}</span>
-                  <span className="ml-auto font-cinzel text-[10px]" style={{ color: qs.color }}>{qs.label}</span>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
 
       {/* Заметки ДМ */}
       {f.dmNotes && <DmNotesBlock notes={f.dmNotes} />}

@@ -74,18 +74,6 @@ export function FactionForm({ initial, onClose, onSaved }) {
             ))}
             <button type="button" className="btn btn-ghost w-full justify-center" style={{ fontSize: 12 }} onClick={() => addToArray('info', { label: '', value: '' })}><IconPlus size={13} /> Добавить строку</button>
           </FormSection>
-          <FormSection title="Квесты фракции">
-            {form.quests?.map((q, i) => (
-              <div key={i} className="flex gap-2 mb-2 items-center">
-                <input className={iCls} style={{ ...iStyle, flex: 1 }} value={q.title} placeholder="Квест" onChange={e => updateInArray('quests', i, x => ({ ...x, title: e.target.value }))} />
-                <select className="rounded-lg px-2 py-1.5 text-xs outline-none shrink-0" style={{ ...iStyle, cursor: 'pointer' }} value={q.status} onChange={e => updateInArray('quests', i, x => ({ ...x, status: e.target.value }))}>
-                  {QUEST_STATUSES.map(s => <option key={s.id} value={s.id}>{s.icon} {s.label}</option>)}
-                </select>
-                <button className="icon-btn shrink-0" onClick={() => removeFromArray('quests', i)}><IconTrash size={12} /></button>
-              </div>
-            ))}
-            <button type="button" className="btn btn-ghost w-full justify-center" style={{ fontSize: 12 }} onClick={() => addToArray('quests', { title: '', status: 'inactive' })}><IconPlus size={13} /> Добавить квест</button>
-          </FormSection>
           <FormSection title="Заметки ДМ 🔒">
             <textarea className={`${iCls} resize-none`} style={{ ...iStyle, minHeight: 60 }} value={form.dmNotes ?? ''} onChange={e => set('dmNotes', e.target.value)} />
           </FormSection>
