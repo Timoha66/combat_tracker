@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { IconPencil, IconChevronDown, IconChevronRight, IconExternalLink } from '@tabler/icons-react'
 import { CAT_MAP } from '../../data/locationsDb'
 import { QUEST_STATUS_MAP } from '../../data/questDb'
@@ -14,8 +14,11 @@ export default function LocationView({ location: l, onEdit }) {
   const [questCardId, setQuestCardId] = useState(null)
 
   const saveDmNotes = useLocationsStore(s => s.saveDmNotes)
-  const allQuests = useQuestStore(s => s.quests)
-  const quests    = allQuests.filter(q => (q.relatedLocationIds ?? []).includes(l.id))
+  const allQuests  = useQuestStore(s => s.quests)
+  const loadQuests = useQuestStore(s => s.loadAll)
+  const quests     = allQuests.filter(q => (q.relatedLocationIds ?? []).includes(l.id))
+
+  useEffect(() => { loadQuests() }, [])
   const npcs        = useNpcStore(s => s.npcs)
   const locations   = useLocationsStore(s => s.locations)
 

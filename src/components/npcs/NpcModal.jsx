@@ -3,7 +3,9 @@ import { IconX, IconPencil, IconTrash, IconBook2 } from '@tabler/icons-react'
 import { useNpcStore } from '../../store/npcStore'
 import { useBestiaryStore } from '../../store/bestiaryStore'
 import { useQuestStore } from '../../store/questStore'
+import { useLocationsStore } from '../../store/locationsStore'
 import StatblockView from '../bestiary/StatblockView'
+import QuestCard from '../quests/QuestCard'
 
 const QUEST_STATUS_COLORS = {
   active:   '#f59e0b',
@@ -16,13 +18,17 @@ const QUEST_STATUS_COLORS = {
 export default function NpcModal({ npc, onClose, onEdit, onOpenQuest }) {
   const [showSecret,    setShowSecret]    = useState(false)
   const [showStatblock, setShowStatblock] = useState(null)
+  const [questCardId,   setQuestCardId]   = useState(null)
   const deleteNpc  = useNpcStore(s => s.deleteNpc)
   const creatures  = useBestiaryStore(s => s.creatures)
   const loadBest   = useBestiaryStore(s => s.loadAll)
   const quests     = useQuestStore(s => s.quests)
   const loadQuests = useQuestStore(s => s.loadAll)
+  const npcs       = useNpcStore(s => s.npcs)
+  const locations  = useLocationsStore(s => s.locations)
+  const loadLocs   = useLocationsStore(s => s.loadAll)
 
-  useState(() => { loadBest(); loadQuests() }, [])
+  useState(() => { loadBest(); loadQuests(); loadLocs() }, [])
 
   const bestiaryMatches = creatures.filter(c => {
     const cName = c.name.toLowerCase(), nName = npc.name.toLowerCase()
@@ -62,6 +68,7 @@ export default function NpcModal({ npc, onClose, onEdit, onOpenQuest }) {
   }
 
   return (
+    <>
     <div className="overlay" style={{ zIndex: 300 }}>
       <div className="flex flex-col rounded-2xl overflow-hidden"
         style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-md)', width: 820, maxWidth: '96vw', maxHeight: '90vh' }}>
@@ -160,7 +167,7 @@ export default function NpcModal({ npc, onClose, onEdit, onOpenQuest }) {
                           Выдаёт квест
                         </div>
                         <div className="flex flex-wrap gap-1.5">
-                          {giverQuests.map(q => <QuestBadge key={q.id} quest={q} onOpen={onOpenQuest} />)}
+                          {giverQuests.map(q => <QuestBadge key={q.id} quest={q} onOpen={() => setQuestCardId(q.id)} />)}
                         </div>
                       </div>
                     )}
@@ -170,7 +177,7 @@ export default function NpcModal({ npc, onClose, onEdit, onOpenQuest }) {
                           Связан с квестами
                         </div>
                         <div className="flex flex-wrap gap-1.5">
-                          {relatedQuests.map(q => <QuestBadge key={q.id} quest={q} onOpen={onOpenQuest} />)}
+                          {relatedQuests.map(q => <QuestBadge key={q.id} quest={q} onOpen={() => setQuestCardId(q.id)} />)}
                         </div>
                       </div>
                     )}
@@ -199,6 +206,16 @@ export default function NpcModal({ npc, onClose, onEdit, onOpenQuest }) {
         </div>
       </div>
     </div>
+
+    {questCardId && (
+      <QuestCard
+        questId={questCardId}
+        npcs={npcs}
+        locations={locations}
+        onClose={() => setQuestCardId(null)}
+      />
+    )}
+    </>
   )
 }
 
