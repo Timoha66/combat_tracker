@@ -245,7 +245,7 @@ export default function QuestForm({ initial, onClose, onSaved, npcs = [], locati
               <SearchableSelect
                 value={form.questGiverNpcId ?? null}
                 onChange={v => set('questGiverNpcId', v)}
-                options={npcs.map(n => ({ id: n.id, name: n.name + (n.role ? ` (${n.role})` : '') }))}
+                options={npcs.map(n => ({ id: n.id, name: n.name }))}
                 placeholder="— Не указан —"
               />
             </div>
@@ -258,7 +258,7 @@ export default function QuestForm({ initial, onClose, onSaved, npcs = [], locati
               <SearchableMulti
                 ids={form.relatedNpcIds ?? []}
                 onChange={v => set('relatedNpcIds', v)}
-                options={npcs.map(n => ({ id: n.id, name: n.name + (n.role ? ` — ${n.role}` : '') }))}
+                options={npcs.map(n => ({ id: n.id, name: n.name }))}
               />
             </div>
           )}

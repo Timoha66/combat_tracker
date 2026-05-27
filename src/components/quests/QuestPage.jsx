@@ -286,7 +286,7 @@ function QuestDetailView({ quest, npcs, locations, onEdit, onOpenNpc, onOpenLoca
                 <button className="font-cinzel text-xs text-left transition-colors"
                   style={{ color: 'var(--text-dim)', textDecoration: onOpenNpc ? 'underline' : 'none', textDecorationColor: 'rgba(255,255,255,0.15)', cursor: onOpenNpc ? 'pointer' : 'default' }}
                   onClick={() => onOpenNpc?.(n)}>
-                  • {n.name}{n.role ? ` — ${n.role}` : ''}
+                  • {n.name}
                 </button>
               </div>
             ))}
