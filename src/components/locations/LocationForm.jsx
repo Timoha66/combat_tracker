@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { IconX, IconPlus, IconTrash, IconCheck } from '@tabler/icons-react'
 import { useLocationsStore } from '../../store/locationsStore'
-import { EMPTY_LOCATION, LOCATION_CATEGORIES, QUEST_STATUSES, QUICK_TAGS } from '../../data/locationsDb'
+import { EMPTY_LOCATION, LOCATION_CATEGORIES, QUICK_TAGS } from '../../data/locationsDb'
 
 export default function LocationForm({ initial, onClose, onSaved }) {
   const { addLocation, updateLocation } = useLocationsStore()
@@ -159,46 +159,6 @@ export default function LocationForm({ initial, onClose, onSaved }) {
             </button>
           </FormSection>
 
-          {/* Квесты */}
-          <FormSection title="Квесты">
-            {form.quests?.map((q, i) => (
-              <div key={i} className="mb-2 p-2.5 rounded-lg" style={{ background: 'var(--bg-row)', border: '1px solid var(--border)' }}>
-                <div className="flex gap-2 mb-2 items-center">
-                  <input className={inputCls} style={{ ...inputStyle, flex: 1 }} value={q.title}
-                    placeholder="Название квеста"
-                    onChange={e => updateInArray('quests', i, x => ({ ...x, title: e.target.value }))} />
-                  <select className="rounded-lg px-2 py-1.5 text-xs outline-none shrink-0"
-                    style={{ ...inputStyle, cursor: 'pointer' }}
-                    value={q.status}
-                    onChange={e => updateInArray('quests', i, x => ({ ...x, status: e.target.value }))}>
-                    {QUEST_STATUSES.map(s => (
-                      <option key={s.id} value={s.id}>{s.icon} {s.label}</option>
-                    ))}
-                  </select>
-                  <button className="icon-btn shrink-0" onClick={() => removeFromArray('quests', i)}>
-                    <IconTrash size={12} />
-                  </button>
-                </div>
-                <div className="grid grid-cols-2 gap-2 mb-2">
-                  <input className={inputCls} style={inputStyle} value={q.giver ?? ''}
-                    placeholder="Кто выдаёт"
-                    onChange={e => updateInArray('quests', i, x => ({ ...x, giver: e.target.value }))} />
-                  <input className={inputCls} style={inputStyle} value={q.reward ?? ''}
-                    placeholder="Награда"
-                    onChange={e => updateInArray('quests', i, x => ({ ...x, reward: e.target.value }))} />
-                </div>
-                <textarea className={`${inputCls} resize-none`} style={{ ...inputStyle, minHeight: 50 }}
-                  value={q.description ?? ''}
-                  placeholder="Описание квеста..."
-                  onChange={e => updateInArray('quests', i, x => ({ ...x, description: e.target.value }))} />
-              </div>
-            ))}
-            <button type="button" className="btn btn-ghost w-full justify-center" style={{ fontSize: 12 }}
-              onClick={() => addToArray('quests', { title: '', status: 'inactive', giver: '', reward: '', description: '' })}>
-              <IconPlus size={13} /> Добавить квест
-            </button>
-          </FormSection>
-
           {/* Точки интереса */}
           <FormSection title="Точки интереса">
             {form.points?.map((p, pi) => (
@@ -235,34 +195,10 @@ export default function LocationForm({ initial, onClose, onSaved }) {
                   onClick={() => updateInArray('points', pi, x => ({ ...x, npcs: [...(x.npcs ?? []), { name: '', description: '' }] }))}>
                   <IconPlus size={12} /> НПС
                 </button>
-
-                {/* Квесты точки */}
-                <div className="font-cinzel text-[10px] uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>Квесты</div>
-                {p.quests?.map((q, qi) => (
-                  <div key={qi} className="flex gap-2 mb-1.5 items-center">
-                    <input className={inputCls} style={{ ...inputStyle, flex: 1 }} value={q.title}
-                      placeholder="Квест"
-                      onChange={e => updateInArray('points', pi, x => ({ ...x, quests: x.quests.map((qq, qqi) => qqi === qi ? { ...qq, title: e.target.value } : qq) }))} />
-                    <select className="rounded-lg px-2 py-1.5 text-xs outline-none shrink-0"
-                      style={{ ...inputStyle, cursor: 'pointer' }}
-                      value={q.status}
-                      onChange={e => updateInArray('points', pi, x => ({ ...x, quests: x.quests.map((qq, qqi) => qqi === qi ? { ...qq, status: e.target.value } : qq) }))}>
-                      {QUEST_STATUSES.map(s => <option key={s.id} value={s.id}>{s.icon} {s.label}</option>)}
-                    </select>
-                    <button className="icon-btn shrink-0"
-                      onClick={() => updateInArray('points', pi, x => ({ ...x, quests: x.quests.filter((_, qqi) => qqi !== qi) }))}>
-                      <IconTrash size={11} />
-                    </button>
-                  </div>
-                ))}
-                <button type="button" className="btn btn-ghost justify-center" style={{ fontSize: 11, width: '100%' }}
-                  onClick={() => updateInArray('points', pi, x => ({ ...x, quests: [...(x.quests ?? []), { title: '', status: 'inactive' }] }))}>
-                  <IconPlus size={12} /> Квест
-                </button>
               </div>
             ))}
             <button type="button" className="btn btn-ghost w-full justify-center" style={{ fontSize: 12 }}
-              onClick={() => addToArray('points', { title: '', description: '', npcs: [], quests: [] })}>
+              onClick={() => addToArray('points', { title: '', description: '', npcs: [] })}>
               <IconPlus size={13} /> Добавить точку интереса
             </button>
           </FormSection>
