@@ -1,13 +1,14 @@
-import { IconHome, IconSword, IconMap, IconUsers, IconBook, IconCloud, IconMap2, IconCompass } from '@tabler/icons-react'
+import { IconHome, IconSword, IconMap, IconUsers, IconBook, IconCloud, IconMap2, IconCompass, IconListCheck } from '@tabler/icons-react'
 
 const NAV_ITEMS = [
-  { id: 'home',      icon: <IconHome size={20} />,     label: 'Домой' },
-  { id: 'tracker',   icon: <IconSword size={20} />,    label: 'Трекер' },
-  { id: 'locations', icon: <IconCompass size={20} />,  label: 'Локации' },
-  { id: 'npcs',      icon: <IconUsers size={20} />,    label: 'НПС и фракции' },
-  { id: 'journal',   icon: <IconBook size={20} />,     label: 'Журнал кампании' },
-  { id: 'weather',   icon: <IconCloud size={20} />,    label: 'Погода и навигация' },
-  { id: 'map',       icon: <IconMap2 size={20} />,     label: 'Карта Чульта' },
+  { id: 'home',      icon: <IconHome size={20} />,       label: 'Домой' },
+  { id: 'tracker',   icon: <IconSword size={20} />,      label: 'Трекер' },
+  { id: 'locations', icon: <IconCompass size={20} />,    label: 'Локации' },
+  { id: 'npcs',      icon: <IconUsers size={20} />,      label: 'НПС и фракции' },
+  { id: 'quests',    icon: <IconListCheck size={20} />,  label: 'Справочник квестов' },
+  { id: 'journal',   icon: <IconBook size={20} />,       label: 'Журнал кампании' },
+  { id: 'weather',   icon: <IconCloud size={20} />,      label: 'Погода и навигация' },
+  { id: 'map',       icon: <IconMap2 size={20} />,       label: 'Карта Чульта' },
 ]
 
 export default function Sidebar({ page, onNavigate }) {

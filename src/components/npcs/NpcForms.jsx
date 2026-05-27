@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { IconX, IconPlus, IconTrash, IconCheck } from '@tabler/icons-react'
-import { useNpcStore } from '../../store/npcStore'
+import { useNpcStore }   from '../../store/npcStore'
+import { useQuestStore } from '../../store/questStore'
 import { EMPTY_FACTION, EMPTY_NPC, FACTION_STATUSES } from '../../data/npcDb'
-import { QUEST_STATUSES } from '../../data/locationsDb'
 
 // ─── ФОРМА ФРАКЦИИ ────────────────────────────────────────────────────────────
 export function FactionForm({ initial, onClose, onSaved }) {
@@ -102,9 +102,12 @@ export function FactionForm({ initial, onClose, onSaved }) {
 // ─── ФОРМА НПС ────────────────────────────────────────────────────────────────
 export function NpcForm({ initial, factionId, factions, onClose, onSaved }) {
   const { addNpc, updateNpc } = useNpcStore()
+  const quests    = useQuestStore(s => s.quests)
+  const loadQuests = useQuestStore(s => s.loadAll)
   const isNew = !initial?.id
 
-  // Совместимость: старый factionId → новый factionIds
+  useEffect(() => { loadQuests() }, [])
+
   const initFactionIds = initial?.factionIds
     ?? (initial?.factionId ? [initial.factionId] : factionId ? [factionId] : [])
 
@@ -117,6 +120,10 @@ export function NpcForm({ initial, factionId, factions, onClose, onSaved }) {
   function removeFromArray(field, idx) { setForm(f => ({ ...f, [field]: f[field].filter((_, i) => i !== idx) })) }
   function updateInArray(field, idx, updater) {
     setForm(f => ({ ...f, [field]: f[field].map((item, i) => i === idx ? updater(item) : item) }))
+  }
+  function toggleQuest(field, id) {
+    const arr = form[field] ?? []
+    set(field, arr.includes(id) ? arr.filter(x => x !== id) : [...arr, id])
   }
 
   async function handleSave() {
@@ -195,8 +202,35 @@ export function NpcForm({ initial, factionId, factions, onClose, onSaved }) {
             <FormField label="Условия найма">
               <textarea className={`${iCls} resize-none`} style={{ ...iStyle, minHeight: 50 }} value={form.conditions} onChange={e => set('conditions', e.target.value)} />
             </FormField>
-            <FormField label="Квест">
-              <textarea className={`${iCls} resize-none`} style={{ ...iStyle, minHeight: 50 }} value={form.quest} onChange={e => set('quest', e.target.value)} />
+            <FormField label="Квесты (квестодатель)">
+              <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-md)', maxHeight: 120, overflowY: 'auto' }}>
+                {quests.length === 0 && <div className="px-3 py-2 font-cinzel text-xs" style={{ color: 'var(--text-muted)' }}>Квестов пока нет</div>}
+                {quests.map(q => {
+                  const checked = (form.questGiverIds ?? []).includes(q.id)
+                  return (
+                    <label key={q.id} className="flex items-center gap-2 px-3 py-1.5 cursor-pointer"
+                      style={{ background: checked ? 'var(--gold-dim)' : 'transparent', borderBottom: '0.5px solid var(--border)' }}>
+                      <input type="checkbox" checked={checked} onChange={() => toggleQuest('questGiverIds', q.id)} />
+                      <span className="font-cinzel text-xs" style={{ color: checked ? 'var(--gold)' : 'var(--text-dim)' }}>{q.title}</span>
+                    </label>
+                  )
+                })}
+              </div>
+            </FormField>
+            <FormField label="Квесты (связанный)">
+              <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-md)', maxHeight: 120, overflowY: 'auto' }}>
+                {quests.length === 0 && <div className="px-3 py-2 font-cinzel text-xs" style={{ color: 'var(--text-muted)' }}>Квестов пока нет</div>}
+                {quests.map(q => {
+                  const checked = (form.relatedQuestIds ?? []).includes(q.id)
+                  return (
+                    <label key={q.id} className="flex items-center gap-2 px-3 py-1.5 cursor-pointer"
+                      style={{ background: checked ? 'rgba(96,165,250,0.12)' : 'transparent', borderBottom: '0.5px solid var(--border)' }}>
+                      <input type="checkbox" checked={checked} onChange={() => toggleQuest('relatedQuestIds', q.id)} />
+                      <span className="font-cinzel text-xs" style={{ color: checked ? '#60a5fa' : 'var(--text-dim)' }}>{q.title}</span>
+                    </label>
+                  )
+                })}
+              </div>
             </FormField>
           </FormSection>
           <FormSection title="Секрет ДМ 🔒">

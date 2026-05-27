@@ -45,7 +45,7 @@ export const EMPTY_LOCATION = {
   atmosphere: '',
   chars:      '',
   npcs:       [],
-  quests:     [],
+  questIds:   [],
   points:     [],
   dmNotes:    '',
 }

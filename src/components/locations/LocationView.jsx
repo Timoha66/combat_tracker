@@ -1,16 +1,22 @@
 import { useState, useCallback } from 'react'
-import { IconPencil, IconChevronDown, IconChevronRight } from '@tabler/icons-react'
-import { QUEST_STATUS_MAP, QUEST_STATUSES, CAT_MAP } from '../../data/locationsDb'
+import { IconPencil, IconChevronDown, IconChevronRight, IconExternalLink } from '@tabler/icons-react'
+import { CAT_MAP } from '../../data/locationsDb'
+import { QUEST_STATUS_MAP } from '../../data/questDb'
 import { useLocationsStore } from '../../store/locationsStore'
+import { useQuestStore }     from '../../store/questStore'
+import QuestCard from '../quests/QuestCard'
+import { useNpcStore }       from '../../store/npcStore'
 
 export default function LocationView({ location: l, onEdit }) {
-  const [openPOI,   setOpenPOI]   = useState(null)
-  const [openQuest, setOpenQuest] = useState(null)
-  const [dmNotes,   setDmNotes]   = useState(l.dmNotes ?? '')
-  const [saveTimer, setSaveTimer] = useState(null)
+  const [openPOI,    setOpenPOI]    = useState(null)
+  const [dmNotes,    setDmNotes]    = useState(l.dmNotes ?? '')
+  const [saveTimer,  setSaveTimer]  = useState(null)
+  const [questCardId, setQuestCardId] = useState(null)
 
-  const updateQuestStatus = useLocationsStore(s => s.updateQuestStatus)
-  const saveDmNotes       = useLocationsStore(s => s.saveDmNotes)
+  const saveDmNotes = useLocationsStore(s => s.saveDmNotes)
+  const quests      = useQuestStore(s => s.getByIds(l.questIds ?? []))
+  const npcs        = useNpcStore(s => s.npcs)
+  const locations   = useLocationsStore(s => s.locations)
 
   const cat = CAT_MAP[l.cat]
 
@@ -20,12 +26,8 @@ export default function LocationView({ location: l, onEdit }) {
     setSaveTimer(setTimeout(() => saveDmNotes(l.id, val), 800))
   }
 
-  function handleStatusChange(questIdx, status, e) {
-    e.stopPropagation()
-    updateQuestStatus(l.id, questIdx, status)
-  }
-
   return (
+    <>
     <div className="overflow-y-auto h-full">
       <div className="p-5">
 
@@ -74,7 +76,7 @@ export default function LocationView({ location: l, onEdit }) {
             ),
 
             // Колонка 2: НПС + Квесты
-            (l.npcs?.length > 0 || l.quests?.length > 0) && (
+            (l.npcs?.length > 0 || quests.length > 0) && (
               <div key="col2" className="flex flex-col gap-4">
                 {l.npcs?.length > 0 && (
                   <Card title={`НПС (${l.npcs.length})`}>
@@ -88,46 +90,23 @@ export default function LocationView({ location: l, onEdit }) {
                     </div>
                   </Card>
                 )}
-                {l.quests?.length > 0 && (
-                  <Card title={`Квесты (${l.quests.length})`}>
+                {quests.length > 0 && (
+                  <Card title={`Квесты (${quests.length})`}>
                     <div className="flex flex-col gap-2">
-                      {l.quests.map((q, i) => {
-                        const st     = QUEST_STATUS_MAP[q.status] ?? QUEST_STATUS_MAP['inactive']
-                        const isOpen = openQuest === i
-                        const hasExtra = q.giver || q.reward || q.description
+                      {quests.map(q => {
+                        const st = QUEST_STATUS_MAP[q.status] ?? QUEST_STATUS_MAP['inactive']
                         return (
-                          <div key={i} className="rounded-xl overflow-hidden" style={{ border: `1px solid ${st.color}33` }}>
-                            <div className="flex items-center gap-2 px-3 py-2"
-                              style={{ background: `${st.color}0d`, cursor: hasExtra ? 'pointer' : 'default' }}
-                              onClick={() => hasExtra && setOpenQuest(isOpen ? null : i)}>
-                              {hasExtra && (isOpen
-                                ? <IconChevronDown size={12} style={{ color: st.color, flexShrink: 0 }} />
-                                : <IconChevronRight size={12} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
-                              )}
-                              <span className="text-sm shrink-0">{st.icon}</span>
-                              <span className="text-sm flex-1" style={{ color: 'var(--text)' }}>{q.title}</span>
-                            </div>
-                            <div className="flex gap-1 px-2 py-1.5 flex-wrap" style={{ borderTop: `0.5px solid ${st.color}22`, background: 'var(--bg-deep)' }}>
-                              {QUEST_STATUSES.map(s => (
-                                <button key={s.id} onClick={e => handleStatusChange(i, s.id, e)}
-                                  className="font-cinzel text-[9px] px-1.5 py-0.5 rounded cursor-pointer transition-all"
-                                  style={{
-                                    background: q.status === s.id ? `${s.color}22` : 'transparent',
-                                    color: q.status === s.id ? s.color : 'var(--text-muted)',
-                                    border: `0.5px solid ${q.status === s.id ? s.color + '66' : 'var(--border)'}`,
-                                    fontWeight: q.status === s.id ? 700 : 400,
-                                  }}>
-                                  {s.icon} {s.label}
-                                </button>
-                              ))}
-                            </div>
-                            {isOpen && hasExtra && (
-                              <div className="px-3 py-2.5 border-t flex flex-col gap-2" style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}>
-                                {q.giver && <div className="text-sm"><span className="font-cinzel text-[10px] uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Выдаёт: </span><span style={{ color: 'var(--text-dim)' }}>{q.giver}</span></div>}
-                                {q.reward && <div className="text-sm"><span className="font-cinzel text-[10px] uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Награда: </span><span style={{ color: '#f59e0b' }}>{q.reward}</span></div>}
-                                {q.description && <p className="text-sm leading-relaxed" style={{ color: 'var(--text-dim)' }}>{q.description}</p>}
-                              </div>
-                            )}
+                          <div key={q.id} className="flex items-center gap-2 px-3 py-2 rounded-lg"
+                            style={{ background: 'var(--bg-deep)', border: `1px solid ${st.color}33` }}>
+                            <span style={{ fontSize: 14 }}>{st.icon}</span>
+                            <span className="font-cinzel text-sm flex-1" style={{ color: 'var(--text)' }}>{q.title}</span>
+                            <span className="font-cinzel text-[10px]" style={{ color: st.color }}>{st.label}</span>
+                            <button
+                              className="btn btn-ghost shrink-0"
+                              style={{ fontSize: 10, padding: '2px 8px', color: '#60a5fa', borderColor: 'rgba(96,165,250,0.3)' }}
+                              onClick={() => setQuestCardId(q.id)}>
+                              <IconExternalLink size={11} /> Карточка
+                            </button>
                           </div>
                         )
                       })}
@@ -216,6 +195,17 @@ export default function LocationView({ location: l, onEdit }) {
 
       </div>
     </div>
+
+    {/* QuestCard модалка */}
+    {questCardId && (
+      <QuestCard
+        questId={questCardId}
+        npcs={npcs}
+        locations={locations}
+        onClose={() => setQuestCardId(null)}
+      />
+    )}
+  </>
   )
 }
 

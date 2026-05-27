@@ -46,7 +46,8 @@ export const EMPTY_NPC = {
   knowledge:   '',
   trade:       [],
   tradeNote:   '',
-  quest:       '',
+  questGiverIds:   [],
+  relatedQuestIds:  [],
   tags:        [],
   dmNotes:     '',
 }
