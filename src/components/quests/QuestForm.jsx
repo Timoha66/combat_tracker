@@ -48,11 +48,10 @@ function SearchableSelect({ value, onChange, options, placeholder = '— Не у
             </div>
           </div>
           <div style={{ maxHeight: 180, overflowY: 'auto' }}>
-            <div style={{ padding: '4px 12px 6px', cursor: 'pointer', borderBottom: '0.5px solid var(--border)' }}
+            <div style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '0.5px solid var(--border)', color: 'var(--text-muted)' }}
               className="text-sm" onClick={() => { onChange(null); setOpen(false) }}
               onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-row)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-              style={{ color: 'var(--text-muted)', paddingTop: 8, paddingBottom: 8 }}>
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
               — Не указан —
             </div>
             {filtered.map(o => (

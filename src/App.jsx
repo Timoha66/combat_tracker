@@ -10,10 +10,10 @@ import CombatLog from './components/CombatLog'
 import BestiaryPage from './components/bestiary/BestiaryPage'
 import LocationsPage from './components/locations/LocationsPage'
 import NpcPage from './components/npcs/NpcPage'
+import QuestPage from './components/quests/QuestPage'
 import JournalPage from './components/journal/JournalPage'
 import WeatherPage from './components/weather/WeatherPage'
 import MapPage from './components/map/MapPage'
-import QuestPage from './components/quests/QuestPage'
 import {
   ConditionPicker, AcPopover, ReviveModal, StatblockModal, BattleSummary,
 } from './components/modals.jsx'
@@ -35,6 +35,7 @@ export default function App() {
   const [page, setPage] = useState('home')
   const view = useBattleStore(s => s.view)
   const [locationTarget, setLocationTarget] = useState(null)
+  const [questTarget,    setQuestTarget]    = useState(null)
 
   const [showBestiary,     setShowBestiary]     = useState(false)
   const [addModalOpen,     setAddModalOpen]     = useState(false)
@@ -101,11 +102,11 @@ export default function App() {
 
         {/* ── ЛОКАЦИИ ── */}
         {page === 'locations' && <LocationsPage initialLocation={locationTarget} onLocationOpened={() => setLocationTarget(null)} />}
-        {page === 'npcs' && <NpcPage />}
+        {page === 'npcs'      && <NpcPage onOpenQuest={q => { setQuestTarget(q); handleNavigate('quests') }} />}
+        {page === 'quests'    && <QuestPage initialQuest={questTarget} onQuestOpened={() => setQuestTarget(null)} />}
         {page === 'journal' && <JournalPage />}
         {page === 'weather' && <WeatherPage />}
         {page === 'map'     && <MapPage onNavigateToLocation={loc => { setLocationTarget(loc); handleNavigate('locations') }} />}
-        {page === 'quests'  && <QuestPage />}
 
       </div>
     </div>

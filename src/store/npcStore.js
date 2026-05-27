@@ -1,7 +1,5 @@
 import { create } from 'zustand'
 import { npcDb } from '../data/npcDb'
-import seedFactions from '../data/seedFactions.json'
-import seedNpcs from '../data/seedNpcs.json'
 
 export const useNpcStore = create((set, get) => ({
   factions:      [],
@@ -129,11 +127,6 @@ export const useNpcStore = create((set, get) => ({
   async resetToSeed() {
     await npcDb.factions.clear()
     await npcDb.npcs.clear()
-    const factionIds = await npcDb.factions.bulkAdd(seedFactions, { allKeys: true })
-    const slugToId = {}
-    seedFactions.forEach((f, i) => { slugToId[f.slug] = factionIds[i] })
-    const npcsWithIds = seedNpcs.map(n => ({ ...n, factionId: slugToId[n.factionSlug] ?? null }))
-    await npcDb.npcs.bulkAdd(npcsWithIds)
     await get().loadAll()
   },
 }))

@@ -10,7 +10,7 @@ import { QUEST_TYPES, QUEST_STATUSES, QUEST_STATUS_MAP, QUEST_TYPE_MAP } from '.
 import QuestForm from './QuestForm'
 import QuestCard from './QuestCard'
 
-export default function QuestPage() {
+export default function QuestPage({ initialQuest, onQuestOpened }) {
   const { loadAll: loadQuests, quests, loading, deleteQuest, exportJSON, importJSON } = useQuestStore()
   const npcs      = useNpcStore(s => s.npcs)
   const loadNpcs  = useNpcStore(s => s.loadAll)
@@ -30,6 +30,13 @@ export default function QuestPage() {
     loadNpcs()
     loadLocs()
   }, [])
+
+  useEffect(() => {
+    if (initialQuest) {
+      setSelectedId(initialQuest.id)
+      onQuestOpened?.()
+    }
+  }, [initialQuest])
 
   const selected = quests.find(q => q.id === selectedId) ?? null
 

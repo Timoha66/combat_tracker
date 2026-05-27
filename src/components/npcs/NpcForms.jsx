@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { IconX, IconPlus, IconTrash, IconCheck } from '@tabler/icons-react'
 import { useNpcStore }   from '../../store/npcStore'
-import { useQuestStore } from '../../store/questStore'
 import { EMPTY_FACTION, EMPTY_NPC, FACTION_STATUSES } from '../../data/npcDb'
 
 // ─── ФОРМА ФРАКЦИИ ────────────────────────────────────────────────────────────
@@ -99,9 +98,8 @@ export function NpcForm({ initial, factionId, factions, onClose, onSaved }) {
   const initFactionIds = initial?.factionIds
     ?? (initial?.factionId ? [initial.factionId] : factionId ? [factionId] : [])
 
-  const [form,    setForm]    = useState({ ...EMPTY_NPC, ...initial, factionIds: initFactionIds })
-  const [tagsStr, setTagsStr] = useState((initial?.tags ?? []).join(', '))
-  const [saving,  setSaving]  = useState(false)
+  const [form,   setForm]   = useState({ ...EMPTY_NPC, ...initial, factionIds: initFactionIds })
+  const [saving, setSaving] = useState(false)
 
   function set(field, val) { setForm(f => ({ ...f, [field]: val })) }
   function addToArray(field, item) { setForm(f => ({ ...f, [field]: [...(f[field] ?? []), item] })) }
@@ -109,19 +107,14 @@ export function NpcForm({ initial, factionId, factions, onClose, onSaved }) {
   function updateInArray(field, idx, updater) {
     setForm(f => ({ ...f, [field]: f[field].map((item, i) => i === idx ? updater(item) : item) }))
   }
-  function toggleQuest(field, id) {
-    const arr = form[field] ?? []
-    set(field, arr.includes(id) ? arr.filter(x => x !== id) : [...arr, id])
-  }
 
   async function handleSave() {
     if (!form.name.trim()) { alert('Введи имя'); return }
     setSaving(true)
-    const finalForm = { ...form, tags: tagsStr.split(',').map(t => t.trim()).filter(Boolean) }
     try {
       let saved
-      if (isNew) saved = await addNpc(finalForm)
-      else saved = await updateNpc(form.id, finalForm)
+      if (isNew) saved = await addNpc(form)
+      else saved = await updateNpc(form.id, form)
       onSaved(saved)
     } finally { setSaving(false) }
   }
@@ -173,10 +166,14 @@ export function NpcForm({ initial, factionId, factions, onClose, onSaved }) {
                   })}
                 </div>
               </FormField>
-              <FormField label="Теги (через запятую)">
-                <input className={iCls} style={iStyle} value={tagsStr}
-                  placeholder="тег1, тег2, тег3"
-                  onChange={e => setTagsStr(e.target.value)} />
+              <FormField label="Черты">
+                <ChipInput
+                  values={form.tags ?? []}
+                  onChange={v => set('tags', v)}
+                  maxLength={50}
+                  placeholder="Введи черту и нажми Enter..."
+                  iStyle={iStyle} iCls={iCls}
+                />
               </FormField>
             </div>
           </FormSection>
@@ -189,36 +186,6 @@ export function NpcForm({ initial, factionId, factions, onClose, onSaved }) {
             </FormField>
             <FormField label="Условия найма">
               <textarea className={`${iCls} resize-none`} style={{ ...iStyle, minHeight: 50 }} value={form.conditions} onChange={e => set('conditions', e.target.value)} />
-            </FormField>
-            <FormField label="Квесты (квестодатель)">
-              <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-md)', maxHeight: 120, overflowY: 'auto' }}>
-                {quests.length === 0 && <div className="px-3 py-2 font-cinzel text-xs" style={{ color: 'var(--text-muted)' }}>Квестов пока нет</div>}
-                {quests.map(q => {
-                  const checked = (form.questGiverIds ?? []).includes(q.id)
-                  return (
-                    <label key={q.id} className="flex items-center gap-2 px-3 py-1.5 cursor-pointer"
-                      style={{ background: checked ? 'var(--gold-dim)' : 'transparent', borderBottom: '0.5px solid var(--border)' }}>
-                      <input type="checkbox" checked={checked} onChange={() => toggleQuest('questGiverIds', q.id)} />
-                      <span className="font-cinzel text-xs" style={{ color: checked ? 'var(--gold)' : 'var(--text-dim)' }}>{q.title}</span>
-                    </label>
-                  )
-                })}
-              </div>
-            </FormField>
-            <FormField label="Квесты (связанный)">
-              <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-md)', maxHeight: 120, overflowY: 'auto' }}>
-                {quests.length === 0 && <div className="px-3 py-2 font-cinzel text-xs" style={{ color: 'var(--text-muted)' }}>Квестов пока нет</div>}
-                {quests.map(q => {
-                  const checked = (form.relatedQuestIds ?? []).includes(q.id)
-                  return (
-                    <label key={q.id} className="flex items-center gap-2 px-3 py-1.5 cursor-pointer"
-                      style={{ background: checked ? 'rgba(96,165,250,0.12)' : 'transparent', borderBottom: '0.5px solid var(--border)' }}>
-                      <input type="checkbox" checked={checked} onChange={() => toggleQuest('relatedQuestIds', q.id)} />
-                      <span className="font-cinzel text-xs" style={{ color: checked ? '#60a5fa' : 'var(--text-dim)' }}>{q.title}</span>
-                    </label>
-                  )
-                })}
-              </div>
             </FormField>
           </FormSection>
           <FormSection title="Секрет ДМ 🔒">
@@ -233,26 +200,58 @@ export function NpcForm({ initial, factionId, factions, onClose, onSaved }) {
             ))}
             <button type="button" className="btn btn-ghost w-full justify-center" style={{ fontSize: 12 }} onClick={() => addToArray('phrases', '')}><IconPlus size={13} /> Добавить фразу</button>
           </FormSection>
-          <FormSection title="Торговля">
-            {form.trade?.map((t, i) => (
-              <div key={i} className="grid gap-2 mb-2" style={{ gridTemplateColumns: '1fr 80px 60px auto' }}>
-                <input className={iCls} style={iStyle} value={t.name} placeholder="Товар" onChange={e => updateInArray('trade', i, x => ({ ...x, name: e.target.value }))} />
-                <input className={iCls} style={iStyle} type="number" value={t.price} placeholder="Цена" onChange={e => updateInArray('trade', i, x => ({ ...x, price: Number(e.target.value) }))} />
-                <input className={iCls} style={iStyle} value={t.currency} placeholder="ЗМ" onChange={e => updateInArray('trade', i, x => ({ ...x, currency: e.target.value }))} />
-                <button className="icon-btn shrink-0" onClick={() => removeFromArray('trade', i)}><IconTrash size={12} /></button>
-              </div>
-            ))}
-            <button type="button" className="btn btn-ghost w-full justify-center" style={{ fontSize: 12 }} onClick={() => addToArray('trade', { name: '', price: 0, currency: 'ЗМ' })}><IconPlus size={13} /> Добавить товар</button>
-            {form.trade?.length > 0 && (
-              <textarea className={`${iCls} resize-none mt-2`} style={{ ...iStyle, minHeight: 40 }} value={form.tradeNote} placeholder="Примечание к торговле" onChange={e => set('tradeNote', e.target.value)} />
-            )}
-          </FormSection>
         </div>
         <div className="flex gap-2 px-5 py-3 border-t shrink-0" style={{ borderColor: 'var(--border)' }}>
           <button className="btn btn-cancel flex-1 justify-center" onClick={onClose}><IconX size={14} /> Отмена</button>
           <button className="btn btn-gold flex-1 justify-center" onClick={handleSave} disabled={saving}><IconCheck size={14} /> {saving ? 'Сохранение...' : 'Сохранить'}</button>
         </div>
       </div>
+    </div>
+  )
+}
+
+function ChipInput({ values, onChange, maxLength = 50, placeholder, iStyle, iCls }) {
+  const [input, setInput] = useState('')
+
+  function add() {
+    const val = input.trim().slice(0, maxLength)
+    if (val && !values.includes(val)) onChange([...values, val])
+    setInput('')
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter') { e.preventDefault(); add() }
+    if (e.key === 'Backspace' && !input && values.length) onChange(values.slice(0, -1))
+  }
+
+  return (
+    <div>
+      <div className="flex flex-wrap gap-1 mb-1.5">
+        {values.filter(Boolean).map((v, i) => (
+          <span key={i} className="font-cinzel text-[10px] flex items-center gap-1 px-2 py-0.5 rounded-full italic"
+            style={{ background: 'var(--gold-dim)', color: 'var(--gold)', border: '0.5px solid rgba(226,201,126,0.3)' }}>
+            {v}
+            <button onClick={() => onChange(values.filter((_, j) => j !== i))} style={{ lineHeight: 1 }}>
+              <IconX size={9} />
+            </button>
+          </span>
+        ))}
+      </div>
+      <div className="flex gap-2">
+        <input className={iCls} style={{ ...iStyle, flex: 1 }}
+          value={input} maxLength={maxLength}
+          placeholder={values.length ? `Ещё черта (до ${maxLength} зн.)...` : placeholder}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={handleKey} />
+        <button type="button" className="btn btn-ghost shrink-0" style={{ fontSize: 11 }} onClick={add}>
+          <IconPlus size={12} />
+        </button>
+      </div>
+      {input.length > maxLength - 10 && (
+        <div className="font-cinzel text-[9px] mt-0.5" style={{ color: input.length >= maxLength ? '#f87171' : 'var(--text-muted)' }}>
+          {input.length}/{maxLength}
+        </div>
+      )}
     </div>
   )
 }

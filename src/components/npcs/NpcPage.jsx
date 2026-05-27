@@ -8,7 +8,7 @@ import { FACTION_STATUSES, FACTION_STATUS_MAP } from '../../data/npcDb'
 import NpcModal from './NpcModal'
 import { FactionForm, NpcForm } from './NpcForms'
 
-export default function NpcPage() {
+export default function NpcPage({ onOpenQuest }) {
   const {
     loadAll, loading, getFilteredFactions, getNpcsForFaction,
     search, setSearch, filterStatus, setFilterStatus,
@@ -250,6 +250,7 @@ export default function NpcPage() {
           npc={viewNpc}
           onClose={() => setViewNpc(null)}
           onEdit={() => { setNpcForm(viewNpc); setViewNpc(null) }}
+          onOpenQuest={onOpenQuest}
         />
       )}
       {factionForm && (
