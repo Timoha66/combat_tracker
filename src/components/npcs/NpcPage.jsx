@@ -8,7 +8,7 @@ import { FACTION_STATUSES, FACTION_STATUS_MAP } from '../../data/npcDb'
 import NpcModal from './NpcModal'
 import { FactionForm, NpcForm } from './NpcForms'
 
-export default function NpcPage({ onOpenQuest }) {
+export default function NpcPage({ onOpenQuest, initialNpc, onNpcOpened }) {
   const {
     loadAll, loading, getFilteredFactions, getNpcsForFaction,
     search, setSearch, filterStatus, setFilterStatus,
@@ -24,6 +24,13 @@ export default function NpcPage({ onOpenQuest }) {
   const [npcSearch,     setNpcSearch]     = useState('')
 
   useEffect(() => { loadAll() }, [])
+
+  useEffect(() => {
+    if (initialNpc) {
+      setViewNpc(initialNpc)
+      onNpcOpened?.()
+    }
+  }, [initialNpc])
 
   const filtered    = getFilteredFactions()
   const selectedFac = factions.find(f => f.id === selectedFactionId)

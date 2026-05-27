@@ -36,6 +36,7 @@ export default function App() {
   const view = useBattleStore(s => s.view)
   const [locationTarget, setLocationTarget] = useState(null)
   const [questTarget,    setQuestTarget]    = useState(null)
+  const [npcTarget,      setNpcTarget]      = useState(null)
 
   const [showBestiary,     setShowBestiary]     = useState(false)
   const [addModalOpen,     setAddModalOpen]     = useState(false)
@@ -102,8 +103,13 @@ export default function App() {
 
         {/* ── ЛОКАЦИИ ── */}
         {page === 'locations' && <LocationsPage initialLocation={locationTarget} onLocationOpened={() => setLocationTarget(null)} />}
-        {page === 'npcs'      && <NpcPage onOpenQuest={q => { setQuestTarget(q); handleNavigate('quests') }} />}
-        {page === 'quests'    && <QuestPage initialQuest={questTarget} onQuestOpened={() => setQuestTarget(null)} />}
+        {page === 'npcs'      && <NpcPage
+                                    initialNpc={npcTarget} onNpcOpened={() => setNpcTarget(null)}
+                                    onOpenQuest={q => { setQuestTarget(q); handleNavigate('quests') }} />}
+        {page === 'quests'    && <QuestPage
+                                    initialQuest={questTarget} onQuestOpened={() => setQuestTarget(null)}
+                                    onOpenNpc={n  => { setNpcTarget(n);       handleNavigate('npcs') }}
+                                    onOpenLocation={l => { setLocationTarget(l); handleNavigate('locations') }} />}
         {page === 'journal' && <JournalPage />}
         {page === 'weather' && <WeatherPage />}
         {page === 'map'     && <MapPage onNavigateToLocation={loc => { setLocationTarget(loc); handleNavigate('locations') }} />}

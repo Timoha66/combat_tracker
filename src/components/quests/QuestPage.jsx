@@ -10,7 +10,7 @@ import { QUEST_TYPES, QUEST_STATUSES, QUEST_STATUS_MAP, QUEST_TYPE_MAP } from '.
 import QuestForm from './QuestForm'
 import QuestCard from './QuestCard'
 
-export default function QuestPage({ initialQuest, onQuestOpened }) {
+export default function QuestPage({ initialQuest, onQuestOpened, onOpenNpc, onOpenLocation }) {
   const { loadAll: loadQuests, quests, loading, deleteQuest, exportJSON, importJSON } = useQuestStore()
   const npcs      = useNpcStore(s => s.npcs)
   const loadNpcs  = useNpcStore(s => s.loadAll)
@@ -168,6 +168,8 @@ export default function QuestPage({ initialQuest, onQuestOpened }) {
             npcs={npcs}
             locations={locations}
             onEdit={() => { setEditTarget(selected); setFormOpen(true) }}
+            onOpenNpc={onOpenNpc}
+            onOpenLocation={onOpenLocation}
           />
         ) : (
           <div className="flex items-center justify-center h-full" style={{ color: 'var(--text-muted)' }}>
@@ -195,7 +197,7 @@ export default function QuestPage({ initialQuest, onQuestOpened }) {
 }
 
 // ─── Детальный вид квеста ──────────────────────────────────────────────────────
-function QuestDetailView({ quest, npcs, locations, onEdit }) {
+function QuestDetailView({ quest, npcs, locations, onEdit, onOpenNpc, onOpenLocation }) {
   const updateStatus = useQuestStore(s => s.updateStatus)
   const st   = QUEST_STATUS_MAP[quest.status] ?? QUEST_STATUS_MAP['inactive']
   const typ  = QUEST_TYPE_MAP[quest.type]     ?? QUEST_TYPE_MAP['side']
@@ -269,15 +271,23 @@ function QuestDetailView({ quest, npcs, locations, onEdit }) {
         {(giverNpc || relNpcs.length > 0) && (
           <Card title="НПС">
             {giverNpc && (
-              <div className="mb-2">
-                <span className="font-cinzel text-[9px] px-1.5 py-0.5 rounded mr-2"
+              <div className="mb-2 flex items-center gap-2">
+                <span className="font-cinzel text-[9px] px-1.5 py-0.5 rounded shrink-0"
                   style={{ background: 'rgba(226,201,126,0.15)', color: 'var(--gold)' }}>Квестодатель</span>
-                <span className="font-cinzel text-xs" style={{ color: 'var(--text)' }}>{giverNpc.name}</span>
+                <button className="font-cinzel text-xs text-left transition-colors"
+                  style={{ color: 'var(--text)', textDecoration: onOpenNpc ? 'underline' : 'none', textDecorationColor: 'rgba(255,255,255,0.2)', cursor: onOpenNpc ? 'pointer' : 'default' }}
+                  onClick={() => onOpenNpc?.(giverNpc)}>
+                  {giverNpc.name}
+                </button>
               </div>
             )}
             {relNpcs.map(n => (
-              <div key={n.id} className="font-cinzel text-xs py-0.5" style={{ color: 'var(--text-dim)' }}>
-                • {n.name}{n.role ? ` — ${n.role}` : ''}
+              <div key={n.id} className="py-0.5">
+                <button className="font-cinzel text-xs text-left transition-colors"
+                  style={{ color: 'var(--text-dim)', textDecoration: onOpenNpc ? 'underline' : 'none', textDecorationColor: 'rgba(255,255,255,0.15)', cursor: onOpenNpc ? 'pointer' : 'default' }}
+                  onClick={() => onOpenNpc?.(n)}>
+                  • {n.name}{n.role ? ` — ${n.role}` : ''}
+                </button>
               </div>
             ))}
           </Card>
@@ -285,7 +295,13 @@ function QuestDetailView({ quest, npcs, locations, onEdit }) {
         {relLocs.length > 0 && (
           <Card title="Локации">
             {relLocs.map(l => (
-              <div key={l.id} className="font-cinzel text-xs py-0.5" style={{ color: 'var(--text-dim)' }}>• {l.title}</div>
+              <div key={l.id} className="py-0.5">
+                <button className="font-cinzel text-xs text-left transition-colors"
+                  style={{ color: 'var(--text-dim)', textDecoration: onOpenLocation ? 'underline' : 'none', textDecorationColor: 'rgba(255,255,255,0.15)', cursor: onOpenLocation ? 'pointer' : 'default' }}
+                  onClick={() => onOpenLocation?.(l)}>
+                  • {l.title}
+                </button>
+              </div>
             ))}
           </Card>
         )}
