@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { IconX, IconPlus, IconTrash, IconCheck } from '@tabler/icons-react'
 import { useNpcStore }   from '../../store/npcStore'
 import { EMPTY_FACTION, EMPTY_NPC, FACTION_STATUSES } from '../../data/npcDb'
@@ -89,11 +89,7 @@ export function FactionForm({ initial, onClose, onSaved }) {
 // ─── ФОРМА НПС ────────────────────────────────────────────────────────────────
 export function NpcForm({ initial, factionId, factions, onClose, onSaved }) {
   const { addNpc, updateNpc } = useNpcStore()
-  const quests    = useQuestStore(s => s.quests)
-  const loadQuests = useQuestStore(s => s.loadAll)
   const isNew = !initial?.id
-
-  useEffect(() => { loadQuests() }, [])
 
   const initFactionIds = initial?.factionIds
     ?? (initial?.factionId ? [initial.factionId] : factionId ? [factionId] : [])
