@@ -14,7 +14,8 @@ export default function LocationView({ location: l, onEdit }) {
   const [questCardId, setQuestCardId] = useState(null)
 
   const saveDmNotes = useLocationsStore(s => s.saveDmNotes)
-  const quests      = useQuestStore(s => s.getByIds(l.questIds ?? []))
+  const allQuests = useQuestStore(s => s.quests)
+  const quests    = allQuests.filter(q => (q.relatedLocationIds ?? []).includes(l.id))
   const npcs        = useNpcStore(s => s.npcs)
   const locations   = useLocationsStore(s => s.locations)
 
