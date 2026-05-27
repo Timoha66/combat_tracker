@@ -17,10 +17,11 @@ export default function LocationView({ location: l, onEdit }) {
   const allQuests  = useQuestStore(s => s.quests)
   const loadQuests = useQuestStore(s => s.loadAll)
   const quests     = allQuests.filter(q => (q.relatedLocationIds ?? []).includes(l.id))
+  const npcs       = useNpcStore(s => s.npcs)
+  const loadNpcs   = useNpcStore(s => s.loadAll)
+  const locations  = useLocationsStore(s => s.locations)
 
-  useEffect(() => { loadQuests() }, [])
-  const npcs        = useNpcStore(s => s.npcs)
-  const locations   = useLocationsStore(s => s.locations)
+  useEffect(() => { loadQuests(); loadNpcs() }, [])
 
   const cat = CAT_MAP[l.cat]
 
