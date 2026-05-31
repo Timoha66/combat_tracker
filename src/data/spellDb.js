@@ -19,7 +19,7 @@ export const SPELL_SCHOOL_MAP = Object.fromEntries(SPELL_SCHOOLS.map(s => [s.id,
 
 export const SPELL_CLASSES = [
   'Варвар', 'Бард', 'Жрец', 'Друид', 'Воин', 'Монах',
-  'Паладин', 'Следопыт', 'Плут', 'Чародей', 'Чернокнижник', 'Волшебник', 'Изобретатель',
+  'Паладин', 'Следопыт', 'Плут', 'Чародей', 'Колдун', 'Волшебник', 'Изобретатель',
 ]
 
 export const SPELL_SOURCES = [
@@ -100,6 +100,25 @@ export function formatDuration(d, concentration) {
   return base
 }
 
+export const EFFECT_TYPES = [
+  { id: '',              label: '— не выбрано —' },
+  { id: 'save',          label: 'Спасбросок' },
+  { id: 'melee_attack',  label: 'Рукопашная атака заклинанием' },
+  { id: 'ranged_attack', label: 'Дальнобойная атака заклинанием' },
+  { id: 'utility',       label: 'Вспомогательное' },
+  { id: 'healing',       label: 'Лечение' },
+  { id: 'special',       label: 'Специальное' },
+]
+
+export const SAVE_ABILITIES = [
+  { id: 'str', label: 'Сила' },
+  { id: 'dex', label: 'Ловкость' },
+  { id: 'con', label: 'Телосложение' },
+  { id: 'int', label: 'Интеллект' },
+  { id: 'wis', label: 'Мудрость' },
+  { id: 'cha', label: 'Харизма' },
+]
+
 export const EMPTY_SPELL = {
   name:         '',
   nameEn:       '',
@@ -113,6 +132,7 @@ export const EMPTY_SPELL = {
   components:   { verbal: false, somatic: false, material: false, materialDesc: '' },
   description:  '',
   higherLevels: '',
+  effect:       { type: '', saveAbility: '', damages: [{ formula: '', dmgType: '' }], specialText: '' },
   classes:      [],
   source:       'PHB',
 }

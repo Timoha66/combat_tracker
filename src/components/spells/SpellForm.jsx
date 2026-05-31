@@ -1,10 +1,12 @@
 import { useState } from 'react'
-import { IconX, IconCheck, IconTrash } from '@tabler/icons-react'
+import { IconX, IconCheck, IconTrash, IconPlus } from '@tabler/icons-react'
 import { useSpellStore } from '../../store/spellStore'
 import {
   EMPTY_SPELL, SPELL_SCHOOLS, SPELL_CLASSES, SPELL_SOURCES,
   CASTING_TIME_UNITS, RANGE_TYPES, DURATION_TYPES,
+  EFFECT_TYPES, SAVE_ABILITIES,
 } from '../../data/spellDb'
+import { DMG_TYPES } from '../../data/constants'
 
 export default function SpellForm({ initial, onClose, onSaved }) {
   const { addSpell, updateSpell, deleteSpell } = useSpellStore()
@@ -15,6 +17,16 @@ export default function SpellForm({ initial, onClose, onSaved }) {
   function set(field, value) { setForm(f => ({ ...f, [field]: value })) }
   function setNested(field, key, value) { setForm(f => ({ ...f, [field]: { ...f[field], [key]: value } })) }
   function setComp(key, value) { setForm(f => ({ ...f, components: { ...f.components, [key]: value } })) }
+  function setEffect(key, value) { setForm(f => ({ ...f, effect: { ...f.effect, [key]: value } })) }
+  function setEffectDamage(idx, key, value) {
+    setForm(f => ({
+      ...f,
+      effect: {
+        ...f.effect,
+        damages: (f.effect?.damages ?? []).map((d, i) => i === idx ? { ...d, [key]: value } : d),
+      },
+    }))
+  }
 
   function toggleClass(cls) {
     const arr = form.classes ?? []
@@ -220,6 +232,74 @@ export default function SpellForm({ initial, onClose, onSaved }) {
                 <input className={iCls} style={iStyle} placeholder="Описание длительности..."
                   value={form.duration?.condition ?? ''}
                   onChange={e => setNested('duration', 'condition', e.target.value)} />
+              </div>
+            )}
+          </FormSection>
+
+          {/* ── ЭФФЕКТ ── */}
+          <FormSection title="Эффект">
+            <Label>Тип действия</Label>
+            <select className={selCls} style={{ ...iStyle, marginBottom: 12 }}
+              value={form.effect?.type ?? ''}
+              onChange={e => setEffect('type', e.target.value)}>
+              {EFFECT_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+            </select>
+
+            {/* Спасбросок → выбор характеристики */}
+            {form.effect?.type === 'save' && (
+              <div className="mb-3">
+                <Label>Характеристика спасброска</Label>
+                <select className={selCls} style={iStyle}
+                  value={form.effect?.saveAbility ?? ''}
+                  onChange={e => setEffect('saveAbility', e.target.value)}>
+                  <option value="">— выбери —</option>
+                  {SAVE_ABILITIES.map(a => <option key={a.id} value={a.id}>{a.label}</option>)}
+                </select>
+              </div>
+            )}
+
+            {/* Атаки / Лечение → урон */}
+            {(form.effect?.type === 'melee_attack' || form.effect?.type === 'ranged_attack' || form.effect?.type === 'healing') && (
+              <div>
+                <Label>{form.effect?.type === 'healing' ? 'Лечение' : 'Урон'}</Label>
+                {(form.effect?.damages ?? [{ formula: '', dmgType: '' }]).map((d, i) => (
+                  <div key={i} className="flex gap-2 mb-1.5">
+                    <input className={iCls} style={{ ...iStyle, flex: 1 }}
+                      placeholder="2к10+5"
+                      value={d.formula ?? ''}
+                      onChange={e => setEffectDamage(i, 'formula', e.target.value)} />
+                    {form.effect?.type !== 'healing' && (
+                      <select className="rounded-lg px-2 py-1.5 text-sm outline-none cursor-pointer shrink-0"
+                        style={{ ...iStyle, minWidth: 130 }}
+                        value={d.dmgType ?? ''}
+                        onChange={e => setEffectDamage(i, 'dmgType', e.target.value)}>
+                        <option value="">— тип —</option>
+                        {DMG_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+                      </select>
+                    )}
+                    {(form.effect?.damages?.length ?? 1) > 1 && (
+                      <button className="icon-btn shrink-0" style={{ width: 28, height: 28 }}
+                        onClick={() => setEffect('damages', form.effect.damages.filter((_, j) => j !== i))}>
+                        <IconTrash size={11} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button type="button" className="btn btn-ghost w-full justify-center mt-1" style={{ fontSize: 11 }}
+                  onClick={() => setEffect('damages', [...(form.effect?.damages ?? []), { formula: '', dmgType: '' }])}>
+                  <IconPlus size={11} /> Ещё компонент урона
+                </button>
+              </div>
+            )}
+
+            {/* Специальное → текст */}
+            {form.effect?.type === 'special' && (
+              <div>
+                <Label>Описание эффекта</Label>
+                <textarea className={`${iCls} resize-none`} style={{ ...iStyle, minHeight: 60 }}
+                  placeholder="Опишите эффект..."
+                  value={form.effect?.specialText ?? ''}
+                  onChange={e => setEffect('specialText', e.target.value)} />
               </div>
             )}
           </FormSection>
