@@ -182,7 +182,7 @@ export default function StatblockView({ creature: c, onEdit }) {
                 <div className="my-3">
                   <p className="text-sm mb-2" style={{ color: 'var(--text-dim)' }}>
                     <span className="font-cinzel font-semibold italic" style={{ color: 'var(--text)' }}>Использование заклинаний. </span>
-                    {c.name} является заклинателем <strong>{sc.level}</strong> уровня. Его заклинательной характеристикой является <strong>{abilityName}</strong> (Сл спасброска от заклинаний {saveDC}, {atkStr} к атакам заклинаниями). {c.name} обладает следующими заготовленными заклинаниями:
+                    {c.name} является заклинателем <strong>{sc.level}</strong> уровня. Его заклинательной характеристикой является <strong>{abilityName}</strong> (СЛ спасброска от заклинаний {saveDC}, {atkStr} к атакам заклинаниями). {c.name} обладает следующими заготовленными заклинаниями:
                   </p>
                   <div className="flex flex-col gap-1">
                     {activeSlots.map(lvl => {

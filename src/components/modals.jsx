@@ -369,7 +369,7 @@ function StatblockViewInline({ creature: c, currentHp }) {
             <hr style={{ borderColor: 'rgba(226,201,126,0.2)', margin: '12px 0' }} />
             <p className="text-sm mb-2" style={{ color: 'var(--text-dim)' }}>
               <span className="font-cinzel font-semibold italic" style={{ color: 'var(--text)' }}>Использование заклинаний. </span>
-              {c.name} является заклинателем <strong>{sc.level}</strong> уровня. Его заклинательной характеристикой является <strong>{abilityName}</strong> (Сл спасброска {saveDC}, {atkStr} к атакам заклинаниями).
+              {c.name} является заклинателем <strong>{sc.level}</strong> уровня. Его заклинательной характеристикой является <strong>{abilityName}</strong> (СЛ спасброска {saveDC}, {atkStr} к атакам заклинаниями).
             </p>
             {activeSlots.map(lvl => {
               const slot = sc.slots[lvl]
