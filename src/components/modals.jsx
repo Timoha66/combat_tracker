@@ -308,16 +308,14 @@ function StatblockViewInline({ creature: c, currentHp, onSpellClick }) {
           const modStr = mod >= 0 ? `+${mod}` : `${mod}`
           const modColor = mod >= 3 ? '#4ade80' : mod >= 1 ? '#86efac' : mod === 0 ? 'var(--text-muted)' : mod >= -2 ? '#f87171' : '#ef4444'
           return (
-            <div key={k} className="rounded-lg py-2 px-2 ability-box"
+            <div key={k} className="rounded-lg py-2 px-1 text-center ability-box"
               style={{ background: 'var(--bg-row)', border: '0.5px solid var(--border-md)' }}>
-              <div className="font-cinzel text-[9px] tracking-widest uppercase mb-1.5 text-center" style={{ color: 'var(--text-muted)' }}>{ABILITY_LABELS[k]}</div>
-              <div className="flex items-center justify-between gap-1">
-                <span className="font-cinzel text-sm" style={{ color: 'var(--text-dim)' }}>{val}</span>
-                <span className="font-cinzel text-sm font-bold px-1.5 py-0.5 rounded-md"
-                  style={{ background: `${modColor}22`, color: modColor, border: `1px solid ${modColor}44`, minWidth: 30, textAlign: 'center' }}>
-                  {modStr}
-                </span>
+              <div className="font-cinzel text-[9px] tracking-widest uppercase mb-1.5" style={{ color: 'var(--text-muted)' }}>{ABILITY_LABELS[k]}</div>
+              <div className="font-cinzel text-base font-bold px-1 py-0.5 rounded-md mx-auto inline-block mb-1"
+                style={{ background: `${modColor}22`, color: modColor, border: `1px solid ${modColor}44`, minWidth: 34 }}>
+                {modStr}
               </div>
+              <div className="font-cinzel text-[10px]" style={{ color: 'var(--text-muted)' }}>{val}</div>
             </div>
           )
         })}
