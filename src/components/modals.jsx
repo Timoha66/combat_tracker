@@ -347,6 +347,38 @@ function StatblockViewInline({ creature: c, currentHp }) {
           </p>
         </>
       )}
+      {c.spellcasting && (() => {
+        const sc = c.spellcasting
+        const mod        = Math.floor(((c.abilities?.[sc.ability] ?? 10) - 10) / 2)
+        const prof       = c.proficiencyBonus ?? 2
+        const saveDC     = sc.saveDCOverride      ?? (8 + prof + mod)
+        const atkBonus   = sc.attackBonusOverride ?? (prof + mod)
+        const atkStr     = `${atkBonus >= 0 ? '+' : ''}${atkBonus}`
+        const abilityName = { str: 'Сила', dex: 'Ловкость', con: 'Телосложение', int: 'Интеллект', wis: 'Мудрость', cha: 'Харизма' }[sc.ability] ?? sc.ability
+        const activeSlots = Array.from({ length: 10 }, (_, i) => i)
+          .filter(i => sc.slots?.[i]?.count && sc.slots[i].count !== 'null' && sc.slots[i].spells?.trim())
+        if (!activeSlots.length) return null
+        return (
+          <>
+            <hr style={{ borderColor: 'rgba(226,201,126,0.2)', margin: '12px 0' }} />
+            <p className="text-sm mb-2" style={{ color: 'var(--text-dim)' }}>
+              <span className="font-cinzel font-semibold italic" style={{ color: 'var(--text)' }}>Использование заклинаний. </span>
+              {c.name} является заклинателем <strong>{sc.level}</strong> уровня. Его заклинательной характеристикой является <strong>{abilityName}</strong> (Сл спасброска {saveDC}, {atkStr} к атакам заклинаниями).
+            </p>
+            {activeSlots.map(lvl => {
+              const slot = sc.slots[lvl]
+              const countStr = slot.count === 'unlimited' ? 'неограниченно' : `${slot.count} яч.`
+              const label = lvl === 0 ? 'Заговоры' : `${lvl} уровень`
+              return (
+                <p key={lvl} className="text-sm mb-1" style={{ color: 'var(--text-dim)' }}>
+                  <span className="font-cinzel font-semibold" style={{ color: 'var(--text)' }}>{label} </span>
+                  <em>({countStr}):</em> <em>{slot.spells}</em>
+                </p>
+              )
+            })}
+          </>
+        )
+      })()}
       {ACTION_SECTIONS.map(section => {
         const acts = (c.actions ?? []).filter(a => a.section === section.id)
         if (!acts.length) return null

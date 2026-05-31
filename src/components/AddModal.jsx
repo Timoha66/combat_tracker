@@ -98,6 +98,7 @@ export default function AddModal({ onClose }) {
           vulnerabilities:      creature.vulnerabilities  ?? [],
           legendaryActionCount: creature.legendaryActionCount ?? 0,
           legendaryResistances: creature.legendaryResistances ?? 0,
+          spellcasting:         creature.spellcasting ?? null,
           id:                   creature.id,
         },
         1,
