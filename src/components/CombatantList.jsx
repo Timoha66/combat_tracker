@@ -72,6 +72,8 @@ function CombatantRow({ combatant: c, isActive, isSelected, onOpenStatblock, onO
   const useLegendaryAction   = useBattleStore(s => s.useLegendaryAction)
   const useLegendaryResist   = useBattleStore(s => s.useLegendaryResistance)
   const restoreLegendaryRes  = useBattleStore(s => s.restoreLegendaryResistances)
+  const useSpellSlot         = useBattleStore(s => s.useSpellSlot)
+  const restoreSpellSlot     = useBattleStore(s => s.restoreSpellSlot)
   const setNote              = useBattleStore(s => s.setNote)
   const setExhaustion        = useBattleStore(s => s.setExhaustion)
   const cycleExhaustion      = useBattleStore(s => s.cycleExhaustion)
@@ -342,6 +344,60 @@ function CombatantRow({ combatant: c, isActive, isSelected, onOpenStatblock, onO
             )}
           </div>
         )}
+
+        {/* Ячейки заклинаний */}
+        {c.spellcasting && (() => {
+          const sc = c.spellcasting
+          const ROMAN = ['✦','I','II','III','IV','V','VI','VII','VIII','IX']
+          const activeSlots = Array.from({ length: 10 }, (_, i) => i)
+            .filter(i => sc.slots?.[i]?.count && sc.slots[i].count !== 'null')
+          if (!activeSlots.length) return null
+          return (
+            <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1" onClick={e => e.stopPropagation()}>
+              {activeSlots.map(lvl => {
+                const slot      = sc.slots[lvl]
+                const unlimited = slot.count === 'unlimited'
+                const maxCount  = unlimited ? null : Number(slot.count)
+                const used      = c.spellSlotsUsed?.[lvl] ?? 0
+                const remaining = unlimited ? null : maxCount - used
+                return (
+                  <div key={lvl} className="flex items-center gap-0.5">
+                    <span className="font-cinzel text-[9px] mr-0.5" style={{ color: '#a78bfa', minWidth: 10 }}>
+                      {ROMAN[lvl]}
+                    </span>
+                    {unlimited ? (
+                      <span style={{ color: '#a78bfa', fontSize: 12, lineHeight: 1 }}>∞</span>
+                    ) : (
+                      <>
+                        {Array.from({ length: maxCount }).map((_, i) => (
+                          <span key={i} className="rounded-sm"
+                            style={{
+                              width: 8, height: 8, display: 'inline-block',
+                              background: i < remaining ? '#a78bfa' : 'rgba(167,139,250,0.1)',
+                              border: '1px solid rgba(167,139,250,0.35)',
+                            }}
+                          />
+                        ))}
+                        <button
+                          className="font-cinzel text-[9px] px-1 rounded cursor-pointer ml-0.5"
+                          style={{ background: 'rgba(167,139,250,0.15)', color: '#a78bfa', border: '0.5px solid rgba(167,139,250,0.3)', lineHeight: '14px' }}
+                          onClick={() => restoreSpellSlot(c.id, lvl)}
+                          title="Восстановить ячейку"
+                        >+</button>
+                        <button
+                          className="font-cinzel text-[9px] px-1 rounded cursor-pointer"
+                          style={{ background: remaining > 0 ? 'rgba(167,139,250,0.15)' : 'var(--bg-row)', color: remaining > 0 ? '#a78bfa' : 'var(--text-muted)', border: '0.5px solid rgba(167,139,250,0.3)', lineHeight: '14px' }}
+                          onClick={() => useSpellSlot(c.id, lvl)}
+                          title="Потратить ячейку"
+                        >−</button>
+                      </>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )
+        })()}
 
         {noteOpen && (
           <textarea

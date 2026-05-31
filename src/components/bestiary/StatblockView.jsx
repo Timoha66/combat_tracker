@@ -43,6 +43,7 @@ export default function StatblockView({ creature: c, onEdit }) {
       vulnerabilities:      c.vulnerabilities ?? [],
       legendaryActionCount: c.legendaryActionCount ?? 0,
       legendaryResistances: c.legendaryResistances ?? 0,
+      spellcasting:         c.spellcasting ?? null,
       id:                   c.id,
     }, 1, initiative)
     alert(`${c.name} добавлен в трекер с инициативой ${initiative}`)

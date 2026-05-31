@@ -34,6 +34,9 @@ export function createCombatant(source, overrides = {}) {
     legendaryActionsLeft:     source.legendaryActionCount  ?? 0,
     legendaryResistancesMax:  source.legendaryResistances  ?? 0,
     legendaryResistancesLeft: source.legendaryResistances  ?? 0,
+    // ── Заклинания ──
+    spellcasting:   source.spellcasting ?? null,
+    spellSlotsUsed: {},
     // ── Истощение (0-6) ──
     exhaustion: 0,
     // ── Заметка ──
@@ -214,6 +217,32 @@ export const useBattleStore = create((set, get) => ({
     } else if (targets.length > 1) {
       get().addLog(`⚔ ${attName} → ${targets.length} целей: ${Math.floor(rawAmount * manualMult)} урона`)
     }
+  },
+
+  // ── ЯЧЕЙКИ ЗАКЛИНАНИЙ ───────────────────────────────────────────────────────
+  useSpellSlot(id, level) {
+    set(state => ({
+      combatants: state.combatants.map(c => {
+        if (c.id !== id || !c.spellcasting) return c
+        const slot = c.spellcasting.slots?.[level]
+        if (!slot || slot.count === 'unlimited' || slot.count === 'null') return c
+        const max  = Number(slot.count)
+        const used = c.spellSlotsUsed?.[level] ?? 0
+        if (used >= max) return c
+        return { ...c, spellSlotsUsed: { ...c.spellSlotsUsed, [level]: used + 1 } }
+      }),
+    }))
+  },
+
+  restoreSpellSlot(id, level) {
+    set(state => ({
+      combatants: state.combatants.map(c => {
+        if (c.id !== id) return c
+        const used = c.spellSlotsUsed?.[level] ?? 0
+        if (used <= 0) return c
+        return { ...c, spellSlotsUsed: { ...c.spellSlotsUsed, [level]: used - 1 } }
+      }),
+    }))
   },
 
   // ── ЛЕГЕНДАРНЫЕ ДЕЙСТВИЯ ────────────────────────────────────────────────────
