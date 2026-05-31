@@ -8,6 +8,7 @@ import RightPanel from './components/RightPanel'
 import AddModal from './components/AddModal'
 import CombatLog from './components/CombatLog'
 import BestiaryPage from './components/bestiary/BestiaryPage'
+import SpellPage from './components/spells/SpellPage'
 import LocationsPage from './components/locations/LocationsPage'
 import NpcPage from './components/npcs/NpcPage'
 import QuestPage from './components/quests/QuestPage'
@@ -39,6 +40,7 @@ export default function App() {
   const [npcTarget,      setNpcTarget]      = useState(null)
 
   const [showBestiary,     setShowBestiary]     = useState(false)
+  const [showSpells,       setShowSpells]       = useState(false)
   const [addModalOpen,     setAddModalOpen]     = useState(false)
   const [statblockTarget,  setStatblockTarget]  = useState(null)
   const [condPickerTarget, setCondPickerTarget] = useState(null)
@@ -47,8 +49,7 @@ export default function App() {
 
   function handleNavigate(dest) {
     setPage(dest)
-    // Скрываем бестиарий при переходе
-    if (dest !== 'tracker') setShowBestiary(false)
+    if (dest !== 'tracker') { setShowBestiary(false); setShowSpells(false) }
   }
 
   return (
@@ -67,12 +68,15 @@ export default function App() {
           <>
             <Header
               onAdd={() => setAddModalOpen(true)}
-              onBestiary={() => setShowBestiary(b => !b)}
+              onBestiary={() => { setShowBestiary(b => !b); setShowSpells(false) }}
               showingBestiary={showBestiary}
+              onSpells={() => { setShowSpells(b => !b); setShowBestiary(false) }}
+              showingSpells={showSpells}
             />
             <div className="flex flex-1 overflow-hidden relative">
               {showBestiary && <BestiaryPage />}
-              {!showBestiary && (
+              {showSpells   && <SpellPage />}
+              {!showBestiary && !showSpells && (
                 <>
                   {view === 'tracker' && (
                     <div className="flex flex-col flex-1 overflow-hidden">

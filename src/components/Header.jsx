@@ -1,7 +1,7 @@
-import { IconSword, IconChevronLeft, IconChevronRight, IconPlus, IconFlag, IconBook2 } from '@tabler/icons-react'
+import { IconSword, IconChevronLeft, IconChevronRight, IconPlus, IconFlag, IconBook2, IconSparkles } from '@tabler/icons-react'
 import { useBattleStore } from '../store/battleStore'
 
-export default function Header({ onAdd, onBestiary, showingBestiary }) {
+export default function Header({ onAdd, onBestiary, showingBestiary, onSpells, showingSpells }) {
   const round    = useBattleStore(s => s.round)
   const nextTurn = useBattleStore(s => s.nextTurn)
   const prevTurn = useBattleStore(s => s.prevTurn)
@@ -62,17 +62,27 @@ export default function Header({ onAdd, onBestiary, showingBestiary }) {
       {/* Actions */}
       <div className="ml-auto flex items-center gap-2">
         {/* Кнопка бестиария */}
-        <button
-          className="btn"
+        <button className="btn"
           style={{
             background: showingBestiary ? 'var(--gold-dim)' : 'none',
             color: showingBestiary ? 'var(--gold)' : 'var(--text-dim)',
             borderColor: showingBestiary ? 'rgba(226,201,126,0.4)' : 'var(--border-md)',
           }}
-          onClick={onBestiary}
-        >
+          onClick={onBestiary}>
           <IconBook2 size={15} />
           {showingBestiary ? 'Закрыть бестиарий' : 'Бестиарий'}
+        </button>
+
+        {/* Кнопка книги заклинаний */}
+        <button className="btn"
+          style={{
+            background: showingSpells ? 'rgba(167,139,250,0.15)' : 'none',
+            color: showingSpells ? '#c4b5fd' : 'var(--text-dim)',
+            borderColor: showingSpells ? 'rgba(167,139,250,0.4)' : 'var(--border-md)',
+          }}
+          onClick={onSpells}>
+          <IconSparkles size={15} />
+          {showingSpells ? 'Закрыть заклинания' : 'Заклинания'}
         </button>
 
         {!showingBestiary && (
