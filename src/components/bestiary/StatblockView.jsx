@@ -100,23 +100,27 @@ export default function StatblockView({ creature: c, onEdit }) {
 
           {/* Ability scores */}
           <div className="grid grid-cols-6 gap-2 my-3">
-            {ABILITY_KEYS.map(k => (
-              <div
-                key={k}
-                className="rounded-lg py-2 px-1 text-center"
-                style={{ background: 'var(--bg-row)', border: '0.5px solid var(--border-md)' }}
-              >
-                <div className="font-cinzel text-[9px] tracking-widest uppercase mb-1" style={{ color: 'var(--text-muted)' }}>
-                  {ABILITY_LABELS[k]}
+            {ABILITY_KEYS.map(k => {
+              const val = c.abilities?.[k] ?? 10
+              const mod = Math.floor((val - 10) / 2)
+              const modStr = mod >= 0 ? `+${mod}` : `${mod}`
+              const modColor = mod >= 3 ? '#4ade80' : mod >= 1 ? '#86efac' : mod === 0 ? 'var(--text-muted)' : mod >= -2 ? '#f87171' : '#ef4444'
+              return (
+                <div key={k} className="rounded-lg py-2 px-2"
+                  style={{ background: 'var(--bg-row)', border: '0.5px solid var(--border-md)' }}>
+                  <div className="font-cinzel text-[9px] tracking-widest uppercase mb-1.5 text-center" style={{ color: 'var(--text-muted)' }}>
+                    {ABILITY_LABELS[k]}
+                  </div>
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="font-cinzel text-sm" style={{ color: 'var(--text-dim)' }}>{val}</span>
+                    <span className="font-cinzel text-sm font-bold px-1.5 py-0.5 rounded-md"
+                      style={{ background: `${modColor}22`, color: modColor, border: `1px solid ${modColor}44`, minWidth: 30, textAlign: 'center' }}>
+                      {modStr}
+                    </span>
+                  </div>
                 </div>
-                <div className="font-cinzel text-base font-bold leading-none" style={{ color: 'var(--text)' }}>
-                  {c.abilities?.[k] ?? 10}
-                </div>
-                <div className="font-cinzel text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>
-                  {abilityMod(c.abilities?.[k] ?? 10)}
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
 
           <SbDivider />

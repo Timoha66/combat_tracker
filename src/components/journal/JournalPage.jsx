@@ -205,23 +205,9 @@ export default function JournalPage() {
       <div className="flex flex-col shrink-0 overflow-hidden" style={{ width: 280, borderRight: '1px solid var(--border)', background: 'var(--bg-panel)' }}>
         <div className="px-3 pt-3 pb-2 border-b shrink-0" style={{ borderColor: 'var(--border)' }}>
           <div className="font-cinzel text-xs uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Журнал кампании</div>
-          <button className="btn btn-add w-full justify-center mb-2" style={{ fontSize: 12 }} onClick={handleNew}>
+          <button className="btn btn-add w-full justify-center" style={{ fontSize: 12 }} onClick={handleNew}>
             <IconPlus size={13} /> Новая сессия
           </button>
-          <div className="flex gap-1">
-            <button className="btn btn-ghost flex-1 justify-center" style={{ fontSize: 10 }} onClick={exportJournal}>
-              <IconDownload size={11} /> Экспорт
-            </button>
-            <label className="btn btn-ghost flex-1 justify-center cursor-pointer" style={{ fontSize: 10 }}>
-              <IconUpload size={11} /> Импорт
-              <input type="file" accept=".json" className="hidden"
-                onChange={e => {
-                  const f = e.target.files[0]
-                  if (f) importJournal(f).catch(err => alert('Ошибка: ' + err.message))
-                  e.target.value = ''
-                }} />
-            </label>
-          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto px-2 py-2">
@@ -253,6 +239,21 @@ export default function JournalPage() {
               </div>
             )
           })}
+        </div>
+
+        <div className="px-3 py-2 border-t flex gap-1" style={{ borderColor: 'var(--border)' }}>
+          <button className="btn btn-ghost flex-1 justify-center" style={{ fontSize: 10 }} onClick={exportJournal}>
+            <IconDownload size={11} /> Экспорт
+          </button>
+          <label className="btn btn-ghost flex-1 justify-center cursor-pointer" style={{ fontSize: 10 }}>
+            <IconUpload size={11} /> Импорт
+            <input type="file" accept=".json" className="hidden"
+              onChange={e => {
+                const f = e.target.files[0]
+                if (f) importJournal(f).catch(err => alert('Ошибка: ' + err.message))
+                e.target.value = ''
+              }} />
+          </label>
         </div>
       </div>
 

@@ -302,17 +302,35 @@ function StatblockViewInline({ creature: c, currentHp, onSpellClick }) {
       </div>
       <hr style={{ borderColor: 'rgba(226,201,126,0.2)', margin: '12px 0' }} />
       <div className="grid grid-cols-6 gap-2 mb-3">
-        {ABILITY_KEYS.map(k => (
-          <div key={k} className="rounded-lg py-2 px-1 text-center ability-box">
-            <div className="font-cinzel text-[9px] tracking-widest uppercase mb-1" style={{ color: 'var(--text-muted)' }}>{ABILITY_LABELS[k]}</div>
-            <div className="font-cinzel text-base font-bold" style={{ color: 'var(--text)' }}>{c.abilities?.[k] ?? 10}</div>
-            <div className="font-cinzel text-xs" style={{ color: 'var(--text-dim)' }}>{abilityMod(c.abilities?.[k] ?? 10)}</div>
-          </div>
-        ))}
+        {ABILITY_KEYS.map(k => {
+          const val = c.abilities?.[k] ?? 10
+          const mod = Math.floor((val - 10) / 2)
+          const modStr = mod >= 0 ? `+${mod}` : `${mod}`
+          const modColor = mod >= 3 ? '#4ade80' : mod >= 1 ? '#86efac' : mod === 0 ? 'var(--text-muted)' : mod >= -2 ? '#f87171' : '#ef4444'
+          return (
+            <div key={k} className="rounded-lg py-2 px-2 ability-box"
+              style={{ background: 'var(--bg-row)', border: '0.5px solid var(--border-md)' }}>
+              <div className="font-cinzel text-[9px] tracking-widest uppercase mb-1.5 text-center" style={{ color: 'var(--text-muted)' }}>{ABILITY_LABELS[k]}</div>
+              <div className="flex items-center justify-between gap-1">
+                <span className="font-cinzel text-sm" style={{ color: 'var(--text-dim)' }}>{val}</span>
+                <span className="font-cinzel text-sm font-bold px-1.5 py-0.5 rounded-md"
+                  style={{ background: `${modColor}22`, color: modColor, border: `1px solid ${modColor}44`, minWidth: 30, textAlign: 'center' }}>
+                  {modStr}
+                </span>
+              </div>
+            </div>
+          )
+        })}
       </div>
       <hr style={{ borderColor: 'rgba(226,201,126,0.2)', margin: '12px 0' }} />
       {!isPlayer && (
         <div className="flex flex-col gap-1.5 mb-3">
+          {c.savingThrows?.length > 0 && (
+            <SbStat label="Спасброски" val={c.savingThrows.map(s => `${s.ability} ${s.bonus >= 0 ? '+' : ''}${s.bonus}`).join(', ')} />
+          )}
+          {c.skills?.length > 0 && (
+            <SbStat label="Навыки" val={c.skills.map(s => `${s.name} ${s.bonus >= 0 ? '+' : ''}${s.bonus}`).join(', ')} />
+          )}
           {c.immunities?.length > 0     && <SbStat label="Иммунитет"    val={c.immunities.map(dmgName).join(', ')}     color="#93c5fd" />}
           {c.resistances?.length > 0    && <SbStat label="Сопротивление" val={c.resistances.map(dmgName).join(', ')}    color="#4ade80" />}
           {c.vulnerabilities?.length > 0 && <SbStat label="Уязвимость"  val={c.vulnerabilities.map(dmgName).join(', ')} color="#f87171" />}
