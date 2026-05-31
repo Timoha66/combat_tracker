@@ -5,6 +5,8 @@ import { useBestiaryStore } from '../store/bestiaryStore'
 import { CONDITIONS, CONDITIONS_BASE, CONDITIONS_COMBAT, STATUS_LABEL, STATUS_PILL, getStatus } from '../data/constants'
 import { ABILITY_KEYS, ABILITY_LABELS, ACTION_SECTIONS, abilityMod } from '../data/gameData'
 import { DMG_TYPES } from '../data/constants'
+import SpellInlineList from './spells/SpellInlineList'
+import SpellMiniCard from './spells/SpellMiniCard'
 
 const ATTACK_TYPE_LABEL = {
   melee:        'Атака рукопашным оружием',
@@ -255,20 +257,17 @@ export function ReviveModal({ id, onClose }) {
 export function StatblockModal({ combatant: c, onClose }) {
   const creatures  = useBestiaryStore(s => s.creatures)
   const loadAll    = useBestiaryStore(s => s.loadAll)
+  const [spellCard, setSpellCard] = useState(null)
 
   useEffect(() => { loadAll() }, [])
 
-  // Ищем полную запись в бестиарии по sourceId
   const full = creatures.find(x => x.id === c.sourceId) ?? null
 
   return (
     <div className="overlay">
       <div className="sb-modal" style={{ overflowY: 'auto' }}>
-        {/* Header */}
-        <div
-          className="flex items-start gap-3 p-5 border-b sticky top-0 z-10"
-          style={{ background: 'var(--bg-panel)', borderColor: 'var(--border)' }}
-        >
+        <div className="flex items-start gap-3 p-5 border-b sticky top-0 z-10"
+          style={{ background: 'var(--bg-panel)', borderColor: 'var(--border)' }}>
           <div className="flex-1">
             <div className="font-cinzel text-xl font-bold" style={{ color: 'var(--gold)' }}>{c.name}</div>
             <div className="text-sm italic mt-0.5" style={{ color: 'var(--text-dim)' }}>
@@ -280,19 +279,18 @@ export function StatblockModal({ combatant: c, onClose }) {
           </div>
           <button className="icon-btn shrink-0" onClick={onClose}><IconX size={15} /></button>
         </div>
-
-        {/* Если нашли полную запись — показываем полный статблок */}
         {full
-          ? <StatblockViewInline creature={full} currentHp={c.hp.current} />
+          ? <StatblockViewInline creature={full} currentHp={c.hp.current} onSpellClick={setSpellCard} />
           : <StatblockFallback c={c} />
         }
       </div>
+      {spellCard && <SpellMiniCard spell={spellCard} onClose={() => setSpellCard(null)} />}
     </div>
   )
 }
 
 // ─── STATBLOCK INLINE (полный статблок внутри модалки трекера) ───────────────
-function StatblockViewInline({ creature: c, currentHp }) {
+function StatblockViewInline({ creature: c, currentHp, onSpellClick }) {
   const isPlayer = c.type === 'player'
   return (
     <div className="p-5">
@@ -378,7 +376,8 @@ function StatblockViewInline({ creature: c, currentHp }) {
               return (
                 <p key={lvl} className="text-sm mb-1" style={{ color: 'var(--text-dim)' }}>
                   <span className="font-cinzel font-semibold" style={{ color: 'var(--text)' }}>{label} </span>
-                  <em>({countStr}):</em> <em>{slot.spells}</em>
+                  <em>({countStr}):</em>{' '}
+                  <SpellInlineList spellsText={slot.spells} onSpellClick={onSpellClick ?? (() => {})} />
                 </p>
               )
             })}

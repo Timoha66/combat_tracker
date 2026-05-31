@@ -1,7 +1,10 @@
+import { useState } from 'react'
 import { IconPencil, IconSword } from '@tabler/icons-react'
 import { abilityMod, ABILITY_KEYS, ABILITY_LABELS, ACTION_SECTIONS } from '../../data/gameData'
 import { useBattleStore } from '../../store/battleStore'
 import { DMG_TYPES } from '../../data/constants'
+import SpellInlineList from '../spells/SpellInlineList'
+import SpellMiniCard from '../spells/SpellMiniCard'
 
 const ATTACK_TYPE_LABEL = {
   melee:        'Атака рукопашным оружием',
@@ -36,6 +39,7 @@ function attackLine(a) {
 export default function StatblockView({ creature: c, onEdit }) {
   const addCombatants = useBattleStore(s => s.addCombatants)
   const isPlayer = c.type === 'player'
+  const [spellCard, setSpellCard] = useState(null)
 
   function handleAddToTracker() {
     const initBonus = c.initiative ?? (c.abilities ? Math.floor((c.abilities.dex - 10) / 2) : 0)
@@ -57,6 +61,7 @@ export default function StatblockView({ creature: c, onEdit }) {
   }
 
   return (
+    <>
     <div className="p-6 max-w-2xl mx-auto">
       {/* Header actions */}
       <div className="flex items-center gap-2 mb-4">
@@ -192,7 +197,8 @@ export default function StatblockView({ creature: c, onEdit }) {
                       return (
                         <p key={lvl} className="text-sm" style={{ color: 'var(--text-dim)' }}>
                           <span className="font-cinzel font-semibold" style={{ color: 'var(--text)' }}>{label} </span>
-                          <em>({countStr}):</em> <em>{slot.spells}</em>
+                          <em>({countStr}):</em>{' '}
+                          <SpellInlineList spellsText={slot.spells} onSpellClick={setSpellCard} />
                         </p>
                       )
                     })}
@@ -282,6 +288,8 @@ export default function StatblockView({ creature: c, onEdit }) {
         </div>
       </div>
     </div>
+    {spellCard && <SpellMiniCard spell={spellCard} onClose={() => setSpellCard(null)} />}
+    </>
   )
 }
 
