@@ -26,6 +26,12 @@ function attackLine(a) {
 const DMG_LABEL = Object.fromEntries(DMG_TYPES.map(t => [t.id, t.label]))
 function dmgName(id) { return DMG_LABEL[id] ?? id }
 
+function damageLine(a) {
+  const damages = a.damages?.filter(d => d.formula) ?? (a.damage ? [{ formula: a.damage, type: a.damageType }] : [])
+  if (!damages.length) return null
+  return 'Попадание: ' + damages.map(d => `${d.formula}${d.type ? ` ${dmgName(d.type)}` : ''}`).join(' плюс ') + '.'
+}
+
 // ─── CONDITION PICKER ─────────────────────────────────────────────────────────
 export function ConditionPicker({ id, onClose }) {
   const combatant       = useBattleStore(s => s.combatants.find(c => c.id === id))
@@ -400,7 +406,7 @@ function StatblockViewInline({ creature: c, currentHp }) {
                   ? <><em>{attackLine(a)}</em>{' '}</>
                   : a.attackBonus != null ? <><em>Атака:</em> {a.attackBonus >= 0 ? '+' : ''}{a.attackBonus} к попаданию. </> : null
                 }
-                {a.damage && <><em>Урон:</em> {a.damage}{a.damageType ? ` ${dmgName(a.damageType)}` : ''}. </>}
+                {damageLine(a) && <><em>{damageLine(a)}</em>{' '}</>}
                 {a.description}
               </p>
             ))}

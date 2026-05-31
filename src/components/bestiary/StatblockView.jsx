@@ -14,6 +14,13 @@ const ATTACK_TYPE_LABEL = {
 const DMG_LABEL = Object.fromEntries(DMG_TYPES.map(t => [t.id, t.label]))
 function dmgName(id) { return DMG_LABEL[id] ?? id }
 
+// Формирует строку урона — поддерживает и старый и новый формат
+function damageLine(a) {
+  const damages = a.damages?.filter(d => d.formula) ?? (a.damage ? [{ formula: a.damage, type: a.damageType }] : [])
+  if (!damages.length) return null
+  return 'Попадание: ' + damages.map(d => `${d.formula}${d.type ? ` ${dmgName(d.type)}` : ''}`).join(' плюс ') + '.'
+}
+
 // Формирует строку атаки как в официальных книгах
 function attackLine(a) {
   if (!a.attackType && a.attackBonus == null) return null
@@ -226,9 +233,9 @@ export default function StatblockView({ creature: c, onEdit }) {
                           <em>Атака:</em> {a.attackBonus >= 0 ? '+' : ''}{a.attackBonus} к попаданию.{' '}
                         </span>
                       )}
-                      {a.damage && (
+                      {damageLine(a) && (
                         <span className="text-sm" style={{ color: 'var(--text-dim)' }}>
-                          <em>Урон:</em> {a.damage}{a.damageType ? ` ${dmgName(a.damageType)}` : ''}.{' '}
+                          <em>{damageLine(a)}</em>{' '}
                         </span>
                       )}
                       {a.description && (

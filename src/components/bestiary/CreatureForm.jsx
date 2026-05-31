@@ -21,6 +21,17 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
     ? { ...EMPTY_PLAYER, ...initial }
     : { ...EMPTY_CREATURE, ...initial }
 
+  // Нормализуем старый формат damage/damageType → damages[]
+  if (base.actions) {
+    base.actions = base.actions.map(a => ({
+      ...a,
+      damages: a.damages?.length > 0
+        ? a.damages
+        : a.damage ? [{ formula: a.damage, type: a.damageType ?? '' }]
+        : [{ formula: '', type: '' }],
+    }))
+  }
+
   const [form, setForm] = useState(base)
   const [tagsInput, setTagsInput] = useState((base.tags ?? []).join(', '))
   const [saving, setSaving] = useState(false)
@@ -540,14 +551,39 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
                           />
                         </Field>
                       )}
-                      <Field label="Урон (например 2к6+4)">
-                        <input className={inputCls} style={inputStyle} value={a.damage ?? ''}
-                          onChange={e => updateInArray('actions', i, x => ({ ...x, damage: e.target.value }))}
-                        />
-                      </Field>
-                      <Field label="Тип урона">
-                        <Select value={a.damageType ?? ''} onChange={v => updateInArray('actions', i, x => ({ ...x, damageType: v }))}
-                          options={[{ id: '', label: '—' }, ...DMG_TYPES.map(t => ({ id: t.id, label: t.label }))]} />
+                      <Field label="Урон">
+                        {(a.damages ?? [{ formula: '', type: '' }]).map((d, di) => (
+                          <div key={di} className="flex gap-2 mb-1">
+                            <input className={inputCls} style={{ ...inputStyle, flex: 1 }}
+                              placeholder="2к6+4"
+                              value={d.formula}
+                              onChange={e => updateInArray('actions', i, x => ({
+                                ...x,
+                                damages: x.damages.map((dd, ddi) => ddi === di ? { ...dd, formula: e.target.value } : dd)
+                              }))}
+                            />
+                            <select className="rounded-lg px-2 py-1.5 text-sm outline-none cursor-pointer shrink-0"
+                              style={{ background: 'var(--bg-deep)', border: '1px solid var(--border-md)', color: 'var(--text)', minWidth: 130 }}
+                              value={d.type}
+                              onChange={e => updateInArray('actions', i, x => ({
+                                ...x,
+                                damages: x.damages.map((dd, ddi) => ddi === di ? { ...dd, type: e.target.value } : dd)
+                              }))}>
+                              <option value="">—</option>
+                              {DMG_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+                            </select>
+                            {(a.damages ?? []).length > 1 && (
+                              <button className="icon-btn shrink-0" style={{ width: 28, height: 28 }}
+                                onClick={() => updateInArray('actions', i, x => ({ ...x, damages: x.damages.filter((_, ddi) => ddi !== di) }))}>
+                                <IconTrash size={11} />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                        <button type="button" className="btn btn-ghost w-full justify-center mt-1" style={{ fontSize: 11 }}
+                          onClick={() => updateInArray('actions', i, x => ({ ...x, damages: [...(x.damages ?? []), { formula: '', type: '' }] }))}>
+                          <IconPlus size={11} /> Ещё урон
+                        </button>
                       </Field>
                     </div>
                     <Field label="Описание">
@@ -564,7 +600,7 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
                 </div>
               ))}
               <button type="button" className="btn btn-ghost w-full justify-center" style={{ fontSize: 12 }}
-                onClick={() => addToArray('actions', { name: '', section: 'action', attackBonus: null, damage: '', damageType: '', description: '' })}>
+                onClick={() => addToArray('actions', { name: '', section: 'action', attackBonus: null, damages: [{ formula: '', type: '' }], description: '' })}>
                 <IconPlus size={13} /> Добавить действие
               </button>
             </Section>
