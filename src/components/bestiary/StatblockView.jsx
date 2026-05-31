@@ -62,7 +62,7 @@ export default function StatblockView({ creature: c, onEdit }) {
 
   return (
     <>
-    <div className="p-6 max-w-2xl mx-auto">
+    <div className="p-5 h-full overflow-y-auto">
       {/* Header actions */}
       <div className="flex items-center gap-2 mb-4">
         {onEdit && (
