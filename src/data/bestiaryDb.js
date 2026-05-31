@@ -88,6 +88,7 @@ export const EMPTY_CREATURE = {
   actions: [],
   legendaryResistances: null,
   legendaryActionCount: null,
+  spellcasting: null,
   tags: [],
   source: 'homebrew',
   notes: '',

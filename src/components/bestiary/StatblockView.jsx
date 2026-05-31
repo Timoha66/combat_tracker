@@ -157,6 +157,43 @@ export default function StatblockView({ creature: c, onEdit }) {
             </>
           )}
 
+          {/* Spellcasting */}
+          {c.spellcasting && (() => {
+            const sc = c.spellcasting
+            const mod  = Math.floor(((c.abilities?.[sc.ability] ?? 10) - 10) / 2)
+            const prof = c.proficiencyBonus ?? 2
+            const saveDC      = sc.saveDCOverride       ?? (8 + prof + mod)
+            const atkBonus    = sc.attackBonusOverride  ?? (prof + mod)
+            const atkStr      = `${atkBonus >= 0 ? '+' : ''}${atkBonus}`
+            const abilityName = { str: 'Сила', dex: 'Ловкость', con: 'Телосложение', int: 'Интеллект', wis: 'Мудрость', cha: 'Харизма' }[sc.ability] ?? sc.ability
+            const activeSlots = Array.from({ length: 10 }, (_, i) => i)
+              .filter(i => sc.slots?.[i]?.count && sc.slots[i].count !== 'null' && sc.slots[i].spells?.trim())
+            return (
+              <>
+                <SbDivider />
+                <div className="my-3">
+                  <p className="text-sm mb-2" style={{ color: 'var(--text-dim)' }}>
+                    <span className="font-cinzel font-semibold italic" style={{ color: 'var(--text)' }}>Использование заклинаний. </span>
+                    {c.name} является заклинателем <strong>{sc.level}</strong> уровня. Его заклинательной характеристикой является <strong>{abilityName}</strong> (Сл спасброска от заклинаний {saveDC}, {atkStr} к атакам заклинаниями). {c.name} обладает следующими заготовленными заклинаниями:
+                  </p>
+                  <div className="flex flex-col gap-1">
+                    {activeSlots.map(lvl => {
+                      const slot = sc.slots[lvl]
+                      const countStr = slot.count === 'unlimited' ? 'неограниченно' : `${slot.count} ${['ячейка','ячейки','ячейки','ячейки','ячеек'][Math.min(Number(slot.count) - 1, 4)] ?? 'ячеек'}`
+                      const label = lvl === 0 ? 'Заговоры' : `${lvl} уровень`
+                      return (
+                        <p key={lvl} className="text-sm" style={{ color: 'var(--text-dim)' }}>
+                          <span className="font-cinzel font-semibold" style={{ color: 'var(--text)' }}>{label} </span>
+                          <em>({countStr}):</em> <em>{slot.spells}</em>
+                        </p>
+                      )
+                    })}
+                  </div>
+                </div>
+              </>
+            )
+          })()}
+
           {/* Actions by section */}
           {ACTION_SECTIONS.map(section => {
             const acts = (c.actions ?? []).filter(a => a.section === section.id)

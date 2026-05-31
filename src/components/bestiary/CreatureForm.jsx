@@ -590,6 +590,17 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
             </Section>
           )}
 
+          {/* ── ЗАКЛИНАТЕЛЬ (только не-игроки) ── */}
+          {!isPlayer && (
+            <SpellcastingSection
+              form={form}
+              setForm={setForm}
+              inputCls={inputCls}
+              inputStyle={inputStyle}
+              focusStyle={focusStyle}
+            />
+          )}
+
           {/* ── ТЕГИ И ЗАМЕТКИ ── */}
           <Section title="Теги и заметки">
             <Field label="Теги (через запятую, например: лес, пещера, нежить)">
@@ -621,6 +632,186 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+// ── Spellcasting helpers ──────────────────────────────────────────────────────
+
+const SPELL_ABILITY_OPTIONS = [
+  { id: 'str', label: 'Сила' },
+  { id: 'dex', label: 'Ловкость' },
+  { id: 'con', label: 'Телосложение' },
+  { id: 'int', label: 'Интеллект' },
+  { id: 'wis', label: 'Мудрость' },
+  { id: 'cha', label: 'Харизма' },
+]
+
+const SLOT_COUNT_OPTIONS = [
+  { id: 'null',      label: '—' },
+  { id: 'unlimited', label: '∞ Неограниченно' },
+  { id: '1', label: '1' },
+  { id: '2', label: '2' },
+  { id: '3', label: '3' },
+  { id: '4', label: '4' },
+  { id: '5', label: '5' },
+]
+
+const EMPTY_SPELLCASTING = {
+  level: 1,
+  ability: 'int',
+  saveDCOverride: null,
+  attackBonusOverride: null,
+  slots: Object.fromEntries(
+    Array.from({ length: 10 }, (_, i) => [
+      i, { count: i === 0 ? 'unlimited' : 'null', spells: '' }
+    ])
+  ),
+}
+
+function calcSpellStats(form) {
+  const sc   = form.spellcasting
+  const mod  = Math.floor(((form.abilities?.[sc?.ability ?? 'int'] ?? 10) - 10) / 2)
+  const prof = form.proficiencyBonus ?? 2
+  return {
+    saveDC:       sc?.saveDCOverride       ?? (8 + prof + mod),
+    attackBonus:  sc?.attackBonusOverride  ?? (prof + mod),
+  }
+}
+
+function SpellcastingSection({ form, setForm, inputCls, inputStyle, focusStyle }) {
+  const sc = form.spellcasting
+  const enabled = !!sc
+  const { saveDC, attackBonus } = enabled ? calcSpellStats(form) : { saveDC: 0, attackBonus: 0 }
+
+  function toggle() {
+    setForm(f => ({ ...f, spellcasting: f.spellcasting ? null : { ...EMPTY_SPELLCASTING } }))
+  }
+  function setSC(key, val) {
+    setForm(f => ({ ...f, spellcasting: { ...f.spellcasting, [key]: val } }))
+  }
+  function setSlot(level, key, val) {
+    setForm(f => ({
+      ...f,
+      spellcasting: {
+        ...f.spellcasting,
+        slots: { ...f.spellcasting.slots, [level]: { ...f.spellcasting.slots[level], [key]: val } }
+      }
+    }))
+  }
+
+  const iStyle = inputStyle
+  const iCls   = inputCls
+
+  return (
+    <div className="mb-5">
+      <div className="font-cinzel text-xs tracking-widest uppercase pb-1 flex items-center gap-3"
+        style={{ color: 'var(--gold)', borderBottom: '1px solid rgba(226,201,126,0.2)', marginBottom: 12 }}>
+        Заклинатель
+        <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: 'Cinzel, serif', fontSize: 11, color: enabled ? '#4ade80' : 'var(--text-muted)', fontWeight: 'normal', textTransform: 'none', letterSpacing: 0 }}>
+          <input type="checkbox" checked={enabled} onChange={toggle} style={{ accentColor: '#4ade80', width: 13, height: 13 }} />
+          {enabled ? 'Включён' : 'Выключен'}
+        </label>
+      </div>
+
+      {enabled && (
+        <div>
+          {/* Уровень + Характеристика */}
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div>
+              <div className="font-cinzel text-[10px] tracking-wide uppercase mb-1" style={{ color: 'var(--text-muted)' }}>Уровень заклинателя (1–20)</div>
+              <input className={iCls} style={iStyle} type="number" min={1} max={20}
+                value={sc.level}
+                onChange={e => setSC('level', Math.max(1, Math.min(20, Number(e.target.value) || 1)))}
+                onFocus={e => Object.assign(e.target.style, focusStyle)}
+                onBlur={e => Object.assign(e.target.style, iStyle)}
+              />
+            </div>
+            <div>
+              <div className="font-cinzel text-[10px] tracking-wide uppercase mb-1" style={{ color: 'var(--text-muted)' }}>Заклинательная характеристика</div>
+              <Select value={sc.ability} onChange={v => setSC('ability', v)} options={SPELL_ABILITY_OPTIONS} />
+            </div>
+          </div>
+
+          {/* СЛ + Бонус атаки */}
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div>
+              <div className="font-cinzel text-[10px] tracking-wide uppercase mb-1" style={{ color: 'var(--text-muted)' }}>
+                СЛ спасброска <span style={{ color: 'var(--text-muted)', fontFamily: 'sans-serif', fontSize: 10 }}>(авто: {8 + (form.proficiencyBonus ?? 2) + Math.floor(((form.abilities?.[sc.ability] ?? 10) - 10) / 2)})</span>
+              </div>
+              <div className="flex gap-2">
+                <input className={iCls} style={{ ...iStyle, flex: 1 }} type="number"
+                  placeholder={`авто (${8 + (form.proficiencyBonus ?? 2) + Math.floor(((form.abilities?.[sc.ability] ?? 10) - 10) / 2)})`}
+                  value={sc.saveDCOverride ?? ''}
+                  onChange={e => setSC('saveDCOverride', e.target.value === '' ? null : Number(e.target.value))}
+                  onFocus={e => Object.assign(e.target.style, focusStyle)}
+                  onBlur={e => Object.assign(e.target.style, iStyle)}
+                />
+                {sc.saveDCOverride !== null && (
+                  <button type="button" className="btn btn-ghost shrink-0" style={{ fontSize: 10, padding: '2px 8px' }}
+                    onClick={() => setSC('saveDCOverride', null)} title="Сбросить">↻</button>
+                )}
+              </div>
+            </div>
+            <div>
+              <div className="font-cinzel text-[10px] tracking-wide uppercase mb-1" style={{ color: 'var(--text-muted)' }}>
+                Бонус атаки заклинанием <span style={{ color: 'var(--text-muted)', fontFamily: 'sans-serif', fontSize: 10 }}>(авто: {(form.proficiencyBonus ?? 2) + Math.floor(((form.abilities?.[sc.ability] ?? 10) - 10) / 2) >= 0 ? '+' : ''}{(form.proficiencyBonus ?? 2) + Math.floor(((form.abilities?.[sc.ability] ?? 10) - 10) / 2)})</span>
+              </div>
+              <div className="flex gap-2">
+                <input className={iCls} style={{ ...iStyle, flex: 1 }} type="number"
+                  placeholder={`авто`}
+                  value={sc.attackBonusOverride ?? ''}
+                  onChange={e => setSC('attackBonusOverride', e.target.value === '' ? null : Number(e.target.value))}
+                  onFocus={e => Object.assign(e.target.style, focusStyle)}
+                  onBlur={e => Object.assign(e.target.style, iStyle)}
+                />
+                {sc.attackBonusOverride !== null && (
+                  <button type="button" className="btn btn-ghost shrink-0" style={{ fontSize: 10, padding: '2px 8px' }}
+                    onClick={() => setSC('attackBonusOverride', null)} title="Сбросить">↻</button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Ячейки заклинаний */}
+          <div className="font-cinzel text-[10px] tracking-wide uppercase mb-2" style={{ color: 'var(--text-muted)' }}>
+            Заклинания по кругам
+          </div>
+          <div className="flex flex-col gap-2">
+            {Array.from({ length: 10 }, (_, lvl) => {
+              const slot  = sc.slots?.[lvl] ?? { count: lvl === 0 ? 'unlimited' : 'null', spells: '' }
+              const countVal = String(slot.count ?? 'null')
+              const isActive = countVal !== 'null'
+              return (
+                <div key={lvl} className="rounded-lg p-2.5" style={{ background: isActive ? 'var(--bg-row)' : 'transparent', border: `1px solid ${isActive ? 'var(--border-md)' : 'var(--border)'}` }}>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="font-cinzel text-xs font-semibold shrink-0" style={{ color: isActive ? 'var(--gold)' : 'var(--text-muted)', minWidth: 90 }}>
+                      {lvl === 0 ? 'Заговоры' : `${lvl} уровень`}
+                    </span>
+                    <select
+                      value={countVal}
+                      onChange={e => setSlot(lvl, 'count', e.target.value === 'null' ? 'null' : e.target.value)}
+                      className="rounded px-2 py-1 text-xs outline-none cursor-pointer"
+                      style={{ background: 'var(--bg-deep)', border: '1px solid var(--border-md)', color: 'var(--text)', minWidth: 120 }}
+                    >
+                      {SLOT_COUNT_OPTIONS.filter(o => lvl === 0 ? o.id !== 'null' : true).map(o => (
+                        <option key={o.id} value={o.id}>{o.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  {isActive && (
+                    <input className={iCls} style={{ ...iStyle, fontSize: 12 }}
+                      placeholder="заклинание 1, заклинание 2, ..."
+                      value={slot.spells}
+                      onChange={e => setSlot(lvl, 'spells', e.target.value)}
+                    />
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
