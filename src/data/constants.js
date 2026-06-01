@@ -83,7 +83,7 @@ export const DMG_TYPES = [
   { id: 'necrotic',    label: 'Некротический', css: 'dt-necrotic', group: 'magic' },
   { id: 'radiant',     label: 'Лучистый',   css: 'dt-radiant',  group: 'magic' },
   { id: 'psychic',     label: 'Психический',   css: 'dt-psychic',  group: 'magic' },
-  { id: 'force',       label: 'Силовое',    css: 'dt-force',    group: 'magic' },
+  { id: 'force',       label: 'Силовое поле',    css: 'dt-force',    group: 'magic' },
   // Магический физический (игнорирует сопротивление к физ. немагическому)
   { id: 'magic_p',     label: 'Маг. колющий',  css: 'dt-magic',    group: 'mphys' },
   { id: 'magic_s',     label: 'Маг. рубящий',  css: 'dt-magic',    group: 'mphys' },
@@ -151,7 +151,7 @@ export const CONDITIONS = [
   { id: 'concentrating', label: 'Концентрация',     css: 'cond-purple', group: 'combat' },
   { id: 'cursed',        label: 'Порча',            css: 'cond-purple', group: 'combat' },
   { id: 'guidance',      label: 'Наставление',      css: 'cond-blue',   group: 'combat' },
-  { id: 'bardic_insp',   label: 'Барт. вдохновение',css: 'cond-amber',  group: 'combat' },
+  { id: 'bardic_insp',   label: 'Бард. вдохновение',css: 'cond-amber',  group: 'combat' },
   { id: 'lethargy',      label: 'Летаргия',         css: 'cond-gray',   group: 'combat' },
 ]
 
