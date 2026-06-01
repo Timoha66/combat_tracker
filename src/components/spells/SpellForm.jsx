@@ -2,28 +2,82 @@ import { useState } from 'react'
 import { IconX, IconCheck, IconTrash, IconPlus } from '@tabler/icons-react'
 import { useSpellStore } from '../../store/spellStore'
 import {
-  EMPTY_SPELL, SPELL_SCHOOLS, SPELL_CLASSES, SPELL_SOURCES,
+  EMPTY_SPELL, EMPTY_EFFECT, EMPTY_UPCAST,
+  SPELL_SCHOOLS, SPELL_CLASSES, SPELL_SOURCES,
   CASTING_TIME_UNITS, RANGE_TYPES, DURATION_TYPES,
-  EFFECT_TYPES, SAVE_ABILITIES,
+  EFFECT_TYPES, SAVE_ABILITIES, DIE_SIZES,
+  normalizeSpell, formatUpcast,
 } from '../../data/spellDb'
 import { DMG_TYPES } from '../../data/constants'
 
 export default function SpellForm({ initial, onClose, onSaved }) {
   const { addSpell, updateSpell, deleteSpell } = useSpellStore()
-  const isNew = !initial?.id
-  const [form, setForm]   = useState({ ...EMPTY_SPELL, ...initial })
+  const isNew   = !initial?.id
+  const [form, setForm] = useState(() => normalizeSpell({ ...EMPTY_SPELL, ...initial }))
   const [saving, setSaving] = useState(false)
 
-  function set(field, value) { setForm(f => ({ ...f, [field]: value })) }
-  function setNested(field, key, value) { setForm(f => ({ ...f, [field]: { ...f[field], [key]: value } })) }
-  function setComp(key, value) { setForm(f => ({ ...f, components: { ...f.components, [key]: value } })) }
-  function setEffect(key, value) { setForm(f => ({ ...f, effect: { ...f.effect, [key]: value } })) }
-  function setEffectDamage(idx, key, value) {
+  // ── helpers ────────────────────────────────────────────────────────────────
+  const set     = (field, value) => setForm(f => ({ ...f, [field]: value }))
+  const setNest = (field, key, value) => setForm(f => ({ ...f, [field]: { ...f[field], [key]: value } }))
+  const setComp = (key, value) => setForm(f => ({ ...f, components: { ...f.components, [key]: value } }))
+
+  // upcast helpers
+  const setUpcast = (key, value) => setForm(f => ({ ...f, upcast: { ...f.upcast, [key]: value } }))
+  const setCantripLevel = (lvl, value) => setForm(f => ({
+    ...f, upcast: { ...f.upcast, cantripLevels: { ...(f.upcast?.cantripLevels ?? {}), [lvl]: value } }
+  }))
+
+  // effects helpers
+  function setEffectField(idx, key, value) {
+    setForm(f => ({ ...f, effects: f.effects.map((e, i) => i === idx ? { ...e, [key]: value } : e) }))
+  }
+  function setEffectDamage(eIdx, dIdx, key, value) {
     setForm(f => ({
       ...f,
-      effect: {
-        ...f.effect,
-        damages: (f.effect?.damages ?? []).map((d, i) => i === idx ? { ...d, [key]: value } : d),
+      effects: f.effects.map((e, i) => i !== eIdx ? e : {
+        ...e,
+        damages: e.damages.map((d, j) => j !== dIdx ? d : { ...d, [key]: value }),
+      }),
+    }))
+  }
+  function addDamage(eIdx) {
+    setForm(f => ({
+      ...f,
+      effects: f.effects.map((e, i) => i !== eIdx ? e : {
+        ...e, damages: [...(e.damages ?? []), { count: 1, die: 'd6', dmgType: '' }],
+      }),
+    }))
+  }
+  function removeDamage(eIdx, dIdx) {
+    setForm(f => ({
+      ...f,
+      effects: f.effects.map((e, i) => i !== eIdx ? e : {
+        ...e, damages: e.damages.filter((_, j) => j !== dIdx),
+      }),
+    }))
+  }
+  function addEffect() {
+    setForm(f => ({ ...f, effects: [...(f.effects ?? []), { ...EMPTY_EFFECT }] }))
+  }
+  function removeEffect(idx) {
+    setForm(f => ({ ...f, effects: f.effects.filter((_, i) => i !== idx) }))
+  }
+
+  // Auto-fill cantrip levels from first damage
+  function autofillCantripLevels() {
+    const firstDmg = form.effects?.[0]?.damages?.[0]
+    if (!firstDmg?.die) return
+    const count = firstDmg.count ?? 1
+    const die   = firstDmg.die
+    setForm(f => ({
+      ...f,
+      upcast: {
+        ...f.upcast,
+        cantripLevels: {
+          5:  `${count + 1}${die}`,
+          11: `${count + 2}${die}`,
+          17: `${count + 3}${die}`,
+        },
       },
     }))
   }
@@ -41,20 +95,19 @@ export default function SpellForm({ initial, onClose, onSaved }) {
       onSaved(saved)
     } finally { setSaving(false) }
   }
-
   async function handleDelete() {
     if (!confirm(`Удалить «${form.name}»?`)) return
     await deleteSpell(form.id)
     onClose()
   }
 
-  const iStyle = { background: 'var(--bg-deep)', border: '1px solid var(--border-md)', color: 'var(--text)' }
-  const iCls   = 'w-full rounded-lg px-3 py-1.5 text-sm outline-none'
-  const selCls = `${iCls} cursor-pointer`
-
-  const castUnit   = CASTING_TIME_UNITS.find(u => u.id === form.castingTime?.unit)
-  const rangeType  = RANGE_TYPES.find(t => t.id === form.range?.type)
-  const durType    = DURATION_TYPES.find(t => t.id === form.duration?.type)
+  const iStyle   = { background: 'var(--bg-deep)', border: '1px solid var(--border-md)', color: 'var(--text)' }
+  const iCls     = 'w-full rounded-lg px-3 py-1.5 text-sm outline-none'
+  const selCls   = `${iCls} cursor-pointer`
+  const castUnit = CASTING_TIME_UNITS.find(u => u.id === form.castingTime?.unit)
+  const rangeType = RANGE_TYPES.find(t => t.id === form.range?.type)
+  const durType  = DURATION_TYPES.find(t => t.id === form.duration?.type)
+  const upcastPreview = form.upcast?.enabled ? formatUpcast(form) : ''
 
   return (
     <div className="overlay" style={{ zIndex: 400 }}>
@@ -73,20 +126,20 @@ export default function SpellForm({ initial, onClose, onSaved }) {
 
           {/* ── ОБЩЕЕ ── */}
           <FormSection title="Общее">
-            <div className="grid grid-cols-2 gap-3 mb-3">
-              <div className="col-span-2 grid grid-cols-3 gap-3">
-                <div className="col-span-2">
-                  <Label>Название *</Label>
-                  <input className={iCls} style={iStyle} value={form.name}
-                    placeholder="Огненный шар" onChange={e => set('name', e.target.value)} />
-                </div>
-                <div>
-                  <Label>Уровень</Label>
-                  <input className={iCls} style={iStyle} type="number" min={0} max={9}
-                    value={form.level}
-                    onChange={e => set('level', Math.max(0, Math.min(9, Number(e.target.value) || 0)))} />
-                </div>
+            <div className="grid grid-cols-3 gap-3 mb-3">
+              <div className="col-span-2">
+                <Label>Название *</Label>
+                <input className={iCls} style={iStyle} value={form.name}
+                  placeholder="Огненный шар" onChange={e => set('name', e.target.value)} />
               </div>
+              <div>
+                <Label>Уровень</Label>
+                <input className={iCls} style={iStyle} type="number" min={0} max={9}
+                  value={form.level}
+                  onChange={e => set('level', Math.max(0, Math.min(9, Number(e.target.value) || 0)))} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>Название (англ.)</Label>
                 <input className={iCls} style={iStyle} value={form.nameEn ?? ''}
@@ -104,28 +157,19 @@ export default function SpellForm({ initial, onClose, onSaved }) {
           {/* ── КОМПОНЕНТЫ ── */}
           <FormSection title="Компоненты">
             <div className="flex gap-2 mb-2">
-              {[
-                { key: 'verbal',   label: 'Вербальный' },
-                { key: 'somatic',  label: 'Соматический' },
-                { key: 'material', label: 'Материальный' },
-              ].map(({ key, label }) => {
+              {[{key:'verbal',label:'Вербальный'},{key:'somatic',label:'Соматический'},{key:'material',label:'Материальный'}].map(({key,label}) => {
                 const active = form.components?.[key]
                 return (
                   <button key={key} type="button" onClick={() => setComp(key, !active)}
                     className="font-cinzel text-xs px-3 py-1.5 rounded-lg transition-all cursor-pointer"
-                    style={{
-                      background: active ? 'var(--gold-dim)' : 'var(--bg-row)',
-                      color:      active ? 'var(--gold)' : 'var(--text-dim)',
-                      border:     `1px solid ${active ? 'rgba(226,201,126,0.4)' : 'var(--border)'}`,
-                    }}>
+                    style={{ background: active ? 'var(--gold-dim)' : 'var(--bg-row)', color: active ? 'var(--gold)' : 'var(--text-dim)', border: `1px solid ${active ? 'rgba(226,201,126,0.4)' : 'var(--border)'}` }}>
                     {label}
                   </button>
                 )
               })}
             </div>
             {form.components?.material && (
-              <input className={iCls} style={iStyle}
-                placeholder="Описание материального компонента..."
+              <input className={iCls} style={iStyle} placeholder="Описание материального компонента..."
                 value={form.components.materialDesc ?? ''}
                 onChange={e => setComp('materialDesc', e.target.value)} />
             )}
@@ -139,14 +183,14 @@ export default function SpellForm({ initial, onClose, onSaved }) {
                   <Label>Кол-во</Label>
                   <input className={iCls} style={iStyle} type="number" min={1}
                     value={form.castingTime?.value ?? 1}
-                    onChange={e => setNested('castingTime', 'value', Number(e.target.value) || 1)} />
+                    onChange={e => setNest('castingTime', 'value', Number(e.target.value) || 1)} />
                 </div>
               )}
               <div className="flex-1">
                 <Label>Единица</Label>
                 <select className={selCls} style={iStyle}
                   value={form.castingTime?.unit ?? 'action'}
-                  onChange={e => setNested('castingTime', 'unit', e.target.value)}>
+                  onChange={e => setNest('castingTime', 'unit', e.target.value)}>
                   {CASTING_TIME_UNITS.map(u => <option key={u.id} value={u.id}>{u.label}</option>)}
                 </select>
               </div>
@@ -157,7 +201,7 @@ export default function SpellForm({ initial, onClose, onSaved }) {
                 <input className={iCls} style={iStyle}
                   placeholder={form.castingTime?.unit === 'reaction' ? 'совершаемая вами в ответ на...' : 'Описание...'}
                   value={form.castingTime?.condition ?? ''}
-                  onChange={e => setNested('castingTime', 'condition', e.target.value)} />
+                  onChange={e => setNest('castingTime', 'condition', e.target.value)} />
               </div>
             )}
           </FormSection>
@@ -170,14 +214,14 @@ export default function SpellForm({ initial, onClose, onSaved }) {
                   <Label>Значение</Label>
                   <input className={iCls} style={iStyle} type="number" min={0}
                     value={form.range?.value ?? 0}
-                    onChange={e => setNested('range', 'value', Number(e.target.value) || 0)} />
+                    onChange={e => setNest('range', 'value', Number(e.target.value) || 0)} />
                 </div>
               )}
               <div className="flex-1">
                 <Label>Тип</Label>
                 <select className={selCls} style={iStyle}
                   value={form.range?.type ?? 'feet'}
-                  onChange={e => setNested('range', 'type', e.target.value)}>
+                  onChange={e => setNest('range', 'type', e.target.value)}>
                   {RANGE_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
                 </select>
               </div>
@@ -187,7 +231,7 @@ export default function SpellForm({ initial, onClose, onSaved }) {
                 <Label>Условие</Label>
                 <input className={iCls} style={iStyle} placeholder="Описание дистанции..."
                   value={form.range?.condition ?? ''}
-                  onChange={e => setNested('range', 'condition', e.target.value)} />
+                  onChange={e => setNest('range', 'condition', e.target.value)} />
               </div>
             )}
           </FormSection>
@@ -195,18 +239,14 @@ export default function SpellForm({ initial, onClose, onSaved }) {
           {/* ── ДЛИТЕЛЬНОСТЬ ── */}
           <FormSection title="Длительность">
             <div className="flex gap-2 items-center mb-2">
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: 'Cinzel, serif', fontSize: 11, color: form.concentration ? '#4ade80' : 'var(--text-muted)' }}>
-                <input type="checkbox" checked={form.concentration ?? false}
-                  onChange={e => set('concentration', e.target.checked)}
-                  style={{ accentColor: '#4ade80', width: 13, height: 13 }} />
+              <CbLabel active={form.concentration} color="#4ade80"
+                onChange={e => set('concentration', e.target.checked)}>
                 Концентрация
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: 'Cinzel, serif', fontSize: 11, color: form.ritual ? 'var(--gold)' : 'var(--text-muted)', marginLeft: 12 }}>
-                <input type="checkbox" checked={form.ritual ?? false}
-                  onChange={e => set('ritual', e.target.checked)}
-                  style={{ accentColor: 'var(--gold)', width: 13, height: 13 }} />
+              </CbLabel>
+              <CbLabel active={form.ritual} color="var(--gold)" style={{ marginLeft: 12 }}
+                onChange={e => set('ritual', e.target.checked)}>
                 Ритуал
-              </label>
+              </CbLabel>
             </div>
             <div className="flex gap-2 items-end">
               {durType?.hasValue && (
@@ -214,14 +254,14 @@ export default function SpellForm({ initial, onClose, onSaved }) {
                   <Label>Кол-во</Label>
                   <input className={iCls} style={iStyle} type="number" min={1}
                     value={form.duration?.value ?? 1}
-                    onChange={e => setNested('duration', 'value', Number(e.target.value) || 1)} />
+                    onChange={e => setNest('duration', 'value', Number(e.target.value) || 1)} />
                 </div>
               )}
               <div className="flex-1">
                 <Label>Тип</Label>
                 <select className={selCls} style={iStyle}
                   value={form.duration?.type ?? 'instant'}
-                  onChange={e => setNested('duration', 'type', e.target.value)}>
+                  onChange={e => setNest('duration', 'type', e.target.value)}>
                   {DURATION_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
                 </select>
               </div>
@@ -231,89 +271,188 @@ export default function SpellForm({ initial, onClose, onSaved }) {
                 <Label>Условие</Label>
                 <input className={iCls} style={iStyle} placeholder="Описание длительности..."
                   value={form.duration?.condition ?? ''}
-                  onChange={e => setNested('duration', 'condition', e.target.value)} />
+                  onChange={e => setNest('duration', 'condition', e.target.value)} />
               </div>
             )}
           </FormSection>
 
-          {/* ── ЭФФЕКТ ── */}
-          <FormSection title="Эффект">
-            <Label>Тип действия</Label>
-            <select className={selCls} style={{ ...iStyle, marginBottom: 12 }}
-              value={form.effect?.type ?? ''}
-              onChange={e => setEffect('type', e.target.value)}>
-              {EFFECT_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
-            </select>
+          {/* ── ЭФФЕКТЫ ── */}
+          <FormSection title="Эффекты">
+            {(form.effects ?? []).map((eff, eIdx) => (
+              <div key={eIdx} className="rounded-xl mb-3 p-3"
+                style={{ background: 'var(--bg-row)', border: '1px solid var(--border)' }}>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="font-cinzel text-[10px] uppercase tracking-widest"
+                    style={{ color: 'var(--text-muted)' }}>Эффект {eIdx + 1}</span>
+                  {(form.effects?.length ?? 1) > 1 && (
+                    <button className="icon-btn ml-auto" style={{ width: 22, height: 22 }}
+                      onClick={() => removeEffect(eIdx)}>
+                      <IconTrash size={11} style={{ color: '#f87171' }} />
+                    </button>
+                  )}
+                </div>
 
-            {/* Спасбросок → выбор характеристики */}
-            {form.effect?.type === 'save' && (
-              <div className="mb-3">
-                <Label>Характеристика спасброска</Label>
-                <select className={selCls} style={iStyle}
-                  value={form.effect?.saveAbility ?? ''}
-                  onChange={e => setEffect('saveAbility', e.target.value)}>
-                  <option value="">— выбери —</option>
-                  {SAVE_ABILITIES.map(a => <option key={a.id} value={a.id}>{a.label}</option>)}
+                {/* Тип */}
+                <select className={selCls} style={{ ...iStyle, marginBottom: 10 }}
+                  value={eff.type ?? ''}
+                  onChange={e => setEffectField(eIdx, 'type', e.target.value)}>
+                  {EFFECT_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
                 </select>
-              </div>
-            )}
 
-            {/* Атаки / Лечение → урон */}
-            {(form.effect?.type === 'melee_attack' || form.effect?.type === 'ranged_attack' || form.effect?.type === 'healing') && (
-              <div>
-                <Label>{form.effect?.type === 'healing' ? 'Лечение' : 'Урон'}</Label>
-                {(form.effect?.damages ?? [{ formula: '', dmgType: '' }]).map((d, i) => (
-                  <div key={i} className="flex gap-2 mb-1.5">
-                    <input className={iCls} style={{ ...iStyle, flex: 1 }}
-                      placeholder="2к10+5"
-                      value={d.formula ?? ''}
-                      onChange={e => setEffectDamage(i, 'formula', e.target.value)} />
-                    {form.effect?.type !== 'healing' && (
-                      <select className="rounded-lg px-2 py-1.5 text-sm outline-none cursor-pointer shrink-0"
-                        style={{ ...iStyle, minWidth: 130 }}
-                        value={d.dmgType ?? ''}
-                        onChange={e => setEffectDamage(i, 'dmgType', e.target.value)}>
-                        <option value="">— тип —</option>
-                        {DMG_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
-                      </select>
-                    )}
-                    {(form.effect?.damages?.length ?? 1) > 1 && (
-                      <button className="icon-btn shrink-0" style={{ width: 28, height: 28 }}
-                        onClick={() => setEffect('damages', form.effect.damages.filter((_, j) => j !== i))}>
-                        <IconTrash size={11} />
-                      </button>
-                    )}
+                {/* Спасбросок → характеристика */}
+                {eff.type === 'save' && (
+                  <div className="mb-2">
+                    <Label>Характеристика спасброска</Label>
+                    <select className={selCls} style={iStyle}
+                      value={eff.saveAbility ?? ''}
+                      onChange={e => setEffectField(eIdx, 'saveAbility', e.target.value)}>
+                      <option value="">— выбери —</option>
+                      {SAVE_ABILITIES.map(a => <option key={a.id} value={a.id}>{a.label}</option>)}
+                    </select>
                   </div>
-                ))}
-                <button type="button" className="btn btn-ghost w-full justify-center mt-1" style={{ fontSize: 11 }}
-                  onClick={() => setEffect('damages', [...(form.effect?.damages ?? []), { formula: '', dmgType: '' }])}>
-                  <IconPlus size={11} /> Ещё компонент урона
-                </button>
-              </div>
-            )}
+                )}
 
-            {/* Специальное → текст */}
-            {form.effect?.type === 'special' && (
-              <div>
-                <Label>Описание эффекта</Label>
-                <textarea className={`${iCls} resize-none`} style={{ ...iStyle, minHeight: 60 }}
-                  placeholder="Опишите эффект..."
-                  value={form.effect?.specialText ?? ''}
-                  onChange={e => setEffect('specialText', e.target.value)} />
+                {/* Урон/Лечение → кубы */}
+                {(eff.type === 'damage' || eff.type === 'save' || eff.type === 'healing') && (
+                  <div>
+                    <Label>{eff.type === 'healing' ? 'Лечение' : 'Урон'}</Label>
+                    {(eff.damages ?? []).map((d, dIdx) => (
+                      <div key={dIdx} className="flex gap-1.5 mb-1.5 items-center">
+                        {/* Количество кубов */}
+                        <input type="number" min={1} max={99}
+                          className="rounded-lg px-2 py-1.5 text-sm outline-none text-center"
+                          style={{ ...iStyle, width: 52 }}
+                          value={d.count ?? 1}
+                          onChange={e => setEffectDamage(eIdx, dIdx, 'count', Math.max(1, Math.min(99, Number(e.target.value) || 1)))} />
+                        {/* Размер куба */}
+                        <select className="rounded-lg px-2 py-1.5 text-sm outline-none cursor-pointer"
+                          style={{ ...iStyle, width: 70 }}
+                          value={d.die ?? 'd6'}
+                          onChange={e => setEffectDamage(eIdx, dIdx, 'die', e.target.value)}>
+                          {DIE_SIZES.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                        {/* Тип урона (не для лечения) */}
+                        {eff.type !== 'healing' && (
+                          <select className="rounded-lg px-2 py-1.5 text-sm outline-none cursor-pointer flex-1"
+                            style={{ ...iStyle }}
+                            value={d.dmgType ?? ''}
+                            onChange={e => setEffectDamage(eIdx, dIdx, 'dmgType', e.target.value)}>
+                            <option value="">— тип —</option>
+                            {DMG_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+                          </select>
+                        )}
+                        {/* Удалить строку */}
+                        {(eff.damages?.length ?? 1) > 1 && (
+                          <button className="icon-btn shrink-0" style={{ width: 26, height: 26 }}
+                            onClick={() => removeDamage(eIdx, dIdx)}>
+                            <IconTrash size={11} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    <button type="button" className="btn btn-ghost w-full justify-center mt-1" style={{ fontSize: 11 }}
+                      onClick={() => addDamage(eIdx)}>
+                      <IconPlus size={11} /> Ещё тип урона
+                    </button>
+                  </div>
+                )}
+
+                {/* Специальное → текст */}
+                {eff.type === 'special' && (
+                  <div>
+                    <Label>Описание эффекта</Label>
+                    <textarea className={`${iCls} resize-none`} style={{ ...iStyle, minHeight: 56 }}
+                      placeholder="Опишите эффект..."
+                      value={eff.specialText ?? ''}
+                      onChange={e => setEffectField(eIdx, 'specialText', e.target.value)} />
+                  </div>
+                )}
               </div>
-            )}
+            ))}
+            <button type="button" className="btn btn-ghost w-full justify-center" style={{ fontSize: 11 }}
+              onClick={addEffect}>
+              <IconPlus size={11} /> Добавить эффект
+            </button>
           </FormSection>
 
           {/* ── ОПИСАНИЕ ── */}
           <FormSection title="Описание">
-            <Label>Описание *</Label>
-            <textarea className={`${iCls} resize-none mb-3`} style={{ ...iStyle, minHeight: 100 }}
+            <textarea className={`${iCls} resize-none`} style={{ ...iStyle, minHeight: 100 }}
               placeholder="Текст заклинания..."
               value={form.description} onChange={e => set('description', e.target.value)} />
-            <Label>На более высоких уровнях</Label>
-            <textarea className={`${iCls} resize-none`} style={{ ...iStyle, minHeight: 60 }}
-              placeholder="Эффект при использовании ячейки более высокого уровня..."
-              value={form.higherLevels ?? ''} onChange={e => set('higherLevels', e.target.value)} />
+          </FormSection>
+
+          {/* ── НА БОЛЕЕ ВЫСОКИХ УРОВНЯХ ── */}
+          <FormSection title="На более высоких уровнях">
+            <CbLabel active={form.upcast?.enabled} color="#a78bfa"
+              onChange={e => setUpcast('enabled', e.target.checked)}>
+              Апкаст
+            </CbLabel>
+
+            {form.upcast?.enabled ? (
+              <div className="mt-3">
+                {form.level === 0 ? (
+                  /* Заговор: поля для 5/11/17 уровня */
+                  <>
+                    <div className="flex gap-2 mb-2">
+                      {[5, 11, 17].map(lvl => (
+                        <div key={lvl} className="flex-1">
+                          <Label>{lvl} уровень</Label>
+                          <input className={iCls} style={iStyle}
+                            placeholder={`2d${(form.effects?.[0]?.damages?.[0]?.die ?? 'd6').slice(1)}`}
+                            value={form.upcast?.cantripLevels?.[lvl] ?? ''}
+                            onChange={e => setCantripLevel(lvl, e.target.value)} />
+                        </div>
+                      ))}
+                    </div>
+                    {form.effects?.[0]?.damages?.[0]?.die && (
+                      <button type="button" className="btn btn-ghost w-full justify-center" style={{ fontSize: 11 }}
+                        onClick={autofillCantripLevels}>
+                        ✨ Подставить +1 куб за порог
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  /* Не заговор: выбор типа прогрессии */
+                  <>
+                    <div className="flex gap-2 mb-3">
+                      {[{id:'extra_target',label:'Доп. цель'},{id:'extra_damage',label:'Повышение урона'}].map(opt => {
+                        const active = (form.upcast?.progressionType ?? 'extra_target') === opt.id
+                        return (
+                          <button key={opt.id} type="button"
+                            className="font-cinzel text-xs px-3 py-1.5 rounded-lg flex-1 transition-all cursor-pointer"
+                            style={{ background: active ? 'rgba(167,139,250,0.15)' : 'var(--bg-row)', color: active ? '#c4b5fd' : 'var(--text-dim)', border: `1px solid ${active ? 'rgba(167,139,250,0.4)' : 'var(--border)'}` }}
+                            onClick={() => setUpcast('progressionType', opt.id)}>
+                            {opt.label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                    {form.upcast?.progressionType === 'extra_target' ? (
+                      <div className="px-3 py-2 rounded-lg text-sm italic"
+                        style={{ background: 'rgba(167,139,250,0.05)', border: '1px solid rgba(167,139,250,0.2)', color: 'var(--text-dim)' }}>
+                        {upcastPreview || 'Предпросмотр появится здесь'}
+                      </div>
+                    ) : (
+                      <>
+                        <Label>Описание</Label>
+                        <textarea className={`${iCls} resize-none`} style={{ ...iStyle, minHeight: 60 }}
+                          placeholder="Опишите эффект апкаста..."
+                          value={form.upcast?.customText ?? ''}
+                          onChange={e => setUpcast('customText', e.target.value)} />
+                      </>
+                    )}
+                  </>
+                )}
+              </div>
+            ) : (
+              /* Обычное текстовое поле */
+              <div className="mt-2">
+                <textarea className={`${iCls} resize-none`} style={{ ...iStyle, minHeight: 60 }}
+                  placeholder="Эффект при использовании ячейки более высокого уровня..."
+                  value={form.higherLevels ?? ''} onChange={e => set('higherLevels', e.target.value)} />
+              </div>
+            )}
           </FormSection>
 
           {/* ── КЛАССЫ ── */}
@@ -324,11 +463,7 @@ export default function SpellForm({ initial, onClose, onSaved }) {
                 return (
                   <button key={cls} type="button" onClick={() => toggleClass(cls)}
                     className="font-cinzel text-[10px] px-2 py-0.5 rounded-md transition-all cursor-pointer"
-                    style={{
-                      background: active ? 'var(--gold-dim)' : 'var(--bg-row)',
-                      color:      active ? 'var(--gold)' : 'var(--text-muted)',
-                      border:     `1px solid ${active ? 'rgba(226,201,126,0.4)' : 'var(--border)'}`,
-                    }}>
+                    style={{ background: active ? 'var(--gold-dim)' : 'var(--bg-row)', color: active ? 'var(--gold)' : 'var(--text-muted)', border: `1px solid ${active ? 'rgba(226,201,126,0.4)' : 'var(--border)'}` }}>
                     {cls}
                   </button>
                 )
@@ -362,6 +497,7 @@ export default function SpellForm({ initial, onClose, onSaved }) {
   )
 }
 
+// ── Мелкие вспомогательные компоненты ─────────────────────────────────────────
 function FormSection({ title, children }) {
   return (
     <div>
@@ -373,11 +509,19 @@ function FormSection({ title, children }) {
     </div>
   )
 }
-
 function Label({ children }) {
   return (
     <div className="font-cinzel text-[10px] tracking-wide uppercase mb-1" style={{ color: 'var(--text-muted)' }}>
       {children}
     </div>
+  )
+}
+function CbLabel({ active, color, onChange, children, style }) {
+  return (
+    <label style={{ display:'flex', alignItems:'center', gap:6, cursor:'pointer', fontFamily:'Cinzel, serif', fontSize:11, color: active ? color : 'var(--text-muted)', ...style }}>
+      <input type="checkbox" checked={active ?? false} onChange={onChange}
+        style={{ accentColor: color, width:13, height:13 }} />
+      {children}
+    </label>
   )
 }

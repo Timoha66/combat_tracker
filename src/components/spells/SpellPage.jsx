@@ -3,11 +3,63 @@ import { IconPlus, IconSearch, IconDownload, IconUpload, IconPencil, IconX } fro
 import { useSpellStore } from '../../store/spellStore'
 import {
   SPELL_SCHOOLS, SPELL_SCHOOL_MAP, SPELL_SOURCES, SPELL_CLASSES,
-  formatCastingTime, formatRange, formatDuration,
+  formatCastingTime, formatRange, formatDuration, formatUpcast,
+  normalizeSpell, EFFECT_TYPES, SAVE_ABILITY_MAP, formatDieFormula,
 } from '../../data/spellDb'
+import { DMG_TYPES } from '../../data/constants'
 import SpellForm from './SpellForm'
 
 const LEVEL_LABELS = ['Заговор', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX']
+const DMG_LABEL = Object.fromEntries(DMG_TYPES.map(t => [t.id, t.label]))
+function dmgName(id) { return DMG_LABEL[id] ?? id }
+function fmtDmgList(damages, isHeal) {
+  return (damages ?? []).filter(d => d.die || d.formula).map(d => {
+    const f = formatDieFormula(d)
+    return isHeal ? f : `${f}${d.dmgType ? ` ${dmgName(d.dmgType)}` : ''}`
+  }).join(' + ')
+}
+function SpellEffectsBlock({ spell: s }) {
+  const ns  = normalizeSpell(s)
+  const effects = (ns.effects ?? []).filter(e => e.type && e.type !== '')
+  const upcastText = formatUpcast(ns)
+  if (!effects.length && !upcastText) return null
+  return (
+    <div className="mb-4">
+      {effects.length > 0 && (
+        <div className="mb-3 px-3 py-2 rounded-xl"
+          style={{ background: 'rgba(167,139,250,0.05)', border: '1px solid rgba(167,139,250,0.2)' }}>
+          <div className="font-cinzel text-[10px] uppercase tracking-widest mb-2"
+            style={{ color: 'rgba(167,139,250,0.7)' }}>Эффект</div>
+          <div className="flex flex-col gap-1.5">
+            {effects.map((e, i) => {
+              const tLabel = EFFECT_TYPES.find(t => t.id === e.type)?.label ?? e.type
+              const saveName = e.saveAbility ? SAVE_ABILITY_MAP[e.saveAbility] : null
+              const dmgStr = fmtDmgList(e.damages, e.type === 'healing')
+              return (
+                <div key={i} className="flex flex-wrap items-center gap-1.5 text-sm">
+                  <span className="font-cinzel text-[10px] px-1.5 py-0.5 rounded"
+                    style={{ background: 'rgba(167,139,250,0.12)', color: '#c4b5fd' }}>{tLabel}</span>
+                  {saveName && <span className="font-cinzel text-xs" style={{ color: '#fbbf24' }}>{saveName}</span>}
+                  {dmgStr  && <span className="font-cinzel text-xs font-semibold" style={{ color: 'var(--text)' }}>{dmgStr}</span>}
+                  {e.type === 'special' && e.specialText && <span className="text-xs italic" style={{ color: 'var(--text-dim)' }}>{e.specialText}</span>}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+      {upcastText && (
+        <div className="px-3 py-2 rounded-xl"
+          style={{ background: 'rgba(226,201,126,0.05)', border: '1px solid rgba(226,201,126,0.2)' }}>
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-dim)' }}>
+            <span className="font-cinzel font-bold" style={{ color: 'var(--gold)' }}>На более высоких уровнях: </span>
+            {upcastText}
+          </p>
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function SpellPage() {
   const { spells, loading, loadAll, exportJSON, importJSON } = useSpellStore()
@@ -301,16 +353,8 @@ function SpellDetailView({ spell: s, onEdit }) {
         </div>
       )}
 
-      {/* На более высоких уровнях */}
-      {s.higherLevels && (
-        <div className="mb-4 px-4 py-3 rounded-xl"
-          style={{ background: 'rgba(226,201,126,0.05)', border: '1px solid rgba(226,201,126,0.2)' }}>
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-dim)' }}>
-            <span className="font-cinzel font-bold" style={{ color: 'var(--gold)' }}>На более высоких уровнях: </span>
-            {s.higherLevels}
-          </p>
-        </div>
-      )}
+      {/* Эффект + На более высоких уровнях */}
+      <SpellEffectsBlock spell={s} />
 
       {/* Классы */}
       {s.classes?.length > 0 && (
