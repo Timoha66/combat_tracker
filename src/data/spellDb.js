@@ -125,7 +125,7 @@ export const DAMAGE_BONUS_TYPES = [
 export const DAMAGE_BONUS_SHORT = {
   str: 'Мод.Сил', dex: 'Мод.Лов', con: 'Мод.Тел',
   int: 'Мод.Инт', wis: 'Мод.Муд', cha: 'Мод.Хар',
-  spell: 'ЗХ', prof: 'БМ', level: 'Ур.', half_level: '½Ур.',
+  spell: 'Мод.Закл.Хар', prof: 'БМ', level: 'Ур.', half_level: 'Половина Ур.',
 }
 
 export const DIE_SIZES = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20', 'd100']
