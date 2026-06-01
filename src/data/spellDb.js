@@ -92,8 +92,8 @@ export const SAVE_ON_SUCCESS_MAP = Object.fromEntries(SAVE_ON_SUCCESS.map(s => [
 export const CONDITION_TYPES = [
   { id: 'blinded',       label: 'Ослеплён' },
   { id: 'charmed',       label: 'Очарован' },
-  { id: 'deafened',      label: 'Глухой' },
-  { id: 'exhaustion',    label: 'Истощение' },
+  { id: 'deafened',      label: 'Оглохший' },
+  { id: 'exhaustion',    label: 'Истощенён' },
   { id: 'frightened',    label: 'Испуган' },
   { id: 'grappled',      label: 'Схвачен' },
   { id: 'incapacitated', label: 'Недееспособен' },
@@ -101,9 +101,9 @@ export const CONDITION_TYPES = [
   { id: 'paralyzed',     label: 'Парализован' },
   { id: 'petrified',     label: 'Окаменел' },
   { id: 'poisoned',      label: 'Отравлен' },
-  { id: 'prone',         label: 'Опрокинут' },
+  { id: 'prone',         label: 'Сбит с ног' },
   { id: 'restrained',    label: 'Обездвижен' },
-  { id: 'stunned',       label: 'Оглушён' },
+  { id: 'stunned',       label: 'Ошеломлён' },
   { id: 'unconscious',   label: 'Без сознания' },
 ]
 export const CONDITION_MAP = Object.fromEntries(CONDITION_TYPES.map(c => [c.id, c.label]))
