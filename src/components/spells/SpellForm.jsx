@@ -5,8 +5,7 @@ import {
   EMPTY_SPELL, EMPTY_EFFECT, EMPTY_UPCAST,
   SPELL_SCHOOLS, SPELL_CLASSES, SPELL_SOURCES,
   CASTING_TIME_UNITS, RANGE_TYPES, DURATION_TYPES,
-  EFFECT_TYPES, SAVE_ABILITIES, DIE_SIZES,
-  normalizeSpell, formatUpcast,
+  EFFECT_TYPES, SAVE_ABILITIES, DIE_SIZES,  normalizeSpell, formatUpcast,
 } from '../../data/spellDb'
 import { DMG_TYPES } from '../../data/constants'
 
@@ -416,7 +415,11 @@ export default function SpellForm({ initial, onClose, onSaved }) {
                   /* Не заговор: выбор типа прогрессии */
                   <>
                     <div className="flex gap-2 mb-3">
-                      {[{id:'extra_target',label:'Доп. цель'},{id:'extra_damage',label:'Повышение урона'}].map(opt => {
+                      {[
+                        { id: 'extra_target', label: 'Доп. цель'   },
+                        { id: 'extra_damage', label: 'Доп. урон'   },
+                        { id: 'custom',       label: 'Специальный' },
+                      ].map(opt => {
                         const active = (form.upcast?.progressionType ?? 'extra_target') === opt.id
                         return (
                           <button key={opt.id} type="button"
@@ -428,12 +431,38 @@ export default function SpellForm({ initial, onClose, onSaved }) {
                         )
                       })}
                     </div>
-                    {form.upcast?.progressionType === 'extra_target' ? (
+
+                    {/* Доп. цель → предпросмотр */}
+                    {form.upcast?.progressionType === 'extra_target' && (
                       <div className="px-3 py-2 rounded-lg text-sm italic"
                         style={{ background: 'rgba(167,139,250,0.05)', border: '1px solid rgba(167,139,250,0.2)', color: 'var(--text-dim)' }}>
                         {upcastPreview || 'Предпросмотр появится здесь'}
                       </div>
-                    ) : (
+                    )}
+
+                    {/* Доп. урон → выбор куба + предпросмотр */}
+                    {form.upcast?.progressionType === 'extra_damage' && (
+                      <>
+                        <div className="flex gap-2 items-end mb-2">
+                          <div className="flex-1">
+                            <Label>Куб урона заклинания</Label>
+                            <select className={selCls} style={iStyle}
+                              value={form.upcast?.damageDie ?? ''}
+                              onChange={e => setUpcast('damageDie', e.target.value)}>
+                              <option value="">— авто из эффекта —</option>
+                              {DIE_SIZES.map(d => <option key={d} value={d}>{d}</option>)}
+                            </select>
+                          </div>
+                        </div>
+                        <div className="px-3 py-2 rounded-lg text-sm italic"
+                          style={{ background: 'rgba(167,139,250,0.05)', border: '1px solid rgba(167,139,250,0.2)', color: 'var(--text-dim)' }}>
+                          {upcastPreview || 'Предпросмотр появится здесь'}
+                        </div>
+                      </>
+                    )}
+
+                    {/* Специальный → свободный текст */}
+                    {form.upcast?.progressionType === 'custom' && (
                       <>
                         <Label>Описание</Label>
                         <textarea className={`${iCls} resize-none`} style={{ ...iStyle, minHeight: 60 }}
