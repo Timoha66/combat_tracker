@@ -354,6 +354,21 @@ export default function SpellForm({ initial, onClose, onSaved }) {
                           onChange={e => setEffectDamage(eIdx, dIdx, 'die', e.target.value)}>
                           {DIE_SIZES.map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
+                        {/* Бонус */}
+                        <select className="rounded-lg px-2 py-1.5 text-sm outline-none cursor-pointer"
+                          style={{ ...iStyle, minWidth: 120 }}
+                          value={d.bonus ?? ''}
+                          onChange={e => setEffectDamage(eIdx, dIdx, 'bonus', e.target.value)}>
+                          {DAMAGE_BONUS_TYPES.map(b => <option key={b.id} value={b.id}>{b.label}</option>)}
+                        </select>
+                        {/* Специальный бонус — текстовое поле */}
+                        {d.bonus === 'custom' && (
+                          <input className="rounded-lg px-2 py-1.5 text-sm outline-none"
+                            style={{ ...iStyle, width: 70 }}
+                            placeholder="+2"
+                            value={d.bonusCustom ?? ''}
+                            onChange={e => setEffectDamage(eIdx, dIdx, 'bonusCustom', e.target.value)} />
+                        )}
                         {/* Тип урона (не для лечения) */}
                         {eff.type !== 'healing' && (
                           <select className="rounded-lg px-2 py-1.5 text-sm outline-none cursor-pointer"
@@ -364,13 +379,6 @@ export default function SpellForm({ initial, onClose, onSaved }) {
                             {DMG_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
                           </select>
                         )}
-                        {/* Бонус */}
-                        <select className="rounded-lg px-2 py-1.5 text-sm outline-none cursor-pointer"
-                          style={{ ...iStyle, minWidth: 120 }}
-                          value={d.bonus ?? ''}
-                          onChange={e => setEffectDamage(eIdx, dIdx, 'bonus', e.target.value)}>
-                          {DAMAGE_BONUS_TYPES.map(b => <option key={b.id} value={b.id}>{b.label}</option>)}
-                        </select>
                         {/* Удалить строку */}
                         {(eff.damages?.length ?? 1) > 1 && (
                           <button className="icon-btn shrink-0" style={{ width: 26, height: 26 }}

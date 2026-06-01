@@ -120,6 +120,7 @@ export const DAMAGE_BONUS_TYPES = [
   { id: 'prof',       label: 'Бонус мастерства (БМ)' },
   { id: 'level',      label: 'Уровень' },
   { id: 'half_level', label: 'Половина уровня' },
+  { id: 'custom',     label: 'Специальное...' },
 ]
 export const DAMAGE_BONUS_SHORT = {
   str: 'Мод.Сил', dex: 'Мод.Лов', con: 'Мод.Тел',
@@ -177,12 +178,11 @@ function normalizeEffect(e) {
   // Нормализуем массив урона
   const rawDmg = e.damages ?? (e.damage ? [{ formula: e.damage, dmgType: e.damageType }] : [])
   const damages = rawDmg.map(d => {
-    if (d.die) return { ...d, bonus: d.bonus ?? '' } // уже новый формат
-    // Парсим старый формат: "2d6", "1d8+4", "3d10"
+    if (d.die) return { ...d, bonus: d.bonus ?? '', bonusCustom: d.bonusCustom ?? '' }
     const m = (d.formula || '').match(/^(\d+)(d\d+)/i)
-    if (m) return { count: parseInt(m[1]), die: m[2].toLowerCase(), dmgType: d.dmgType || d.type || '', bonus: '' }
-    if (d.formula) return { count: 1, die: 'd6', dmgType: d.dmgType || '', bonus: '' }
-    return { count: 1, die: 'd6', dmgType: d.dmgType || '', bonus: '' }
+    if (m) return { count: parseInt(m[1]), die: m[2].toLowerCase(), dmgType: d.dmgType || d.type || '', bonus: '', bonusCustom: '' }
+    if (d.formula) return { count: 1, die: 'd6', dmgType: d.dmgType || '', bonus: '', bonusCustom: '' }
+    return { count: 1, die: 'd6', dmgType: d.dmgType || '', bonus: '', bonusCustom: '' }
   }).filter(d => d)
   return {
     type,
@@ -214,7 +214,12 @@ export function normalizeSpell(raw) {
 export function formatDieFormula(d) {
   if (!d) return ''
   const base = d.die ? `${d.count || 1}${d.die}` : (d.formula || '')
-  const bonusStr = d.bonus ? ` + ${DAMAGE_BONUS_SHORT[d.bonus] ?? d.bonus}` : ''
+  let bonusStr = ''
+  if (d.bonus === 'custom') {
+    bonusStr = d.bonusCustom ? ` + ${d.bonusCustom}` : ''
+  } else if (d.bonus && DAMAGE_BONUS_SHORT[d.bonus]) {
+    bonusStr = ` + ${DAMAGE_BONUS_SHORT[d.bonus]}`
+  }
   return base + bonusStr
 }
 
