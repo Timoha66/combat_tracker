@@ -29,7 +29,8 @@ function MiniEffectsBlock({ spell: s }) {
             {effects.map((e, i) => {
               const tLabel = EFFECT_TYPES.find(t => t.id === e.type)?.label ?? e.type
               const saveName = e.saveAbility ? SAVE_ABILITY_MAP[e.saveAbility] : null
-              const dmgStr = _fmtDmgList(e.damages, e.type === 'healing')
+              const showDmg = e.type === 'damage' || e.type === 'healing'
+              const dmgStr = showDmg ? _fmtDmgList(e.damages, e.type === 'healing') : ''
               return (
                 <div key={i} className="flex flex-wrap items-center gap-1.5 text-sm">
                   <span className="font-cinzel text-[10px] px-1.5 py-0.5 rounded"

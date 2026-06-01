@@ -312,8 +312,8 @@ export default function SpellForm({ initial, onClose, onSaved }) {
                   </div>
                 )}
 
-                {/* Урон/Лечение → кубы */}
-                {(eff.type === 'damage' || eff.type === 'save' || eff.type === 'healing') && (
+                {/* Урон/Лечение → кубы (только для damage и healing, не для save) */}
+                {(eff.type === 'damage' || eff.type === 'healing') && (
                   <div>
                     <Label>{eff.type === 'healing' ? 'Лечение' : 'Урон'}</Label>
                     {(eff.damages ?? []).map((d, dIdx) => (
