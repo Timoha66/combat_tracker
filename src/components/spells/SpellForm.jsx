@@ -65,7 +65,7 @@ export default function SpellForm({ initial, onClose, onSaved }) {
 
   // Auto-fill cantrip levels from first damage
   function autofillCantripLevels() {
-    const firstDmg = form.effects?.[0]?.damages?.[0]
+    const firstDmg = form.effects?.find(e => e.type === 'damage')?.damages?.[0]
     if (!firstDmg?.die) return
     const count = firstDmg.count ?? 1
     const die   = firstDmg.die
@@ -454,13 +454,13 @@ export default function SpellForm({ initial, onClose, onSaved }) {
                             <div key={lvl} className="flex-1">
                               <Label>{lvl} уровень</Label>
                               <input className={iCls} style={iStyle}
-                                placeholder={`2d${(form.effects?.[0]?.damages?.[0]?.die ?? 'd6').slice(1)}`}
+                                placeholder={`2d${(form.effects?.find(e => e.type === 'damage')?.damages?.[0]?.die ?? 'd6').slice(1)}`}
                                 value={form.upcast?.cantripLevels?.[lvl] ?? ''}
                                 onChange={e => setCantripLevel(lvl, e.target.value)} />
                             </div>
                           ))}
                         </div>
-                        {form.effects?.[0]?.damages?.[0]?.die && (
+                        {form.effects?.find(e => e.type === 'damage')?.damages?.[0]?.die && (
                           <button type="button" className="btn btn-ghost w-full justify-center" style={{ fontSize: 11 }}
                             onClick={autofillCantripLevels}>
                             ✨ Подставить +1 куб за порог
