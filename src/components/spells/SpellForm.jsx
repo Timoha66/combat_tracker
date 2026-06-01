@@ -5,7 +5,8 @@ import {
   EMPTY_SPELL, EMPTY_EFFECT, EMPTY_UPCAST,
   SPELL_SCHOOLS, SPELL_CLASSES, SPELL_SOURCES,
   CASTING_TIME_UNITS, RANGE_TYPES, DURATION_TYPES,
-  EFFECT_TYPES, SAVE_ABILITIES, DIE_SIZES,  normalizeSpell, formatUpcast,
+  EFFECT_TYPES, SAVE_ABILITIES, SAVE_ON_SUCCESS, CONDITION_TYPES,
+  DAMAGE_BONUS_TYPES, DIE_SIZES, normalizeSpell, formatUpcast,
 } from '../../data/spellDb'
 import { DMG_TYPES } from '../../data/constants'
 
@@ -298,15 +299,38 @@ export default function SpellForm({ initial, onClose, onSaved }) {
                   {EFFECT_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
                 </select>
 
-                {/* Спасбросок → характеристика */}
+                {/* Спасбросок → характеристика + результат при успехе */}
                 {eff.type === 'save' && (
+                  <div className="mb-2 flex flex-col gap-2">
+                    <div>
+                      <Label>Характеристика спасброска</Label>
+                      <select className={selCls} style={iStyle}
+                        value={eff.saveAbility ?? ''}
+                        onChange={e => setEffectField(eIdx, 'saveAbility', e.target.value)}>
+                        <option value="">— выбери —</option>
+                        {SAVE_ABILITIES.map(a => <option key={a.id} value={a.id}>{a.label}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <Label>Результат при успехе</Label>
+                      <select className={selCls} style={iStyle}
+                        value={eff.saveOnSuccess ?? ''}
+                        onChange={e => setEffectField(eIdx, 'saveOnSuccess', e.target.value)}>
+                        {SAVE_ON_SUCCESS.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                )}
+
+                {/* Состояние → выбор из списка */}
+                {eff.type === 'condition' && (
                   <div className="mb-2">
-                    <Label>Характеристика спасброска</Label>
+                    <Label>Состояние</Label>
                     <select className={selCls} style={iStyle}
-                      value={eff.saveAbility ?? ''}
-                      onChange={e => setEffectField(eIdx, 'saveAbility', e.target.value)}>
+                      value={eff.condition ?? ''}
+                      onChange={e => setEffectField(eIdx, 'condition', e.target.value)}>
                       <option value="">— выбери —</option>
-                      {SAVE_ABILITIES.map(a => <option key={a.id} value={a.id}>{a.label}</option>)}
+                      {CONDITION_TYPES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
                     </select>
                   </div>
                 )}
@@ -316,7 +340,7 @@ export default function SpellForm({ initial, onClose, onSaved }) {
                   <div>
                     <Label>{eff.type === 'healing' ? 'Лечение' : 'Урон'}</Label>
                     {(eff.damages ?? []).map((d, dIdx) => (
-                      <div key={dIdx} className="flex gap-1.5 mb-1.5 items-center">
+                      <div key={dIdx} className="flex gap-1.5 mb-1.5 items-center flex-wrap">
                         {/* Количество кубов */}
                         <input type="number" min={1} max={99}
                           className="rounded-lg px-2 py-1.5 text-sm outline-none text-center"
@@ -332,14 +356,21 @@ export default function SpellForm({ initial, onClose, onSaved }) {
                         </select>
                         {/* Тип урона (не для лечения) */}
                         {eff.type !== 'healing' && (
-                          <select className="rounded-lg px-2 py-1.5 text-sm outline-none cursor-pointer flex-1"
-                            style={{ ...iStyle }}
+                          <select className="rounded-lg px-2 py-1.5 text-sm outline-none cursor-pointer"
+                            style={{ ...iStyle, minWidth: 110 }}
                             value={d.dmgType ?? ''}
                             onChange={e => setEffectDamage(eIdx, dIdx, 'dmgType', e.target.value)}>
                             <option value="">— тип —</option>
                             {DMG_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
                           </select>
                         )}
+                        {/* Бонус */}
+                        <select className="rounded-lg px-2 py-1.5 text-sm outline-none cursor-pointer"
+                          style={{ ...iStyle, minWidth: 120 }}
+                          value={d.bonus ?? ''}
+                          onChange={e => setEffectDamage(eIdx, dIdx, 'bonus', e.target.value)}>
+                          {DAMAGE_BONUS_TYPES.map(b => <option key={b.id} value={b.id}>{b.label}</option>)}
+                        </select>
                         {/* Удалить строку */}
                         {(eff.damages?.length ?? 1) > 1 && (
                           <button className="icon-btn shrink-0" style={{ width: 26, height: 26 }}
@@ -391,24 +422,58 @@ export default function SpellForm({ initial, onClose, onSaved }) {
             {form.upcast?.enabled ? (
               <div className="mt-3">
                 {form.level === 0 ? (
-                  /* Заговор: поля для 5/11/17 уровня */
+                  /* Заговор: режим Урон / Снаряды */
                   <>
-                    <div className="flex gap-2 mb-2">
-                      {[5, 11, 17].map(lvl => (
-                        <div key={lvl} className="flex-1">
-                          <Label>{lvl} уровень</Label>
-                          <input className={iCls} style={iStyle}
-                            placeholder={`2d${(form.effects?.[0]?.damages?.[0]?.die ?? 'd6').slice(1)}`}
-                            value={form.upcast?.cantripLevels?.[lvl] ?? ''}
-                            onChange={e => setCantripLevel(lvl, e.target.value)} />
-                        </div>
-                      ))}
+                    {/* Переключатель режима */}
+                    <div className="flex gap-2 mb-3">
+                      {[{id:'damage',label:'Урон'},{id:'projectiles',label:'Снаряды'}].map(opt => {
+                        const active = (form.upcast?.cantripMode ?? 'damage') === opt.id
+                        return (
+                          <button key={opt.id} type="button"
+                            className="font-cinzel text-xs px-3 py-1.5 rounded-lg flex-1 transition-all cursor-pointer"
+                            style={{ background: active ? 'rgba(167,139,250,0.15)' : 'var(--bg-row)', color: active ? '#c4b5fd' : 'var(--text-dim)', border: `1px solid ${active ? 'rgba(167,139,250,0.4)' : 'var(--border)'}` }}
+                            onClick={() => setUpcast('cantripMode', opt.id)}>
+                            {opt.label}
+                          </button>
+                        )
+                      })}
                     </div>
-                    {form.effects?.[0]?.damages?.[0]?.die && (
-                      <button type="button" className="btn btn-ghost w-full justify-center" style={{ fontSize: 11 }}
-                        onClick={autofillCantripLevels}>
-                        ✨ Подставить +1 куб за порог
-                      </button>
+
+                    {(form.upcast?.cantripMode ?? 'damage') === 'damage' ? (
+                      <>
+                        <div className="flex gap-2 mb-2">
+                          {[5, 11, 17].map(lvl => (
+                            <div key={lvl} className="flex-1">
+                              <Label>{lvl} уровень</Label>
+                              <input className={iCls} style={iStyle}
+                                placeholder={`2d${(form.effects?.[0]?.damages?.[0]?.die ?? 'd6').slice(1)}`}
+                                value={form.upcast?.cantripLevels?.[lvl] ?? ''}
+                                onChange={e => setCantripLevel(lvl, e.target.value)} />
+                            </div>
+                          ))}
+                        </div>
+                        {form.effects?.[0]?.damages?.[0]?.die && (
+                          <button type="button" className="btn btn-ghost w-full justify-center" style={{ fontSize: 11 }}
+                            onClick={autofillCantripLevels}>
+                            ✨ Подставить +1 куб за порог
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      /* Снаряды: поля 5/11/17 */
+                      <div className="flex gap-2">
+                        {[5, 11, 17].map(lvl => (
+                          <div key={lvl} className="flex-1">
+                            <Label>{lvl} уровень</Label>
+                            <input className={iCls} style={iStyle} type="number" min={1} max={99}
+                              placeholder="2"
+                              value={form.upcast?.cantripProjectiles?.[lvl] ?? ''}
+                              onChange={e => setForm(f => ({
+                                ...f, upcast: { ...f.upcast, cantripProjectiles: { ...(f.upcast?.cantripProjectiles ?? {}), [lvl]: e.target.value } }
+                              }))} />
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </>
                 ) : (

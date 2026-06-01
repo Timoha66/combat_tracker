@@ -1,7 +1,8 @@
 import { IconX } from '@tabler/icons-react'
 import {
   SPELL_SCHOOL_MAP, SPELL_SOURCES, formatCastingTime, formatRange, formatDuration,
-  normalizeSpell, EFFECT_TYPES, SAVE_ABILITY_MAP, formatDieFormula, formatUpcast,
+  normalizeSpell, EFFECT_TYPES, SAVE_ABILITY_MAP, SAVE_ON_SUCCESS_MAP,
+  CONDITION_MAP, DAMAGE_BONUS_SHORT, formatDieFormula, formatUpcast,
 } from '../../data/spellDb'
 import { DMG_TYPES } from '../../data/constants'
 
@@ -27,16 +28,21 @@ function MiniEffectsBlock({ spell: s }) {
             style={{ color: 'rgba(167,139,250,0.7)' }}>Эффект</div>
           <div className="flex flex-col gap-1">
             {effects.map((e, i) => {
-              const tLabel = EFFECT_TYPES.find(t => t.id === e.type)?.label ?? e.type
-              const saveName = e.saveAbility ? SAVE_ABILITY_MAP[e.saveAbility] : null
-              const showDmg = e.type === 'damage' || e.type === 'healing'
-              const dmgStr = showDmg ? _fmtDmgList(e.damages, e.type === 'healing') : ''
+              const tLabel    = EFFECT_TYPES.find(t => t.id === e.type)?.label ?? e.type
+              const saveName  = e.saveAbility   ? SAVE_ABILITY_MAP[e.saveAbility]      : null
+              const saveOnSuc = e.saveOnSuccess  ? SAVE_ON_SUCCESS_MAP[e.saveOnSuccess] : null
+              const condName  = e.condition      ? CONDITION_MAP[e.condition]           : null
+              const showDmg   = e.type === 'damage' || e.type === 'healing'
+              const dmgStr    = showDmg ? _fmtDmgList(e.damages, e.type === 'healing') : ''
               return (
                 <div key={i} className="flex flex-wrap items-center gap-1.5 text-sm">
                   <span className="font-cinzel text-[10px] px-1.5 py-0.5 rounded"
                     style={{ background: 'rgba(167,139,250,0.12)', color: '#c4b5fd' }}>{tLabel}</span>
-                  {saveName && <span className="font-cinzel text-xs" style={{ color: '#fbbf24' }}>{saveName}</span>}
-                  {dmgStr  && <span className="font-cinzel text-xs font-semibold" style={{ color: 'var(--text)' }}>{dmgStr}</span>}
+                  {saveName   && <span className="font-cinzel text-xs" style={{ color: '#fbbf24' }}>{saveName}</span>}
+                  {saveOnSuc  && <span className="font-cinzel text-[10px] px-1.5 py-0.5 rounded"
+                    style={{ background: 'rgba(248,113,113,0.1)', color: '#fca5a5' }}>· {saveOnSuc}</span>}
+                  {condName   && <span className="font-cinzel text-xs font-semibold" style={{ color: '#fb923c' }}>{condName}</span>}
+                  {dmgStr     && <span className="font-cinzel text-xs font-semibold" style={{ color: 'var(--text)' }}>{dmgStr}</span>}
                   {e.type === 'special' && e.specialText && <span className="text-xs italic" style={{ color: 'var(--text-dim)' }}>{e.specialText}</span>}
                 </div>
               )

@@ -63,12 +63,12 @@ export const DURATION_TYPES = [
 
 // ─── ЭФФЕКТЫ ──────────────────────────────────────────────────────────────────
 export const EFFECT_TYPES = [
-  { id: '',         label: '— не выбрано —' },
-  { id: 'save',     label: 'Спасбросок' },
-  { id: 'damage',   label: 'Урон' },           // объединяет рукопашную и дальнобойную атаки
-  { id: 'utility',  label: 'Вспомогательное' },
-  { id: 'healing',  label: 'Лечение' },
-  { id: 'special',  label: 'Специальное' },
+  { id: '',          label: '— не выбрано —' },
+  { id: 'save',      label: 'Спасбросок' },
+  { id: 'damage',    label: 'Урон' },
+  { id: 'condition', label: 'Состояние' },
+  { id: 'healing',   label: 'Лечение' },
+  { id: 'special',   label: 'Специальное' },
 ]
 
 export const SAVE_ABILITIES = [
@@ -81,22 +81,72 @@ export const SAVE_ABILITIES = [
 ]
 export const SAVE_ABILITY_MAP = Object.fromEntries(SAVE_ABILITIES.map(a => [a.id, a.label]))
 
+export const SAVE_ON_SUCCESS = [
+  { id: '',          label: '— не указано —' },
+  { id: 'half',      label: 'половина при успехе' },
+  { id: 'no_damage', label: 'без урона при успехе' },
+  { id: 'no_effect', label: 'без эффекта при успехе' },
+]
+export const SAVE_ON_SUCCESS_MAP = Object.fromEntries(SAVE_ON_SUCCESS.map(s => [s.id, s.label]))
+
+export const CONDITION_TYPES = [
+  { id: 'blinded',       label: 'Ослеплён' },
+  { id: 'charmed',       label: 'Очарован' },
+  { id: 'deafened',      label: 'Глухой' },
+  { id: 'exhaustion',    label: 'Истощение' },
+  { id: 'frightened',    label: 'Испуган' },
+  { id: 'grappled',      label: 'Схвачен' },
+  { id: 'incapacitated', label: 'Недееспособен' },
+  { id: 'invisible',     label: 'Невидим' },
+  { id: 'paralyzed',     label: 'Парализован' },
+  { id: 'petrified',     label: 'Окаменел' },
+  { id: 'poisoned',      label: 'Отравлен' },
+  { id: 'prone',         label: 'Опрокинут' },
+  { id: 'restrained',    label: 'Обездвижен' },
+  { id: 'stunned',       label: 'Оглушён' },
+  { id: 'unconscious',   label: 'Без сознания' },
+]
+export const CONDITION_MAP = Object.fromEntries(CONDITION_TYPES.map(c => [c.id, c.label]))
+
+export const DAMAGE_BONUS_TYPES = [
+  { id: '',           label: '— нет —' },
+  { id: 'str',        label: 'Мод. Силы' },
+  { id: 'dex',        label: 'Мод. Ловкости' },
+  { id: 'con',        label: 'Мод. Телосложения' },
+  { id: 'int',        label: 'Мод. Интеллекта' },
+  { id: 'wis',        label: 'Мод. Мудрости' },
+  { id: 'cha',        label: 'Мод. Харизмы' },
+  { id: 'spell',      label: 'Мод. заклинат. хар-ки (ЗХ)' },
+  { id: 'prof',       label: 'Бонус мастерства (БМ)' },
+  { id: 'level',      label: 'Уровень' },
+  { id: 'half_level', label: 'Половина уровня' },
+]
+export const DAMAGE_BONUS_SHORT = {
+  str: 'Мод.Сил', dex: 'Мод.Лов', con: 'Мод.Тел',
+  int: 'Мод.Инт', wis: 'Мод.Муд', cha: 'Мод.Хар',
+  spell: 'ЗХ', prof: 'БМ', level: 'Ур.', half_level: '½Ур.',
+}
+
 export const DIE_SIZES = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20', 'd100']
 
 // ─── ПУСТЫЕ ШАБЛОНЫ ───────────────────────────────────────────────────────────
 export const EMPTY_EFFECT = {
-  type: '',
-  saveAbility: '',
-  damages: [{ count: 1, die: 'd6', dmgType: '' }],
-  specialText: '',
+  type:          '',
+  saveAbility:   '',
+  saveOnSuccess: '',
+  condition:     '',
+  damages:       [{ count: 1, die: 'd6', dmgType: '', bonus: '' }],
+  specialText:   '',
 }
 
 export const EMPTY_UPCAST = {
-  enabled: false,
-  progressionType: 'extra_target', // 'extra_target' | 'extra_damage' | 'custom'
-  cantripLevels: { 5: '', 11: '', 17: '' },
-  damageDie: '',   // для extra_damage
-  customText: '',  // для custom
+  enabled:            false,
+  progressionType:    'extra_target',  // 'extra_target' | 'extra_damage' | 'custom'
+  cantripMode:        'damage',        // 'damage' | 'projectiles'
+  cantripLevels:      { 5: '', 11: '', 17: '' },
+  cantripProjectiles: { 5: '', 11: '', 17: '' },
+  damageDie:          '',
+  customText:         '',
 }
 
 export const EMPTY_SPELL = {
@@ -127,18 +177,20 @@ function normalizeEffect(e) {
   // Нормализуем массив урона
   const rawDmg = e.damages ?? (e.damage ? [{ formula: e.damage, dmgType: e.damageType }] : [])
   const damages = rawDmg.map(d => {
-    if (d.die) return d // уже новый формат
+    if (d.die) return { ...d, bonus: d.bonus ?? '' } // уже новый формат
     // Парсим старый формат: "2d6", "1d8+4", "3d10"
     const m = (d.formula || '').match(/^(\d+)(d\d+)/i)
-    if (m) return { count: parseInt(m[1]), die: m[2].toLowerCase(), dmgType: d.dmgType || d.type || '' }
-    if (d.formula) return { count: 1, die: 'd6', dmgType: d.dmgType || '' }
-    return { count: 1, die: 'd6', dmgType: d.dmgType || '' }
+    if (m) return { count: parseInt(m[1]), die: m[2].toLowerCase(), dmgType: d.dmgType || d.type || '', bonus: '' }
+    if (d.formula) return { count: 1, die: 'd6', dmgType: d.dmgType || '', bonus: '' }
+    return { count: 1, die: 'd6', dmgType: d.dmgType || '', bonus: '' }
   }).filter(d => d)
   return {
     type,
-    saveAbility: e.saveAbility ?? '',
-    damages:     damages.length ? damages : [{ count: 1, die: 'd6', dmgType: '' }],
-    specialText: e.specialText ?? '',
+    saveAbility:   e.saveAbility   ?? '',
+    saveOnSuccess: e.saveOnSuccess ?? '',
+    condition:     e.condition     ?? '',
+    damages:       damages.length ? damages : [{ count: 1, die: 'd6', dmgType: '', bonus: '' }],
+    specialText:   e.specialText   ?? '',
   }
 }
 
@@ -161,8 +213,9 @@ export function normalizeSpell(raw) {
 // ─── ФОРМАТИРОВАНИЕ УРОНА ─────────────────────────────────────────────────────
 export function formatDieFormula(d) {
   if (!d) return ''
-  if (d.die) return `${d.count || 1}${d.die}` // новый формат
-  return d.formula || ''                        // старый формат
+  const base = d.die ? `${d.count || 1}${d.die}` : (d.formula || '')
+  const bonusStr = d.bonus ? ` + ${DAMAGE_BONUS_SHORT[d.bonus] ?? d.bonus}` : ''
+  return base + bonusStr
 }
 
 // ─── ФОРМАТИРОВАНИЕ АПКАСТА ───────────────────────────────────────────────────
@@ -173,6 +226,15 @@ export function formatUpcast(spell) {
   const u = spell.upcast
   if (!u?.enabled) return spell.higherLevels || ''
   if (spell.level === 0) {
+    if (u.cantripMode === 'projectiles') {
+      const pl = u.cantripProjectiles ?? {}
+      const parts = []
+      if (pl[5])  parts.push(`до ${pl[5]} на 5 уровне`)
+      if (pl[11]) parts.push(`до ${pl[11]} на 11 уровне`)
+      if (pl[17]) parts.push(`до ${pl[17]} на 17 уровне`)
+      return parts.length ? 'Количество снарядов увеличивается: ' + parts.join(', ') + '.' : ''
+    }
+    // damage mode
     const cl = u.cantripLevels ?? {}
     const parts = []
     if (cl[5])  parts.push(`на 5 уровне — ${cl[5]}`)
