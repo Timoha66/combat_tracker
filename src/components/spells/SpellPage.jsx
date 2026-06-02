@@ -70,12 +70,12 @@ function SpellEffectsBlock({ spell: s }) {
 
 export default function SpellPage() {
   const { spells, loading, loadAll, exportJSON, importJSON, clearAll } = useSpellStore()
-  const [search,      setSearch]      = useState('')
-  const [filterLevel, setFilterLevel] = useState('all')
-  const [filterSchool,setFilterSchool]= useState('all')
-  const [filterConc,  setFilterConc]  = useState('all')
-  const [filterRitual,setFilterRitual]= useState('all')
-  const [filterSource,setFilterSource]= useState('all')
+  const [search,        setSearch]        = useState('')
+  const [filterLevels,  setFilterLevels]  = useState([])
+  const [filterSchools, setFilterSchools] = useState([])
+  const [filterConc,    setFilterConc]    = useState('all')
+  const [filterRitual,  setFilterRitual]  = useState('all')
+  const [filterSources, setFilterSources] = useState([])
   const [selected,    setSelected]    = useState(null)
   const [formOpen,    setFormOpen]    = useState(false)
   const [editTarget,  setEditTarget]  = useState(null)
@@ -85,14 +85,18 @@ export default function SpellPage() {
   // Live version from store
   const liveSelected = selected ? spells.find(s => s.id === selected.id) ?? selected : null
 
+  function toggleArr(arr, setArr, val) {
+    setArr(arr.includes(val) ? arr.filter(v => v !== val) : [...arr, val])
+  }
+
   const filtered = spells.filter(s => {
     if (search && !s.name.toLowerCase().includes(search.toLowerCase()) &&
         !s.nameEn?.toLowerCase().includes(search.toLowerCase())) return false
-    if (filterLevel  !== 'all' && String(s.level) !== filterLevel) return false
-    if (filterSchool !== 'all' && s.school !== filterSchool) return false
+    if (filterLevels.length  > 0 && !filterLevels.includes(s.level))   return false
+    if (filterSchools.length > 0 && !filterSchools.includes(s.school))  return false
     if (filterConc   !== 'all' && String(s.concentration) !== filterConc) return false
-    if (filterRitual !== 'all' && String(s.ritual) !== filterRitual) return false
-    if (filterSource !== 'all' && s.source !== filterSource) return false
+    if (filterRitual !== 'all' && String(s.ritual)        !== filterRitual) return false
+    if (filterSources.length > 0 && !filterSources.includes(s.source))  return false
     return true
   }).sort((a, b) => a.level - b.level || a.name.localeCompare(b.name, 'ru'))
 
@@ -142,20 +146,20 @@ export default function SpellPage() {
         <div className="px-3 py-2 border-b flex flex-col gap-2" style={{ borderColor: 'var(--border)' }}>
           {/* Уровень */}
           <div className="flex flex-wrap gap-1">
-            <button style={filterBtnStyle(filterLevel === 'all')} onClick={() => setFilterLevel('all')}>Все</button>
+            <button style={filterBtnStyle(filterLevels.length === 0)} onClick={() => setFilterLevels([])}>Все</button>
             {[0,1,2,3,4,5,6,7,8,9].map(l => (
-              <button key={l} style={filterBtnStyle(filterLevel === String(l))}
-                onClick={() => setFilterLevel(filterLevel === String(l) ? 'all' : String(l))}>
+              <button key={l} style={filterBtnStyle(filterLevels.includes(l))}
+                onClick={() => toggleArr(filterLevels, setFilterLevels, l)}>
                 {LEVEL_LABELS[l]}
               </button>
             ))}
           </div>
           {/* Школа */}
           <div className="flex flex-wrap gap-1">
-            <button style={filterBtnStyle(filterSchool === 'all')} onClick={() => setFilterSchool('all')}>Все школы</button>
+            <button style={filterBtnStyle(filterSchools.length === 0)} onClick={() => setFilterSchools([])}>Все школы</button>
             {SPELL_SCHOOLS.map(s => (
-              <button key={s.id} style={filterBtnStyle(filterSchool === s.id)}
-                onClick={() => setFilterSchool(filterSchool === s.id ? 'all' : s.id)}>
+              <button key={s.id} style={filterBtnStyle(filterSchools.includes(s.id))}
+                onClick={() => toggleArr(filterSchools, setFilterSchools, s.id)}>
                 {s.label}
               </button>
             ))}
@@ -172,8 +176,8 @@ export default function SpellPage() {
               </button>
             ))}
             {SPELL_SOURCES.map(s => (
-              <button key={s.id} style={filterBtnStyle(filterSource === s.id)}
-                onClick={() => setFilterSource(filterSource === s.id ? 'all' : s.id)}>
+              <button key={s.id} style={filterBtnStyle(filterSources.includes(s.id))}
+                onClick={() => toggleArr(filterSources, setFilterSources, s.id)}>
                 {s.id}
               </button>
             ))}
