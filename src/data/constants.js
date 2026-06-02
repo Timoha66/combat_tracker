@@ -156,6 +156,7 @@ export const CONDITIONS = [
   { id: 'lethargy',      label: 'Летаргия',         css: 'cond-gray',   group: 'combat' },
   { id: 'slowed',        label: 'Замедлен',         css: 'cond-blue',   group: 'combat' },
   { id: 'hex',           label: 'Сглаз',            css: 'cond-blue',   group: 'combat' },
+  { id: 'sanctuary',     label: 'Убежище',          css: 'cond-blue',   group: 'combat' },
 ]
 
 export const CONDITIONS_BASE   = CONDITIONS.filter(c => c.group === 'base')
