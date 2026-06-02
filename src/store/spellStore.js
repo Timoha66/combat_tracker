@@ -41,6 +41,12 @@ export const useSpellStore = create((set, get) => ({
     URL.revokeObjectURL(url)
   },
 
+  async clearAll() {
+    if (!confirm('Удалить все заклинания? Это действие нельзя отменить.')) return
+    await spellDb.spells.clear()
+    set({ spells: [] })
+  },
+
   async importJSON(file) {
     const text = await file.text()
     const data = JSON.parse(text)

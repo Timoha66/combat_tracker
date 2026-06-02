@@ -69,7 +69,7 @@ function SpellEffectsBlock({ spell: s }) {
 }
 
 export default function SpellPage() {
-  const { spells, loading, loadAll, exportJSON, importJSON } = useSpellStore()
+  const { spells, loading, loadAll, exportJSON, importJSON, clearAll } = useSpellStore()
   const [search,      setSearch]      = useState('')
   const [filterLevel, setFilterLevel] = useState('all')
   const [filterSchool,setFilterSchool]= useState('all')
@@ -247,6 +247,12 @@ export default function SpellPage() {
             <IconUpload size={13} /> Импорт
             <input type="file" accept=".json" className="hidden" onChange={handleImport} />
           </label>
+        </div>
+        <div className="px-3 py-2 border-t" style={{ borderColor: 'var(--border)' }}>
+          <button className="btn btn-ghost w-full justify-center" style={{ fontSize: 11, color: '#f87171', borderColor: 'rgba(248,113,113,0.3)' }}
+            onClick={clearAll}>
+            Удалить все заклинания
+          </button>
         </div>
       </div>
 
