@@ -513,10 +513,16 @@ export default function SpellForm({ initial, onClose, onSaved }) {
                       </div>
                     )}
 
-                    {/* Доп. урон → выбор куба + предпросмотр */}
+                    {/* Доп. урон → количество + куб + предпросмотр */}
                     {form.upcast?.progressionType === 'extra_damage' && (
                       <>
                         <div className="flex gap-2 items-end mb-2">
+                          <div style={{ width: 70 }}>
+                            <Label>Кол-во</Label>
+                            <input className={iCls} style={iStyle} type="number" min={1} max={9}
+                              value={form.upcast?.damageCount ?? 1}
+                              onChange={e => setUpcast('damageCount', Math.max(1, Math.min(9, Number(e.target.value) || 1)))} />
+                          </div>
                           <div className="flex-1">
                             <Label>Куб урона заклинания</Label>
                             <select className={selCls} style={iStyle}
