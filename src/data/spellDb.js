@@ -295,14 +295,28 @@ export function formatRange(r) {
 
 export function formatDuration(d, concentration) {
   if (!d) return '—'
+  const v = d.value ?? 1
+
+  // Именительный падеж (без концентрации)
   let base = ''
   if      (d.type === 'instant')         base = 'Мгновенная'
-  else if (d.type === 'rounds')     { const v = d.value ?? 1; base = `${v} ${v === 1 ? 'раунд' : v < 5 ? 'раунда' : 'раундов'}` }
-  else if (d.type === 'minutes')    { const v = d.value ?? 1; base = `${v} ${v === 1 ? 'минута' : v < 5 ? 'минуты' : 'минут'}` }
-  else if (d.type === 'hours')      { const v = d.value ?? 1; base = `${v} ${v === 1 ? 'час' : v < 5 ? 'часа' : 'часов'}` }
-  else if (d.type === 'days')       { const v = d.value ?? 1; base = `${v} ${v === 1 ? 'день' : v < 5 ? 'дня' : 'дней'}` }
+  else if (d.type === 'rounds')          base = `${v} ${v === 1 ? 'раунд' : v < 5 ? 'раунда' : 'раундов'}`
+  else if (d.type === 'minutes')         base = `${v} ${v === 1 ? 'минута' : v < 5 ? 'минуты' : 'минут'}`
+  else if (d.type === 'hours')           base = `${v} ${v === 1 ? 'час' : v < 5 ? 'часа' : 'часов'}`
+  else if (d.type === 'days')            base = `${v} ${v === 1 ? 'день' : v < 5 ? 'дня' : 'дней'}`
   else if (d.type === 'until_dispelled') base = 'Пока не рассеётся'
-  else if (d.type === 'special')    base = d.condition || 'Специальная'
-  if (concentration && d.type !== 'instant') return `Концентрация, вплоть до ${base.toLowerCase()}`
-  return base
+  else if (d.type === 'special')         base = d.condition || 'Специальная'
+
+  if (!concentration || d.type === 'instant') return base
+
+  // Родительный падеж после «вплоть до»
+  let gen = ''
+  if      (d.type === 'rounds')          gen = `${v} ${v === 1 ? 'раунда' : 'раундов'}`
+  else if (d.type === 'minutes')         gen = `${v} ${v === 1 ? 'минуты' : 'минут'}`
+  else if (d.type === 'hours')           gen = `${v} ${v === 1 ? 'часа' : 'часов'}`
+  else if (d.type === 'days')            gen = `${v} ${v === 1 ? 'дня' : 'дней'}`
+  else if (d.type === 'until_dispelled') gen = 'рассеяния'
+  else if (d.type === 'special')         gen = (d.condition || 'особого условия').toLowerCase()
+
+  return `Концентрация, вплоть до ${gen || base.toLowerCase()}`
 }
