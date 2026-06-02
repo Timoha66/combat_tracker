@@ -489,9 +489,9 @@ export default function SpellForm({ initial, onClose, onSaved }) {
                   <>
                     <div className="flex gap-2 mb-3">
                       {[
-                        { id: 'extra_target', label: 'Доп. цель'   },
-                        { id: 'extra_damage', label: 'Доп. урон'   },
-                        { id: 'custom',       label: 'Специальный' },
+                        { id: 'extra_target', label: 'Доп. цель'         },
+                        { id: 'extra_damage', label: 'Доп. урон/лечение' },
+                        { id: 'custom',       label: 'Специальный'       },
                       ].map(opt => {
                         const active = (form.upcast?.progressionType ?? 'extra_target') === opt.id
                         return (
@@ -513,9 +513,23 @@ export default function SpellForm({ initial, onClose, onSaved }) {
                       </div>
                     )}
 
-                    {/* Доп. урон → количество + куб + предпросмотр */}
+                    {/* Доп. урон/лечение → sub-toggle + количество + куб + предпросмотр */}
                     {form.upcast?.progressionType === 'extra_damage' && (
                       <>
+                        {/* Урон / Лечение */}
+                        <div className="flex gap-2 mb-2">
+                          {[{id:'damage',label:'Урон'},{id:'healing',label:'Лечение'}].map(opt => {
+                            const active = (form.upcast?.damageType ?? 'damage') === opt.id
+                            return (
+                              <button key={opt.id} type="button"
+                                className="font-cinzel text-xs px-3 py-1.5 rounded-lg flex-1 transition-all cursor-pointer"
+                                style={{ background: active ? 'rgba(167,139,250,0.15)' : 'var(--bg-row)', color: active ? '#c4b5fd' : 'var(--text-dim)', border: `1px solid ${active ? 'rgba(167,139,250,0.4)' : 'var(--border)'}` }}
+                                onClick={() => setUpcast('damageType', opt.id)}>
+                                {opt.label}
+                              </button>
+                            )
+                          })}
+                        </div>
                         <div className="flex gap-2 items-end mb-2">
                           <div style={{ width: 70 }}>
                             <Label>Кол-во</Label>
@@ -524,7 +538,7 @@ export default function SpellForm({ initial, onClose, onSaved }) {
                               onChange={e => setUpcast('damageCount', Math.max(1, Math.min(9, Number(e.target.value) || 1)))} />
                           </div>
                           <div className="flex-1">
-                            <Label>Куб урона заклинания</Label>
+                            <Label>Куб</Label>
                             <select className={selCls} style={iStyle}
                               value={form.upcast?.damageDie ?? ''}
                               onChange={e => setUpcast('damageDie', e.target.value)}>

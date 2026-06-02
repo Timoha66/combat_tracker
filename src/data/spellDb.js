@@ -147,7 +147,8 @@ export const EMPTY_UPCAST = {
   cantripLevels:      { 5: '', 11: '', 17: '' },
   cantripProjectiles: { 5: '', 11: '', 17: '' },
   damageDie:          '',
-  damageCount:        1,    // количество кубов за уровень для extra_damage
+  damageCount:        1,
+  damageType:         'damage',  // 'damage' | 'healing' для extra_damage
   customText:         '',
 }
 
@@ -253,9 +254,15 @@ export function formatUpcast(spell) {
     return `Если вы накладываете это заклинание, используя ячейку ${ordGen(next)} уровня или выше, вы можете сделать целью одно дополнительное существо за каждый уровень ячейки выше ${spell.level}.`
   }
   if (u.progressionType === 'extra_damage') {
-    const next  = spell.level + 1
-    const die   = u.damageDie || spell.effects?.find(e => e.type === 'damage')?.damages?.[0]?.die || 'd6'
-    const count = u.damageCount && u.damageCount > 1 ? u.damageCount : 1
+    const next   = spell.level + 1
+    const count  = u.damageCount && u.damageCount > 1 ? u.damageCount : 1
+    const isHeal = u.damageType === 'healing'
+    const die    = u.damageDie
+      || spell.effects?.find(e => e.type === (isHeal ? 'healing' : 'damage'))?.damages?.[0]?.die
+      || 'd6'
+    if (isHeal) {
+      return `Если вы накладываете это заклинание, используя ячейку ${ordGen(next)} уровня или выше, количество восстанавливаемых хитов увеличивается на ${count}${die} за каждый уровень ячейки выше ${spell.level}.`
+    }
     return `Если вы накладываете это заклинание, используя ячейку ${ordGen(next)} уровня или выше, урон увеличивается на ${count}${die} за каждый уровень ячейки выше ${spell.level}.`
   }
   return u.customText || ''
