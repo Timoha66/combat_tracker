@@ -150,11 +150,12 @@ export const CONDITIONS = [
   { id: 'blessed',       label: 'Благословление',   css: 'cond-blue',   group: 'combat' },
   { id: 'hasted',        label: 'Ускорение',        css: 'cond-blue',   group: 'combat' },
   { id: 'concentrating', label: 'Концентрация',     css: 'cond-purple', group: 'combat' },
-  { id: 'cursed',        label: 'Порча',            css: 'cond-purple', group: 'combat' },
+  { id: 'bane',          label: 'Порча',            css: 'cond-purple', group: 'combat' },
   { id: 'guidance',      label: 'Наставление',      css: 'cond-blue',   group: 'combat' },
   { id: 'bardic_insp',   label: 'Бард. вдохновение',css: 'cond-amber',  group: 'combat' },
   { id: 'lethargy',      label: 'Летаргия',         css: 'cond-gray',   group: 'combat' },
   { id: 'slowed',        label: 'Замедлен',         css: 'cond-blue',   group: 'combat' },
+  { id: 'hex',           label: 'Сглаз',            css: 'cond-blue',   group: 'combat' },
 ]
 
 export const CONDITIONS_BASE   = CONDITIONS.filter(c => c.group === 'base')
