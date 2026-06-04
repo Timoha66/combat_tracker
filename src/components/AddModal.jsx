@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { IconX, IconDice5, IconPlus, IconCheck } from '@tabler/icons-react'
 import { useBattleStore } from '../store/battleStore'
 import { useBestiaryStore } from '../store/bestiaryStore'
+import { usePartyStore } from '../store/partyStore'
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 function rollFor(c) {
@@ -22,15 +23,23 @@ export function displayInit(stored) {
 export default function AddModal({ onClose }) {
   const addCombatants = useBattleStore(s => s.addCombatants)
   const combatants    = useBattleStore(s => s.combatants)
-  const { creatures, loadAll } = useBestiaryStore()
+  const { creatures, loadAll }     = useBestiaryStore()
+  const { players, loadAll: loadParty } = usePartyStore()
 
+  const [tab,      setTab]      = useState('bestiary')
   const [search,   setSearch]   = useState('')
   // selected: { [id]: { creature, initiative: string, priority: string } }
   const [selected, setSelected] = useState({})
 
-  useEffect(() => { loadAll() }, [])
+  useEffect(() => { loadAll(); loadParty() }, [])
 
-  const filtered = creatures.filter(c =>
+  // Нормализуем партию в формат совместимый с бестиарием
+  const partyAsCreatures = players.map(p => ({
+    ...p, type: 'player', hp: { max: p.hp?.max, average: p.hp?.max }, ac: { value: p.ac },
+  }))
+
+  const sourceList = tab === 'party' ? partyAsCreatures : creatures
+  const filtered = sourceList.filter(c =>
     c.name.toLowerCase().includes(search.toLowerCase())
   )
 
@@ -119,6 +128,17 @@ export default function AddModal({ onClose }) {
         </div>
         <p className="text-sm mb-3 shrink-0" style={{ color: 'var(--text-dim)' }}>Выберите одного или нескольких существ</p>
 
+        {/* Вкладки */}
+        <div className="flex gap-1 mb-3 shrink-0">
+          {[{id:'bestiary',label:'Бестиарий'},{id:'party',label:'Партия'}].map(t => (
+            <button key={t.id} onClick={() => { setTab(t.id); setSearch(''); setSelected({}) }}
+              className="font-cinzel text-xs px-3 py-1.5 rounded-lg cursor-pointer transition-all"
+              style={{ background: tab === t.id ? 'var(--gold-dim)' : 'var(--bg-row)', color: tab === t.id ? 'var(--gold)' : 'var(--text-muted)', border: `1px solid ${tab === t.id ? 'rgba(226,201,126,0.4)' : 'var(--border)'}` }}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+
         <input
           className="w-full rounded-lg px-3 py-2 mb-2 outline-none text-sm shrink-0"
           style={{ background: 'var(--bg-row)', border: '1px solid var(--border-md)', color: 'var(--text)' }}
@@ -132,7 +152,7 @@ export default function AddModal({ onClose }) {
         <div className="overflow-y-auto shrink-0" style={{ maxHeight: 320, border: '1px solid var(--border)', borderRadius: 8, marginBottom: 12 }}>
           {filtered.length === 0 && (
             <div className="text-center py-8" style={{ color: 'var(--text-muted)' }}>
-              <span className="font-cinzel text-xs">{creatures.length === 0 ? 'Бестиарий пуст' : 'Ничего не найдено'}</span>
+              <span className="font-cinzel text-xs">{sourceList.length === 0 ? (tab === 'party' ? 'Партия пуста' : 'Бестиарий пуст') : 'Ничего не найдено'}</span>
             </div>
           )}
           {filtered.map(c => {

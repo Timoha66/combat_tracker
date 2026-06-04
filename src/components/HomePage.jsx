@@ -1,7 +1,8 @@
-import { IconSword, IconMap, IconUsers, IconBook, IconCloud, IconMap2, IconCompass, IconListCheck } from '@tabler/icons-react'
+import { IconSword, IconMap, IconUsers, IconBook, IconCloud, IconMap2, IconCompass, IconListCheck, IconShield } from '@tabler/icons-react'
 
 const SECTIONS = [
   { id: 'tracker',   icon: <IconSword size={28} />,      title: 'Трекер инициативы',   desc: 'Управление боем, инициатива, урон, состояния', iconColor: 'var(--gold)' },
+  { id: 'party',     icon: <IconShield size={28} />,     title: 'Ширма',               desc: 'Партия, быстрые правила, таблицы, торговля',  iconColor: '#f472b6' },
   { id: 'locations', icon: <IconCompass size={28} />,    title: 'Справочник локаций',  desc: 'Описания мест, НПС, квесты, точки интереса',  iconColor: '#60a5fa' },
   { id: 'npcs',      icon: <IconUsers size={28} />,      title: 'НПС и фракции',       desc: 'Карточки персонажей, фракции, отношения',     iconColor: '#a78bfa' },
   { id: 'quests',    icon: <IconListCheck size={28} />,  title: 'Справочник квестов',  desc: 'Все квесты кампании, статусы, связи',         iconColor: '#fbbf24' },

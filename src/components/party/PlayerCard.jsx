@@ -1,0 +1,129 @@
+import { IconSword, IconPencil } from '@tabler/icons-react'
+import { ABILITY_KEYS, ABILITY_LABELS, abilityMod } from '../../data/gameData'
+
+export default function PlayerCard({ player: p, onEdit, onAddToTracker, onClick }) {
+  const mod = k => Math.floor(((p.abilities?.[k] ?? 10) - 10) / 2)
+  const modStr = k => { const m = mod(k); return m >= 0 ? `+${m}` : `${m}` }
+  const modColor = k => {
+    const m = mod(k)
+    return m >= 3 ? '#4ade80' : m >= 1 ? '#86efac' : m === 0 ? 'var(--text-muted)' : '#f87171'
+  }
+
+  return (
+    <div className="rounded-2xl overflow-hidden flex flex-col cursor-pointer transition-all"
+      style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-md)', width: 280, flexShrink: 0 }}
+      onClick={onClick}
+      onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(226,201,126,0.4)'}
+      onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-md)'}>
+
+      {/* Шапка */}
+      <div className="px-4 py-3" style={{ background: 'rgba(226,201,126,0.08)', borderBottom: '1px solid rgba(226,201,126,0.2)' }}>
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <div className="font-cinzel text-base font-bold truncate" style={{ color: 'var(--gold)' }}>{p.name}</div>
+            <div className="font-cinzel text-xs" style={{ color: 'var(--text-dim)' }}>
+              {[p.playerClass, p.level ? `${p.level} ур.` : '', p.size].filter(Boolean).join(' · ')}
+            </div>
+          </div>
+          <button className="icon-btn shrink-0" style={{ width: 26, height: 26 }}
+            onClick={e => { e.stopPropagation(); onEdit() }}>
+            <IconPencil size={12} />
+          </button>
+        </div>
+      </div>
+
+      <div className="px-4 py-3 flex-1 flex flex-col gap-2">
+        {/* ХП и КД */}
+        <div className="flex gap-3">
+          <div className="flex-1 text-center rounded-lg py-1.5"
+            style={{ background: 'var(--bg-row)', border: '1px solid var(--border)' }}>
+            <div className="font-cinzel text-[9px] uppercase tracking-widest mb-0.5" style={{ color: 'var(--text-muted)' }}>ХП</div>
+            <div className="font-cinzel text-sm font-bold" style={{ color: '#4ade80' }}>{p.hp?.max ?? '—'}</div>
+          </div>
+          <div className="flex-1 text-center rounded-lg py-1.5"
+            style={{ background: 'var(--bg-row)', border: '1px solid var(--border)' }}>
+            <div className="font-cinzel text-[9px] uppercase tracking-widest mb-0.5" style={{ color: 'var(--text-muted)' }}>КД</div>
+            <div className="font-cinzel text-sm font-bold" style={{ color: '#93c5fd' }}>{p.ac ?? '—'}</div>
+          </div>
+          {p.showSpeed && p.speed && (
+            <div className="flex-1 text-center rounded-lg py-1.5"
+              style={{ background: 'var(--bg-row)', border: '1px solid var(--border)' }}>
+              <div className="font-cinzel text-[9px] uppercase tracking-widest mb-0.5" style={{ color: 'var(--text-muted)' }}>Скор.</div>
+              <div className="font-cinzel text-xs font-bold" style={{ color: 'var(--text-dim)' }}>{p.speed}</div>
+            </div>
+          )}
+        </div>
+
+        {/* Характеристики */}
+        <div className="grid grid-cols-6 gap-1">
+          {ABILITY_KEYS.map(k => (
+            <div key={k} className="rounded-lg py-1.5 text-center"
+              style={{ background: 'var(--bg-row)', border: '0.5px solid var(--border)' }}>
+              <div className="font-cinzel text-[8px] uppercase mb-0.5" style={{ color: 'var(--text-muted)' }}>{ABILITY_LABELS[k]}</div>
+              <div className="font-cinzel text-[10px] font-bold"
+                style={{ background: `${modColor(k)}22`, color: modColor(k), borderRadius: 4, padding: '1px 2px' }}>
+                {modStr(k)}
+              </div>
+              <div className="font-cinzel text-[9px]" style={{ color: 'var(--text-muted)' }}>{p.abilities?.[k] ?? 10}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Истощение */}
+        {p.showExhaustion && (
+          <div className="flex items-center gap-2">
+            <span className="font-cinzel text-[10px]" style={{ color: 'var(--text-muted)' }}>Истощение:</span>
+            <div className="flex gap-1">
+              {[1,2,3,4,5,6].map(lvl => (
+                <div key={lvl} className="rounded-full"
+                  style={{ width: 12, height: 12, background: lvl <= (p.exhaustion ?? 0) ? '#f87171' : 'var(--bg-row)', border: '1px solid var(--border-md)' }} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Состояния */}
+        {p.showConditions && p.conditions && (
+          <div className="font-cinzel text-[10px] px-2 py-1 rounded-lg"
+            style={{ background: 'rgba(251,191,36,0.08)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.2)' }}>
+            {p.conditions}
+          </div>
+        )}
+
+        {/* Грузоподъёмность */}
+        {p.showCarryCapacity && p.carryCapacity && (
+          <div className="text-xs" style={{ color: 'var(--text-dim)' }}>
+            <span className="font-cinzel" style={{ color: 'var(--text-muted)' }}>Груз.: </span>
+            {p.carryCapacity}
+          </div>
+        )}
+
+        {/* Действия */}
+        {p.showActions && (p.actions ?? []).length > 0 && (
+          <div>
+            <div className="font-cinzel text-[9px] uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Действия</div>
+            {p.actions.map((a, i) => (
+              <div key={i} className="font-cinzel text-[10px] mb-0.5" style={{ color: 'var(--text-dim)' }}>
+                <span style={{ color: 'var(--text)' }}>{a.name}</span>
+                {a.attackBonus != null && ` · ${a.attackBonus >= 0 ? '+' : ''}${a.attackBonus}`}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Заметки */}
+        {p.showNotes && p.notes && (
+          <div className="text-xs italic" style={{ color: 'var(--text-dim)' }}>{p.notes}</div>
+        )}
+      </div>
+
+      {/* Кнопка в трекер */}
+      <div className="px-4 pb-3">
+        <button className="btn btn-add w-full justify-center" style={{ fontSize: 11 }}
+          onClick={e => { e.stopPropagation(); onAddToTracker(p) }}>
+          <IconSword size={12} /> В трекер
+        </button>
+      </div>
+    </div>
+  )
+}
