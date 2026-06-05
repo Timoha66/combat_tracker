@@ -128,6 +128,22 @@ export default function PlayerCard({ player: p, onEdit, onAddToTracker, onClick 
           </div>
         )}
 
+        {/* Заклинания */}
+        {p.showSpellcasting && p.spellcasting && (() => {
+          const lvl2 = totalLevel(p)
+          const pb2  = profBonus(lvl2)
+          const spellMod = abilityMod(p.abilities?.[p.spellcasting.ability ?? 'int'])
+          const atk = pb2 + spellMod
+          const dc  = 8 + pb2 + spellMod
+          return (
+            <div className="text-xs px-2 py-1 rounded-lg"
+              style={{ background:'rgba(167,139,250,0.08)', border:'1px solid rgba(167,139,250,0.2)', color:'var(--text-dim)' }}>
+              <span className="font-cinzel" style={{ color:'#c4b5fd' }}>Закл.: </span>
+              атака {atk>=0?'+':''}{atk} · СЛ {dc}
+            </div>
+          )
+        })()}
+
         {/* Заметки */}
         {p.showNotes && p.notes && (
           <div className="text-xs italic" style={{color:'var(--text-dim)'}}>{p.notes}</div>

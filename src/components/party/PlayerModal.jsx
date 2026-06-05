@@ -1,27 +1,73 @@
-import { IconX, IconPencil, IconSword } from '@tabler/icons-react'
+import { IconX, IconPencil, IconSword, IconShield } from '@tabler/icons-react'
 import { ABILITY_KEYS, ABILITY_LABELS } from '../../data/gameData'
-import { totalLevel, classLabel, SPECIAL_SENSES } from '../../data/partyDb'
+import {
+  totalLevel, classLabel, SPECIAL_SENSES,
+  effectiveAC, carryMax, profBonus, abilityMod, SKILL_ABILITY,
+} from '../../data/partyDb'
 import { DMG_TYPES } from '../../data/constants'
 import { DAMAGE_BONUS_SHORT, CONDITION_TYPES } from '../../data/spellDb'
 
 const SENSE_LABEL = Object.fromEntries(SPECIAL_SENSES.map(s => [s.id, s.label]))
 const DMG_LABEL   = Object.fromEntries(DMG_TYPES.map(t => [t.id, t.label]))
 const COND_LABEL  = Object.fromEntries(CONDITION_TYPES.map(c => [c.id, c.label]))
+const SPELL_ABILITY_LABELS = {
+  str: 'Сила', dex: 'Ловкость', con: 'Телосложение',
+  int: 'Интеллект', wis: 'Мудрость', cha: 'Харизма',
+}
+const SPEED_LABELS  = { walk: '', swim: 'пл.', fly: 'пол.', burrow: 'коп.', climb: 'лаз.' }
+const TRAIT_LABEL   = { action: 'Действие', bonus: 'Бонусное', reaction: 'Реакция' }
+const SECTION_LABEL = { action: 'Действие', bonus: 'Бонусное действие', reaction: 'Реакция' }
+const PROF_LABEL    = { proficient: 'Владение', expertise: 'Экспертиза' }
 
 function fmtDmg(d) {
   const base    = `${d.count ?? 1}${d.die ?? 'd6'}`
-  const bonuses = (d.bonuses ?? []).map(b =>
-    b.type === 'custom' ? (b.value || '') : (DAMAGE_BONUS_SHORT[b.type] ?? '')
-  ).filter(Boolean).join(' + ')
+  const bonuses = (d.bonuses ?? [])
+    .map(b => b.type === 'custom' ? (b.value || '') : (DAMAGE_BONUS_SHORT[b.type] ?? ''))
+    .filter(Boolean).join(' + ')
   const type    = d.dmgType ? ` ${DMG_LABEL[d.dmgType] ?? d.dmgType}` : ''
   return base + (bonuses ? ` + ${bonuses}` : '') + type
 }
 
-const ACTION_SECTION_LABEL = { action: 'Действие', bonus: 'Бонусное действие', reaction: 'Реакция' }
-const TRAIT_ACTION_LABEL   = { action: 'Действие', bonus: 'Бонусное', reaction: 'Реакция' }
+function fmtSpeed(speed) {
+  if (!speed) return null
+  // Поддержка старого формата (строка)
+  if (typeof speed === 'string') return speed || null
+  const parts = []
+  Object.entries(speed).forEach(([k, v]) => {
+    if (v === null || v === undefined || v === '' || v === 0) return
+    const prefix = SPEED_LABELS[k]
+    parts.push(`${prefix ? prefix + ' ' : ''}${v} м`)
+  })
+  return parts.length ? parts.join(', ') : null
+}
 
+// ─── Вспомогательные компоненты (снаружи — критично) ─────────────────────────
+function Hr()    { return <hr style={{ borderColor: 'rgba(226,201,126,0.15)', margin: '8px 0' }} /> }
+function Sec({ label }) {
+  return (
+    <div className="font-cinzel text-sm font-bold mt-3 mb-2" style={{ color: 'var(--gold)' }}>{label}</div>
+  )
+}
+function Row({ label, value, color }) {
+  return (
+    <div className="text-sm mb-1">
+      <span className="font-cinzel font-semibold" style={{ color: 'var(--text)' }}>{label}: </span>
+      <span style={{ color: color ?? 'var(--text-dim)' }}>{value}</span>
+    </div>
+  )
+}
+function Pill({ label, value, color }) {
+  return (
+    <div className="text-sm">
+      <span className="font-cinzel font-semibold" style={{ color: 'var(--text)' }}>{label}: </span>
+      <span style={{ color: color ?? 'var(--text-dim)' }}>{value}</span>
+    </div>
+  )
+}
+
+// ─── Основной компонент ───────────────────────────────────────────────────────
 export default function PlayerModal({ player: p, onClose, onEdit, onAddToTracker }) {
-  const mod    = k => Math.floor(((p.abilities?.[k] ?? 10) - 10) / 2)
+  const mod    = k => abilityMod(p.abilities?.[k])
   const modStr = k => { const m = mod(k); return m >= 0 ? `+${m}` : `${m}` }
   const modClr = k => {
     const m = mod(k)
@@ -29,14 +75,38 @@ export default function PlayerModal({ player: p, onClose, onEdit, onAddToTracker
   }
 
   const lvl    = totalLevel(p)
+  const pb     = profBonus(lvl)
   const clsLbl = classLabel(p)
+  const ac     = effectiveAC(p)
+  const carry  = carryMax(p)
+  const speedStr = fmtSpeed(p.speed)
+
+  // Спасброски с авторасчётом
+  function getSaveValue(s) {
+    if (s.override !== null && s.override !== undefined && s.override !== '') return Number(s.override)
+    return mod(s.ability) + pb
+  }
+
+  // Навыки с авторасчётом
+  function getSkillValue(s) {
+    if (s.override !== null && s.override !== undefined && s.override !== '') return Number(s.override)
+    const ability  = SKILL_ABILITY[s.name] ?? 'str'
+    const profMod  = s.proficiency === 'expertise' ? pb * 2 : s.proficiency === 'proficient' ? pb : 0
+    return mod(ability) + profMod
+  }
+
+  // Заклинания
+  const spellAttack = p.spellcasting
+    ? pb + mod(p.spellcasting.ability ?? 'int')
+    : null
+  const spellDC = p.spellcasting
+    ? 8 + pb + mod(p.spellcasting.ability ?? 'int')
+    : null
 
   // Группируем действия по секции
-  const actionsBySection = ['action', 'bonus', 'reaction'].map(sec => ({
-    sec,
-    label: ACTION_SECTION_LABEL[sec],
-    items: (p.actions ?? []).filter(a => (a.section ?? 'action') === sec),
-  })).filter(g => g.items.length > 0)
+  const actionGroups = ['action', 'bonus', 'reaction']
+    .map(sec => ({ sec, label: SECTION_LABEL[sec], items: (p.actions ?? []).filter(a => (a.section ?? 'action') === sec) }))
+    .filter(g => g.items.length > 0)
 
   return (
     <div className="overlay" style={{ zIndex: 500 }}>
@@ -50,6 +120,7 @@ export default function PlayerModal({ player: p, onClose, onEdit, onAddToTracker
             <h3 className="font-cinzel text-xl font-bold" style={{ color: 'var(--gold)' }}>{p.name}</h3>
             <p className="font-cinzel text-sm italic mt-0.5" style={{ color: 'var(--text-dim)' }}>
               {[clsLbl, lvl ? `${lvl} уровень` : '', p.size].filter(Boolean).join(' · ')}
+              {lvl > 0 && <span style={{ color: 'rgba(226,201,126,0.6)' }}> · БМ +{pb}</span>}
             </p>
           </div>
           <div className="flex gap-2 shrink-0">
@@ -63,9 +134,10 @@ export default function PlayerModal({ player: p, onClose, onEdit, onAddToTracker
 
           {/* Боевые параметры */}
           <div className="flex flex-wrap gap-3 mb-4">
-            <Pill label="ХП" value={p.hp?.max} color="#4ade80" />
-            <Pill label="КД" value={p.ac} color="#93c5fd" />
-            {p.speed    && <Pill label="Скорость"     value={p.speed} />}
+            <Pill label="ХП"    value={p.hp?.max}  color="#4ade80" />
+            <Pill label={p.shield ? 'КД 🛡' : 'КД'} value={ac} color="#93c5fd" />
+            {p.shield && <span className="font-cinzel text-xs self-center" style={{ color: '#4ade80' }}>(+2 щит)</span>}
+            {speedStr && <Pill label="Скорость" value={speedStr} />}
             <Pill label="Иниц." value={`${(p.initiative ?? 0) >= 0 ? '+' : ''}${p.initiative ?? 0}`} />
           </div>
 
@@ -86,17 +158,44 @@ export default function PlayerModal({ player: p, onClose, onEdit, onAddToTracker
             ))}
           </div>
 
-          {/* Спасброски / Навыки */}
-          {p.savingThrows?.length > 0 && <><Hr /><Row label="Спасброски" value={p.savingThrows.map(s => `${s.ability} ${s.bonus >= 0 ? '+' : ''}${s.bonus}`).join(', ')} /></>}
-          {p.skills?.length > 0       && <Row label="Навыки"      value={p.skills.map(s => `${s.name} ${s.bonus >= 0 ? '+' : ''}${s.bonus}`).join(', ')} />}
+          {/* Спасброски */}
+          {(p.savingThrows ?? []).length > 0 && (
+            <><Hr />
+            <Row label="Спасброски" value={
+              p.savingThrows.map(s => {
+                const val = getSaveValue(s)
+                return `${SPELL_ABILITY_LABELS[s.ability] ?? s.ability} ${val >= 0 ? '+' : ''}${val}${s.override !== null && s.override !== undefined && s.override !== '' ? '*' : ''}`
+              }).join(', ')
+            } /></>
+          )}
+
+          {/* Навыки */}
+          {(p.skills ?? []).length > 0 && (
+            <Row label="Навыки" value={
+              p.skills.map(s => {
+                const val = getSkillValue(s)
+                const profStr = PROF_LABEL[s.proficiency] ? ` (${PROF_LABEL[s.proficiency]})` : ''
+                return `${s.name}${profStr} ${val >= 0 ? '+' : ''}${val}`
+              }).join(', ')
+            } />
+          )}
+
+          {/* Владения */}
+          {p.proficiencies && Object.values(p.proficiencies).some(Boolean) && (
+            <><Hr />
+            {[['Языки','languages'],['Доспехи','armor'],['Оружие','weapons'],['Инструменты','tools']]
+              .filter(([, k]) => p.proficiencies[k])
+              .map(([label, k]) => <Row key={k} label={label} value={p.proficiencies[k]} />)
+            }</>
+          )}
 
           {/* Иммунитеты / сопротивления */}
           {(p.immunities?.length > 0 || p.resistances?.length > 0 || p.vulnerabilities?.length > 0 || p.conditionImmunities?.length > 0) && (
             <><Hr />
-            {p.immunities?.length > 0           && <Row label="Иммунитет к урону"    value={p.immunities.map(id => DMG_LABEL[id] ?? id).join(', ')} color="#93c5fd" />}
-            {p.resistances?.length > 0          && <Row label="Сопротивление"        value={p.resistances.map(id => DMG_LABEL[id] ?? id).join(', ')} color="#4ade80" />}
-            {p.vulnerabilities?.length > 0      && <Row label="Уязвимость"           value={p.vulnerabilities.map(id => DMG_LABEL[id] ?? id).join(', ')} color="#f87171" />}
-            {p.conditionImmunities?.length > 0  && <Row label="Иммунитет к состояниям" value={p.conditionImmunities.map(id => COND_LABEL[id] ?? id).join(', ')} color="#fbbf24" />}
+            {p.immunities?.length          > 0 && <Row label="Иммунитет к урону"      value={p.immunities.map(id => DMG_LABEL[id] ?? id).join(', ')} color="#93c5fd" />}
+            {p.resistances?.length         > 0 && <Row label="Сопротивление"          value={p.resistances.map(id => DMG_LABEL[id] ?? id).join(', ')} color="#4ade80" />}
+            {p.vulnerabilities?.length     > 0 && <Row label="Уязвимость"             value={p.vulnerabilities.map(id => DMG_LABEL[id] ?? id).join(', ')} color="#f87171" />}
+            {p.conditionImmunities?.length > 0 && <Row label="Иммунитет к состояниям" value={p.conditionImmunities.map(id => COND_LABEL[id] ?? id).join(', ')} color="#fbbf24" />}
             </>
           )}
 
@@ -107,17 +206,37 @@ export default function PlayerModal({ player: p, onClose, onEdit, onAddToTracker
             </>
           )}
 
-          {/* Владения */}
-          {p.proficiencies && Object.values(p.proficiencies).some(Boolean) && (
+          {/* Грузоподъёмность */}
+          {(carry > 0) && (
             <><Hr />
-            {[['Языки','languages'],['Доспехи','armor'],['Оружие','weapons'],['Инструменты','tools']].map(([label, key]) =>
-              p.proficiencies[key] ? <Row key={key} label={label} value={p.proficiencies[key]} /> : null
-            )}
+            <Row label="Грузоподъёмность" value={`макс. ${carry} фунтов · предел ${carry * 2} фунтов`} />
+            </>
+          )}
+
+          {/* Истощение */}
+          {(p.exhaustion ?? 0) > 0 && (
+            <><Hr />
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="font-cinzel text-sm font-semibold" style={{ color: 'var(--text)' }}>Истощение: </span>
+              <div className="flex gap-1">
+                {[1,2,3,4,5,6].map(lvl => (
+                  <div key={lvl} className="rounded-full"
+                    style={{ width: 14, height: 14, background: lvl <= p.exhaustion ? '#f87171' : 'var(--bg-row)', border: '1px solid var(--border-md)' }} />
+                ))}
+              </div>
+              <span className="text-sm" style={{ color: '#f87171' }}>{p.exhaustion}/6</span>
+            </div></>
+          )}
+
+          {/* Состояния */}
+          {p.conditions && (
+            <><Hr />
+            <Row label="Состояния" value={p.conditions} color="#fbbf24" />
             </>
           )}
 
           {/* Черты */}
-          {p.traits?.length > 0 && (
+          {(p.traits ?? []).length > 0 && (
             <><Hr />
             <div className="my-2">
               {p.traits.map((t, i) => (
@@ -127,7 +246,7 @@ export default function PlayerModal({ player: p, onClose, onEdit, onAddToTracker
                     {t.actionType && (
                       <span className="font-cinzel text-[10px] px-1.5 py-0.5 rounded ml-2"
                         style={{ background: 'rgba(167,139,250,0.12)', color: '#c4b5fd', fontStyle: 'normal' }}>
-                        {TRAIT_ACTION_LABEL[t.actionType] ?? t.actionType}
+                        {TRAIT_LABEL[t.actionType] ?? t.actionType}
                       </span>
                     )}
                     {'. '}
@@ -138,12 +257,12 @@ export default function PlayerModal({ player: p, onClose, onEdit, onAddToTracker
             </div></>
           )}
 
-          {/* Действия */}
-          {actionsBySection.length > 0 && (
+          {/* Боевые способности */}
+          {actionGroups.length > 0 && (
             <><Hr />
-            {actionsBySection.map(({ sec, label, items }) => (
+            {actionGroups.map(({ sec, label, items }) => (
               <div key={sec} className="mb-3">
-                <div className="font-cinzel text-sm font-bold mb-2" style={{ color: 'var(--gold)' }}>{label}</div>
+                <Sec label={label} />
                 {items.map((a, i) => (
                   <div key={i} className="mb-2">
                     <span className="font-cinzel text-sm font-semibold" style={{ color: 'var(--text)' }}>{a.name}. </span>
@@ -166,30 +285,28 @@ export default function PlayerModal({ player: p, onClose, onEdit, onAddToTracker
             ))}</>
           )}
 
-          {/* Дополнительно */}
-          {(p.exhaustion > 0 || p.conditions || p.carryCapacity) && (
-            <><Hr />
-            {p.exhaustion > 0 && (
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className="font-cinzel text-sm font-semibold" style={{ color: 'var(--text)' }}>Истощение: </span>
-                <div className="flex gap-1">
-                  {[1,2,3,4,5,6].map(lvl => (
-                    <div key={lvl} className="rounded-full"
-                      style={{ width: 14, height: 14, background: lvl <= p.exhaustion ? '#f87171' : 'var(--bg-row)', border: '1px solid var(--border-md)' }} />
-                  ))}
-                </div>
-                <span className="text-sm" style={{ color: '#f87171' }}>{p.exhaustion}/6</span>
-              </div>
-            )}
-            {p.conditions    && <Row label="Состояния"        value={p.conditions}    color="#fbbf24" />}
-            {p.carryCapacity && <Row label="Грузоподъёмность" value={p.carryCapacity} />}
-            </>
-          )}
-
           {/* Заклинания */}
           {p.spellcasting && (
             <><Hr />
-            <Row label="Заклинатель" value={`${p.spellcasting.level} уровень, хар-ка: ${p.spellcasting.ability}`} />
+            <Sec label="Заклинания" />
+            <div className="flex gap-3 mb-2">
+              <div className="flex-1 rounded-lg px-3 py-2" style={{ background: 'var(--bg-row)', border: '1px solid var(--border)' }}>
+                <div className="font-cinzel text-[9px] uppercase tracking-widest mb-0.5" style={{ color: 'var(--text-muted)' }}>Бонус атаки заклинанием</div>
+                <div className="font-cinzel text-base font-bold" style={{ color: '#a78bfa' }}>
+                  {spellAttack >= 0 ? '+' : ''}{spellAttack}
+                </div>
+              </div>
+              <div className="flex-1 rounded-lg px-3 py-2" style={{ background: 'var(--bg-row)', border: '1px solid var(--border)' }}>
+                <div className="font-cinzel text-[9px] uppercase tracking-widest mb-0.5" style={{ color: 'var(--text-muted)' }}>Сложность спасброска</div>
+                <div className="font-cinzel text-base font-bold" style={{ color: '#a78bfa' }}>{spellDC}</div>
+              </div>
+              <div className="flex-1 rounded-lg px-3 py-2" style={{ background: 'var(--bg-row)', border: '1px solid var(--border)' }}>
+                <div className="font-cinzel text-[9px] uppercase tracking-widest mb-0.5" style={{ color: 'var(--text-muted)' }}>Хар-ка</div>
+                <div className="font-cinzel text-sm" style={{ color: 'var(--text-dim)' }}>
+                  {SPELL_ABILITY_LABELS[p.spellcasting.ability ?? 'int']}
+                </div>
+              </div>
+            </div>
             </>
           )}
 
@@ -201,26 +318,9 @@ export default function PlayerModal({ player: p, onClose, onEdit, onAddToTracker
               <p className="text-sm" style={{ color: 'var(--text-dim)' }}>{p.notes}</p>
             </div></>
           )}
+
         </div>
       </div>
-    </div>
-  )
-}
-
-function Hr()  { return <hr style={{ borderColor: 'rgba(226,201,126,0.15)', margin: '8px 0' }} /> }
-function Pill({ label, value, color }) {
-  return (
-    <div className="text-sm">
-      <span className="font-cinzel font-semibold" style={{ color: 'var(--text)' }}>{label}: </span>
-      <span style={{ color: color ?? 'var(--text-dim)' }}>{value}</span>
-    </div>
-  )
-}
-function Row({ label, value, color }) {
-  return (
-    <div className="text-sm mb-1">
-      <span className="font-cinzel font-semibold" style={{ color: 'var(--text)' }}>{label}: </span>
-      <span style={{ color: color ?? 'var(--text-dim)' }}>{value}</span>
     </div>
   )
 }
