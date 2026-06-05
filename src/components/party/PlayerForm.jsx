@@ -20,7 +20,7 @@ const ACTION_SECTIONS  = [{ id:'action',label:'Действие' },{ id:'bonus',
 const TRAIT_ACTIONS    = [{ id:'',label:'— не выбрано —' },{ id:'action',label:'Действие' },{ id:'bonus',label:'Бонусное действие' },{ id:'reaction',label:'Реакция' }]
 const PROFICIENCY_OPTS = [{ id:'none',label:'Нет' },{ id:'proficient',label:'Владение' },{ id:'expertise',label:'Экспертиза' }]
 const SPEED_FIELDS = [
-  { key:'walk',  label:'Ходьба',   placeholder:'9' },
+  { key:'walk',  label:'Ходьба',   placeholder:'30' },
   { key:'swim',  label:'Плавание', placeholder:'—' },
   { key:'fly',   label:'Полёт',    placeholder:'—' },
   { key:'burrow',label:'Копание',  placeholder:'—' },

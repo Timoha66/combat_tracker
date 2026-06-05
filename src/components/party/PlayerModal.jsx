@@ -36,7 +36,7 @@ function fmtSpeed(speed) {
   Object.entries(speed).forEach(([k, v]) => {
     if (v === null || v === undefined || v === '' || v === 0) return
     const prefix = SPEED_LABELS[k]
-    parts.push(`${prefix ? prefix + ' ' : ''}${v} м`)
+    parts.push(`${prefix ? prefix + ' ' : ''}${v} фут.`)
   })
   return parts.length ? parts.join(', ') : null
 }

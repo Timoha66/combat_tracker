@@ -76,7 +76,7 @@ export const EMPTY_PLAYER = {
   ac:         10,
   shield:     false,
   initiative: 0,
-  speed: { walk: 9, swim: null, fly: null, burrow: null, climb: null },
+  speed: { walk: 30, swim: null, fly: null, burrow: null, climb: null },
 
   abilities: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
 
