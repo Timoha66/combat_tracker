@@ -128,7 +128,7 @@ export default function PlayerModal({ player: p, onClose, onEdit, onAddToTracker
               )}
             </h3>
             <p className="font-cinzel text-sm italic mt-0.5" style={{ color: 'var(--text-dim)' }}>
-              {[clsLbl, lvl ? `${lvl} уровень` : '', p.size].filter(Boolean).join(' · ')}
+              {[clsLbl, p.size].filter(Boolean).join(' · ')}
               {lvl > 0 && <span style={{ color: 'rgba(226,201,126,0.6)' }}> · БМ +{pb}</span>}
             </p>
           </div>

@@ -32,6 +32,7 @@ export default function PlayerCard({ player: p, onEdit, onAddToTracker, onClick 
   const modClr = k => { const m=mod(k); return m>=3?'#4ade80':m>=1?'#86efac':m===0?'var(--text-muted)':'#f87171' }
 
   const lvl    = totalLevel(p)
+  const pb     = profBonus(lvl)
   const clsLbl = classLabel(p)
   const ac     = effectiveAC(p)
   const carry  = carryMax(p)
@@ -58,9 +59,15 @@ export default function PlayerCard({ player: p, onEdit, onAddToTracker, onClick 
                   {lvl}
                 </span>
               )}
+              {pb > 0 && (
+                <span className="font-cinzel text-[10px] px-1.5 py-0.5 rounded-full shrink-0"
+                  style={{background:'rgba(167,139,250,0.12)',color:'#c4b5fd',border:'1px solid rgba(167,139,250,0.3)'}}>
+                  БМ +{pb}
+                </span>
+              )}
             </div>
             <div className="font-cinzel text-xs" style={{color:'var(--text-dim)'}}>
-              {[clsLbl, lvl?`${lvl} ур.`:'', p.size].filter(Boolean).join(' · ')}
+              {[clsLbl, p.size].filter(Boolean).join(' · ')}
             </div>
           </div>
           <button className="icon-btn shrink-0" style={{width:26,height:26}}
