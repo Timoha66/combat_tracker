@@ -1,22 +1,22 @@
 // src/components/party/ShirmaPage.jsx
 import { useState } from 'react'
-import { IconUsers, IconHeartHandshake, IconShield, IconBandage } from '@tabler/icons-react'
+import { IconUsers, IconHeartHandshake, IconTrees, IconBandage } from '@tabler/icons-react'
 import PartyPage from './PartyPage'
 import ConditionsPage from './ConditionsPage'
-import CoverPage from './CoverPage'
+import EnvironmentPage from './EnvironmentPage'
 import InjuriesPage from './InjuriesPage'
 
 const SECTIONS = [
-  { id: 'party',      icon: <IconUsers size={16} />,           label: 'Партия' },
-  { id: 'conditions', icon: <IconHeartHandshake size={16} />,  label: 'Состояния' },
-  { id: 'cover',      icon: <IconShield size={16} />,          label: 'Укрытие' },
-  { id: 'injuries',   icon: <IconBandage size={16} />,         label: 'Травмы' },
+  { id: 'party',       icon: <IconUsers size={16} />,          label: 'Партия' },
+  { id: 'conditions',  icon: <IconHeartHandshake size={16} />, label: 'Состояния' },
+  { id: 'environment', icon: <IconTrees size={16} />,          label: 'Окружающая среда' },
+  { id: 'injuries',    icon: <IconBandage size={16} />,        label: 'Травмы' },
 ]
 
 const SECTION_TITLES = {
-  conditions: { title: 'Состояния',  sub: 'Шпаргалка по состояниям и истощению' },
-  cover:      { title: 'Укрытие',    sub: 'Виды укрытия и их бонусы' },
-  injuries:   { title: 'Травмы',     sub: 'Типы травм, получение и лечение' },
+  conditions:  { title: 'Состояния',          sub: 'Шпаргалка по состояниям и истощению' },
+  environment: { title: 'Окружающая среда',   sub: 'Укрытие, зрение, свет, падение и прочее' },
+  injuries:    { title: 'Травмы',             sub: 'Типы травм, получение и лечение' },
 }
 
 export default function ShirmaPage() {
@@ -52,7 +52,7 @@ export default function ShirmaPage() {
       {/* Контент */}
       <div className="flex flex-col flex-1 overflow-hidden">
         {section === 'party' && <PartyPage />}
-        {['conditions', 'cover', 'injuries'].includes(section) && (
+        {['conditions', 'environment', 'injuries'].includes(section) && (
           <div className="flex flex-col h-full overflow-hidden">
             <div className="flex items-center gap-3 px-6 py-4 shrink-0 border-b"
               style={{ background: 'var(--bg-panel)', borderColor: 'var(--border)' }}>
@@ -63,9 +63,9 @@ export default function ShirmaPage() {
                 {SECTION_TITLES[section].sub}
               </span>
             </div>
-            {section === 'conditions' && <ConditionsPage />}
-            {section === 'cover'      && <CoverPage />}
-            {section === 'injuries'   && <InjuriesPage />}
+            {section === 'conditions'  && <ConditionsPage />}
+            {section === 'environment' && <EnvironmentPage />}
+            {section === 'injuries'    && <InjuriesPage />}
           </div>
         )}
       </div>
