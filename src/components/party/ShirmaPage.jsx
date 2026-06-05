@@ -1,13 +1,23 @@
 // src/components/party/ShirmaPage.jsx
 import { useState } from 'react'
-import { IconUsers, IconHeartHandshake } from '@tabler/icons-react'
+import { IconUsers, IconHeartHandshake, IconShield, IconBandage } from '@tabler/icons-react'
 import PartyPage from './PartyPage'
 import ConditionsPage from './ConditionsPage'
+import CoverPage from './CoverPage'
+import InjuriesPage from './InjuriesPage'
 
 const SECTIONS = [
-  { id: 'party',      icon: <IconUsers size={16} />,         label: 'Партия' },
-  { id: 'conditions', icon: <IconHeartHandshake size={16} />, label: 'Состояния' },
+  { id: 'party',      icon: <IconUsers size={16} />,           label: 'Партия' },
+  { id: 'conditions', icon: <IconHeartHandshake size={16} />,  label: 'Состояния' },
+  { id: 'cover',      icon: <IconShield size={16} />,          label: 'Укрытие' },
+  { id: 'injuries',   icon: <IconBandage size={16} />,         label: 'Травмы' },
 ]
+
+const SECTION_TITLES = {
+  conditions: { title: 'Состояния',  sub: 'Шпаргалка по состояниям и истощению' },
+  cover:      { title: 'Укрытие',    sub: 'Виды укрытия и их бонусы' },
+  injuries:   { title: 'Травмы',     sub: 'Типы травм, получение и лечение' },
+}
 
 export default function ShirmaPage() {
   const [section, setSection] = useState('party')
@@ -41,17 +51,21 @@ export default function ShirmaPage() {
 
       {/* Контент */}
       <div className="flex flex-col flex-1 overflow-hidden">
-        {section === 'party'      && <PartyPage />}
-        {section === 'conditions' && (
+        {section === 'party' && <PartyPage />}
+        {['conditions', 'cover', 'injuries'].includes(section) && (
           <div className="flex flex-col h-full overflow-hidden">
             <div className="flex items-center gap-3 px-6 py-4 shrink-0 border-b"
               style={{ background: 'var(--bg-panel)', borderColor: 'var(--border)' }}>
-              <h1 className="font-cinzel text-xl font-bold" style={{ color: 'var(--gold)' }}>Состояния</h1>
+              <h1 className="font-cinzel text-xl font-bold" style={{ color: 'var(--gold)' }}>
+                {SECTION_TITLES[section].title}
+              </h1>
               <span className="font-cinzel text-xs" style={{ color: 'var(--text-muted)' }}>
-                Шпаргалка · Укрытие · Травмы
+                {SECTION_TITLES[section].sub}
               </span>
             </div>
-            <ConditionsPage />
+            {section === 'conditions' && <ConditionsPage />}
+            {section === 'cover'      && <CoverPage />}
+            {section === 'injuries'   && <InjuriesPage />}
           </div>
         )}
       </div>
