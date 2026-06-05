@@ -109,7 +109,8 @@ export default function PlayerModal({ player: p, onClose, onEdit, onAddToTracker
     .filter(g => g.items.length > 0)
 
   return (
-    <div className="overlay" style={{ zIndex: 500 }}>
+    <div className="overlay" style={{ zIndex: 500 }}
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div className="flex flex-col rounded-2xl overflow-hidden"
         style={{ background: 'var(--bg-panel)', border: '1px solid rgba(226,201,126,0.3)', width: 640, maxWidth: '95vw', maxHeight: '90vh', boxShadow: '0 20px 60px rgba(0,0,0,0.7)' }}>
 
@@ -117,7 +118,15 @@ export default function PlayerModal({ player: p, onClose, onEdit, onAddToTracker
         <div className="flex items-start gap-3 px-5 py-4 border-b shrink-0"
           style={{ borderColor: 'var(--border)', background: 'rgba(226,201,126,0.06)' }}>
           <div className="flex-1 min-w-0">
-            <h3 className="font-cinzel text-xl font-bold" style={{ color: 'var(--gold)' }}>{p.name}</h3>
+            <h3 className="font-cinzel text-xl font-bold flex items-center gap-2" style={{ color: 'var(--gold)' }}>
+              {p.name}
+              {lvl > 0 && (
+                <span className="font-cinzel text-sm px-2 py-0.5 rounded-full"
+                  style={{ background: 'rgba(226,201,126,0.15)', color: 'var(--gold)', border: '1px solid rgba(226,201,126,0.3)' }}>
+                  {lvl} ур.
+                </span>
+              )}
+            </h3>
             <p className="font-cinzel text-sm italic mt-0.5" style={{ color: 'var(--text-dim)' }}>
               {[clsLbl, lvl ? `${lvl} уровень` : '', p.size].filter(Boolean).join(' · ')}
               {lvl > 0 && <span style={{ color: 'rgba(226,201,126,0.6)' }}> · БМ +{pb}</span>}

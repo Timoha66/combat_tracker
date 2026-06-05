@@ -50,7 +50,15 @@ export default function PlayerCard({ player: p, onEdit, onAddToTracker, onClick 
       <div className="px-4 py-3" style={{background:'rgba(226,201,126,0.08)',borderBottom:'1px solid rgba(226,201,126,0.2)'}}>
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <div className="font-cinzel text-base font-bold truncate" style={{color:'var(--gold)'}}>{p.name}</div>
+            <div className="font-cinzel text-base font-bold flex items-center gap-1.5 min-w-0" style={{color:'var(--gold)'}}>
+              <span className="truncate">{p.name}</span>
+              {lvl > 0 && (
+                <span className="font-cinzel text-[10px] px-1.5 py-0.5 rounded-full shrink-0"
+                  style={{background:'rgba(226,201,126,0.15)',color:'var(--gold)',border:'1px solid rgba(226,201,126,0.3)'}}>
+                  {lvl}
+                </span>
+              )}
+            </div>
             <div className="font-cinzel text-xs" style={{color:'var(--text-dim)'}}>
               {[clsLbl, lvl?`${lvl} ур.`:'', p.size].filter(Boolean).join(' · ')}
             </div>
