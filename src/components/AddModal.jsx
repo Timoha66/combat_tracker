@@ -35,7 +35,10 @@ export default function AddModal({ onClose }) {
 
   // Нормализуем партию в формат совместимый с бестиарием
   const partyAsCreatures = players.map(p => ({
-    ...p, type: 'player', hp: { max: p.hp?.max, average: p.hp?.max }, ac: { value: p.ac },
+    ...p,
+    type: 'player',
+    hp:   { max: p.hp?.max, average: p.hp?.max },
+    // ac остаётся числом — isPlayer ? c.ac : c.ac?.value
   }))
 
   const sourceList = tab === 'party' ? partyAsCreatures : creatures

@@ -17,30 +17,90 @@ export const SPECIAL_SENSES = [
   { id: 'truesight',   label: 'Истинное зрение' },
 ]
 
+// Навык → характеристика (D&D 5e)
+export const SKILL_ABILITY = {
+  'Акробатика':             'dex',
+  'Анализ':                 'int',
+  'Атлетика':               'str',
+  'Внимание':               'wis',
+  'Выживание':              'wis',
+  'Запугивание':            'cha',
+  'История':                'int',
+  'Магия':                  'int',
+  'Медицина':               'wis',
+  'Обман':                  'cha',
+  'Обращение с животными':  'wis',
+  'Природа':                'int',
+  'Проницательность':       'wis',
+  'Религия':                'int',
+  'Скрытность':             'dex',
+  'Убеждение':              'cha',
+  'Ловкость рук':           'dex',
+}
+
+export const SKILLS_LIST = Object.keys(SKILL_ABILITY)
+
+// ─── Вспомогательные функции ──────────────────────────────────────────────────
+export function totalLevel(player) {
+  return (player.classes ?? []).reduce((s, c) => s + (Number(c.level) || 0), 0)
+}
+
+export function classLabel(player) {
+  return (player.classes ?? []).filter(c => c.cls).map(c => `${c.cls} ${c.level}`).join(' / ')
+}
+
+export function profBonus(level) {
+  return Math.floor((Math.max(1, level) - 1) / 4) + 2
+}
+
+export function abilityMod(val) {
+  return Math.floor(((val ?? 10) - 10) / 2)
+}
+
+export function effectiveAC(player) {
+  return (player.ac ?? 10) + (player.shield ? 2 : 0)
+}
+
+export function carryMax(player) {
+  return (player.abilities?.str ?? 10) * 15
+}
+
+// ─── Пустой персонаж ──────────────────────────────────────────────────────────
 export const EMPTY_PLAYER = {
   name:    '',
-  classes: [{ cls: '', level: 1 }],   // мультикласс
+  classes: [{ cls: '', level: 1 }],
   size:    'Средний',
-  hp:          { max: 10 },
-  ac:          10,
-  initiative:  0,
-  speed:       '9 м',
-  abilities:   { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
-  savingThrows:       [],
-  skills:             [],
-  resistances:        [],
-  immunities:         [],
-  vulnerabilities:    [],
-  conditionImmunities:[],
-  specialSenses: [],         // [{ type: 'darkvision', range: 60 }]
+
+  // Боевые
+  hp:         { max: 10 },
+  ac:         10,
+  shield:     false,
+  initiative: 0,
+  speed: { walk: 9, swim: null, fly: null, burrow: null, climb: null },
+
+  abilities: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
+
+  // savingThrows: [{ ability: 'str', override: null }]
+  savingThrows: [],
+  // skills: [{ name: 'Акробатика', proficiency: 'proficient', override: null }]
+  skills: [],
+
+  resistances:         [],
+  immunities:          [],
+  vulnerabilities:     [],
+  conditionImmunities: [],
+
+  specialSenses: [],
   proficiencies: { languages: '', armor: '', weapons: '', tools: '' },
-  traits:  [],               // { name, description, actionType }
-  actions: [],               // { name, section, attackBonus, reach, range, damages: [{count,die,dmgType,bonuses:[]}], description }
+
+  traits:  [],
+  actions: [],
   spellcasting: null,
-  carryCapacity: '',
-  exhaustion:    0,
-  conditions:    '',
-  notes:         '',
+
+  exhaustion: 0,
+  conditions: '',
+  notes:      '',
+
   // отображение в карточке
   showSpeed:         true,
   showSavingThrows:  false,
@@ -51,18 +111,8 @@ export const EMPTY_PLAYER = {
   showTraits:        false,
   showActions:       true,
   showSpellcasting:  false,
-  showCarryCapacity: false,
   showExhaustion:    true,
   showConditions:    true,
+  showCarry:         false,
   showNotes:         false,
-}
-
-export function totalLevel(player) {
-  return (player.classes ?? []).reduce((s, c) => s + (Number(c.level) || 0), 0)
-}
-
-export function classLabel(player) {
-  const cls = player.classes ?? []
-  if (cls.length === 0) return ''
-  return cls.filter(c => c.cls).map(c => `${c.cls} ${c.level}`).join(' / ')
 }
