@@ -1,13 +1,31 @@
 import { IconSword, IconPencil } from '@tabler/icons-react'
-import { ABILITY_KEYS, ABILITY_LABELS, abilityMod } from '../../data/gameData'
+import { ABILITY_KEYS, ABILITY_LABELS } from '../../data/gameData'
+import { totalLevel, classLabel, SPECIAL_SENSES } from '../../data/partyDb'
+import { DAMAGE_BONUS_SHORT } from '../../data/spellDb'
+import { DMG_TYPES } from '../../data/constants'
+
+const SENSE_LABEL = Object.fromEntries(SPECIAL_SENSES.map(s => [s.id, s.label]))
+const DMG_LABEL   = Object.fromEntries(DMG_TYPES.map(t => [t.id, t.label]))
+
+function fmtActionDmg(d) {
+  const base    = `${d.count ?? 1}${d.die ?? 'd6'}`
+  const bonuses = (d.bonuses ?? []).map(b =>
+    b.type === 'custom' ? (b.value || '') : (DAMAGE_BONUS_SHORT[b.type] ?? '')
+  ).filter(Boolean).join(' + ')
+  const type    = d.dmgType ? ` ${DMG_LABEL[d.dmgType] ?? d.dmgType}` : ''
+  return base + (bonuses ? ` + ${bonuses}` : '') + type
+}
 
 export default function PlayerCard({ player: p, onEdit, onAddToTracker, onClick }) {
-  const mod = k => Math.floor(((p.abilities?.[k] ?? 10) - 10) / 2)
+  const mod    = k => Math.floor(((p.abilities?.[k] ?? 10) - 10) / 2)
   const modStr = k => { const m = mod(k); return m >= 0 ? `+${m}` : `${m}` }
-  const modColor = k => {
+  const modClr = k => {
     const m = mod(k)
     return m >= 3 ? '#4ade80' : m >= 1 ? '#86efac' : m === 0 ? 'var(--text-muted)' : '#f87171'
   }
+
+  const lvl   = totalLevel(p)
+  const clsLbl = classLabel(p)
 
   return (
     <div className="rounded-2xl overflow-hidden flex flex-col cursor-pointer transition-all"
@@ -22,7 +40,7 @@ export default function PlayerCard({ player: p, onEdit, onAddToTracker, onClick 
           <div className="min-w-0">
             <div className="font-cinzel text-base font-bold truncate" style={{ color: 'var(--gold)' }}>{p.name}</div>
             <div className="font-cinzel text-xs" style={{ color: 'var(--text-dim)' }}>
-              {[p.playerClass, p.level ? `${p.level} ур.` : '', p.size].filter(Boolean).join(' · ')}
+              {[clsLbl, lvl ? `${lvl} ур.` : '', p.size].filter(Boolean).join(' · ')}
             </div>
           </div>
           <button className="icon-btn shrink-0" style={{ width: 26, height: 26 }}
@@ -33,25 +51,12 @@ export default function PlayerCard({ player: p, onEdit, onAddToTracker, onClick 
       </div>
 
       <div className="px-4 py-3 flex-1 flex flex-col gap-2">
-        {/* ХП и КД */}
-        <div className="flex gap-3">
-          <div className="flex-1 text-center rounded-lg py-1.5"
-            style={{ background: 'var(--bg-row)', border: '1px solid var(--border)' }}>
-            <div className="font-cinzel text-[9px] uppercase tracking-widest mb-0.5" style={{ color: 'var(--text-muted)' }}>ХП</div>
-            <div className="font-cinzel text-sm font-bold" style={{ color: '#4ade80' }}>{p.hp?.max ?? '—'}</div>
-          </div>
-          <div className="flex-1 text-center rounded-lg py-1.5"
-            style={{ background: 'var(--bg-row)', border: '1px solid var(--border)' }}>
-            <div className="font-cinzel text-[9px] uppercase tracking-widest mb-0.5" style={{ color: 'var(--text-muted)' }}>КД</div>
-            <div className="font-cinzel text-sm font-bold" style={{ color: '#93c5fd' }}>{p.ac ?? '—'}</div>
-          </div>
-          {p.showSpeed && p.speed && (
-            <div className="flex-1 text-center rounded-lg py-1.5"
-              style={{ background: 'var(--bg-row)', border: '1px solid var(--border)' }}>
-              <div className="font-cinzel text-[9px] uppercase tracking-widest mb-0.5" style={{ color: 'var(--text-muted)' }}>Скор.</div>
-              <div className="font-cinzel text-xs font-bold" style={{ color: 'var(--text-dim)' }}>{p.speed}</div>
-            </div>
-          )}
+
+        {/* ХП / КД / Скорость */}
+        <div className="flex gap-2">
+          <StatChip label="ХП" value={p.hp?.max ?? '—'} color="#4ade80" />
+          <StatChip label="КД" value={p.ac ?? '—'}      color="#93c5fd" />
+          {p.showSpeed && p.speed && <StatChip label="Скор." value={p.speed} />}
         </div>
 
         {/* Характеристики */}
@@ -60,8 +65,8 @@ export default function PlayerCard({ player: p, onEdit, onAddToTracker, onClick 
             <div key={k} className="rounded-lg py-1.5 text-center"
               style={{ background: 'var(--bg-row)', border: '0.5px solid var(--border)' }}>
               <div className="font-cinzel text-[8px] uppercase mb-0.5" style={{ color: 'var(--text-muted)' }}>{ABILITY_LABELS[k]}</div>
-              <div className="font-cinzel text-[10px] font-bold"
-                style={{ background: `${modColor(k)}22`, color: modColor(k), borderRadius: 4, padding: '1px 2px' }}>
+              <div className="font-cinzel text-[10px] font-bold rounded"
+                style={{ background: `${modClr(k)}22`, color: modClr(k), padding: '1px 2px' }}>
                 {modStr(k)}
               </div>
               <div className="font-cinzel text-[9px]" style={{ color: 'var(--text-muted)' }}>{p.abilities?.[k] ?? 10}</div>
@@ -90,11 +95,30 @@ export default function PlayerCard({ player: p, onEdit, onAddToTracker, onClick 
           </div>
         )}
 
+        {/* Особые чувства */}
+        {p.showSenses && (p.specialSenses ?? []).length > 0 && (
+          <div className="text-xs" style={{ color: 'var(--text-dim)' }}>
+            {p.specialSenses.map((s, i) => (
+              <span key={i}>{i > 0 && ', '}{SENSE_LABEL[s.type] ?? s.type} {s.range} фут.</span>
+            ))}
+          </div>
+        )}
+
+        {/* Владения */}
+        {p.showProficiencies && p.proficiencies && (
+          <div className="text-xs" style={{ color: 'var(--text-dim)' }}>
+            {[['Языки', p.proficiencies.languages], ['Доспехи', p.proficiencies.armor],
+              ['Оружие', p.proficiencies.weapons],  ['Инструменты', p.proficiencies.tools]]
+              .filter(([, v]) => v)
+              .map(([label, v], i) => <div key={i}><span style={{ color: 'var(--text-muted)' }}>{label}: </span>{v}</div>)
+            }
+          </div>
+        )}
+
         {/* Грузоподъёмность */}
         {p.showCarryCapacity && p.carryCapacity && (
           <div className="text-xs" style={{ color: 'var(--text-dim)' }}>
-            <span className="font-cinzel" style={{ color: 'var(--text-muted)' }}>Груз.: </span>
-            {p.carryCapacity}
+            <span className="font-cinzel" style={{ color: 'var(--text-muted)' }}>Груз.: </span>{p.carryCapacity}
           </div>
         )}
 
@@ -106,6 +130,9 @@ export default function PlayerCard({ player: p, onEdit, onAddToTracker, onClick 
               <div key={i} className="font-cinzel text-[10px] mb-0.5" style={{ color: 'var(--text-dim)' }}>
                 <span style={{ color: 'var(--text)' }}>{a.name}</span>
                 {a.attackBonus != null && ` · ${a.attackBonus >= 0 ? '+' : ''}${a.attackBonus}`}
+                {(a.damages ?? []).filter(d => d.die).map((d, di) => (
+                  <span key={di} style={{ color: 'var(--text-muted)' }}> · {fmtActionDmg(d)}</span>
+                ))}
               </div>
             ))}
           </div>
@@ -124,6 +151,16 @@ export default function PlayerCard({ player: p, onEdit, onAddToTracker, onClick 
           <IconSword size={12} /> В трекер
         </button>
       </div>
+    </div>
+  )
+}
+
+function StatChip({ label, value, color }) {
+  return (
+    <div className="flex-1 text-center rounded-lg py-1.5"
+      style={{ background: 'var(--bg-row)', border: '1px solid var(--border)' }}>
+      <div className="font-cinzel text-[9px] uppercase tracking-widest mb-0.5" style={{ color: 'var(--text-muted)' }}>{label}</div>
+      <div className="font-cinzel text-sm font-bold" style={{ color: color ?? 'var(--text-dim)' }}>{value}</div>
     </div>
   )
 }
