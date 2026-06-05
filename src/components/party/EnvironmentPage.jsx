@@ -3,9 +3,9 @@
 // ─── Данные ───────────────────────────────────────────────────────────────────
 
 const COVER = [
-  { type: 'Половинное укрытие',  bonus: '+2 к КД и спасброскам Ловкости',                    examples: 'Низкая стена, большая мебель, дерево, другое существо', color: '#fbbf24' },
-  { type: '¾ укрытие',           bonus: '+5 к КД и спасброскам Ловкости',                    examples: 'Бойница, дверной проём, густые заросли',                 color: '#fb923c' },
-  { type: 'Полное укрытие',      bonus: 'Нельзя стать целью атаки или заклинания напрямую',  examples: 'Существо полностью скрыто за препятствием',             color: '#f87171' },
+  { name: 'Половинное укрытие',  color: '#fbbf24', rules: ['+2 к КД и спасброскам Ловкости', 'Примеры: низкая стена, большая мебель, дерево, другое существо'] },
+  { name: '¾ укрытие',           color: '#fb923c', rules: ['+5 к КД и спасброскам Ловкости', 'Примеры: бойница, дверной проём, густые заросли'] },
+  { name: 'Полное укрытие',      color: '#f87171', rules: ['Нельзя стать целью атаки или заклинания напрямую', 'Примеры: существо полностью скрыто за препятствием'] },
 ]
 
 const HAZARDS = [
@@ -160,20 +160,8 @@ export default function EnvironmentPage() {
       {/* Укрытие */}
       <section>
         <SectionTitle>Укрытие</SectionTitle>
-        <div className="flex flex-col gap-3">
-          {COVER.map(c => (
-            <div key={c.type} className="rounded-xl p-4 flex gap-4 items-start"
-              style={{ background: 'var(--bg-panel)', border: `1px solid ${c.color}33` }}>
-              <div className="flex-1">
-                <div className="font-cinzel text-sm font-bold mb-1" style={{ color: c.color }}>{c.type}</div>
-                <div className="font-cinzel text-base font-bold" style={{ color: 'var(--text)' }}>{c.bonus}</div>
-              </div>
-              <div className="text-xs text-right shrink-0" style={{ maxWidth: 220, color: 'var(--text-muted)' }}>
-                <span className="font-cinzel text-[9px] uppercase tracking-widest block mb-1">Примеры</span>
-                {c.examples}
-              </div>
-            </div>
-          ))}
+        <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}>
+          {COVER.map(c => <RuleCard key={c.name} item={c} />)}
         </div>
       </section>
 
