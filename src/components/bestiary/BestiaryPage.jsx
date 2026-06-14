@@ -12,7 +12,7 @@ import CreatureForm from './CreatureForm'
 import StatblockView from './StatblockView'
 
 const SOURCES = [
-  'HB','DMG','MM','VGM','XGE','MTF','TCE','MPMM','UA','TOA','OoTA','PoTA',
+  'HB','DMG','MM','VGM','XGE','MTF','TCE','MPMM','UA','TOA','OoTA','PoTA','LH',
 ]
 
 export default function BestiaryPage() {

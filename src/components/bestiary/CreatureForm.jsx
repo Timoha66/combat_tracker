@@ -185,6 +185,7 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
                       { id: 'TOA',  label: 'TOA — Tomb of Annihilation' },
                       { id: 'OoTA', label: 'OoTA — Out of the Abyss' },
                       { id: 'PoTA', label: 'PoTA — Princes of the Apocalypse' },
+                      { id: 'LH',   label: 'LH — LaserLlama' },
                     ]} />
                   </Field>
                 </>
