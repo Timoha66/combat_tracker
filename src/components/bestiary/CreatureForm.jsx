@@ -10,7 +10,30 @@ import {
 } from '../../data/gameData'
 import { DMG_TYPES } from '../../data/constants'
 
-const DMG_NAMES = DMG_TYPES.map(t => t.label)
+// ── Damage constants ──────────────────────────────────────────────────────────
+const DICE_SIZES = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20']
+const EMPTY_DAMAGE = { count: 1, die: 'd6', bonuses: [], type: '' }
+const BONUS_OPTIONS = [
+  { id: 'str',     label: 'Мод. СИЛ' },
+  { id: 'dex',     label: 'Мод. ЛОВ' },
+  { id: 'con',     label: 'Мод. ТЕЛ' },
+  { id: 'int',     label: 'Мод. ИНТ' },
+  { id: 'wis',     label: 'Мод. МДР' },
+  { id: 'cha',     label: 'Мод. ХАР' },
+  { id: 'special', label: 'Специальный' },
+]
+
+/** Парсит старый формат "2к6+4" → новую структуру */
+function parseLegacyFormula(formula = '') {
+  const m = formula.match(/^(\d+)[кd](\d+)([+-]\d+)?$/)
+  if (m) {
+    const dieNum = parseInt(m[2])
+    const die    = [4, 6, 8, 10, 12, 20].includes(dieNum) ? `d${dieNum}` : 'd6'
+    const bonuses = m[3] ? [{ type: 'special', value: m[3] }] : []
+    return { count: parseInt(m[1]), die, bonuses }
+  }
+  return { count: 1, die: 'd6', bonuses: formula ? [{ type: 'special', value: formula }] : [] }
+}
 
 export default function CreatureForm({ initial, onClose, onSaved }) {
   const { addCreature, updateCreature } = useBestiaryStore()
@@ -18,15 +41,22 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
 
   const base = { ...EMPTY_CREATURE, ...initial }
 
-  // Нормализуем старый формат damage/damageType → damages[]
+  // Нормализуем старый формат damage/damageType → damages[] → новый структурный формат
   if (base.actions) {
-    base.actions = base.actions.map(a => ({
-      ...a,
-      damages: a.damages?.length > 0
+    base.actions = base.actions.map(a => {
+      const rawDamages = a.damages?.length > 0
         ? a.damages
         : a.damage ? [{ formula: a.damage, type: a.damageType ?? '' }]
-        : [{ formula: '', type: '' }],
-    }))
+        : [{ ...EMPTY_DAMAGE }]
+      return {
+        ...a,
+        damages: rawDamages.map(d => {
+          if (d.count !== undefined) return d  // уже новый формат
+          const { count, die, bonuses } = parseLegacyFormula(d.formula ?? '')
+          return { count, die, bonuses, type: d.type ?? '' }
+        }),
+      }
+    })
   }
 
   const [form, setForm] = useState(base)
@@ -476,11 +506,9 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
                           value={a.attackType ?? ''}
                           onChange={v => updateInArray('actions', i, x => ({ ...x, attackType: v }))}
                           options={[
-                            { id: '',          label: '— не атака —' },
-                            { id: 'melee',     label: 'Атака рукопашным оружием' },
-                            { id: 'ranged',    label: 'Атака дальнобойным оружием' },
-                            { id: 'spell_melee',  label: 'Атака заклинанием ближнего боя' },
-                            { id: 'spell_ranged', label: 'Атака заклинанием дальнего боя' },
+                            { id: '',       label: '— не атака —' },
+                            { id: 'melee',  label: 'Атака рукопашным оружием' },
+                            { id: 'ranged', label: 'Атака дальнобойным оружием' },
                           ]}
                         />
                       </Field>
@@ -491,7 +519,7 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
                         />
                       </Field>
                       {/* Досягаемость — для рукопашных */}
-                      {(a.attackType === 'melee' || a.attackType === 'spell_melee') && (
+                      {a.attackType === 'melee' && (
                         <Field label="Досягаемость">
                           <input className={inputCls} style={inputStyle} value={a.reach ?? ''}
                             placeholder="1,5 м"
@@ -500,7 +528,7 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
                         </Field>
                       )}
                       {/* Дальность — для дальнобойных */}
-                      {(a.attackType === 'ranged' || a.attackType === 'spell_ranged') && (
+                      {a.attackType === 'ranged' && (
                         <Field label="Дальность (норм./макс.)">
                           <input className={inputCls} style={inputStyle} value={a.range ?? ''}
                             placeholder="18/60 м"
@@ -509,36 +537,127 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
                         </Field>
                       )}
                       <Field label="Урон">
-                        {(a.damages ?? [{ formula: '', type: '' }]).map((d, di) => (
-                          <div key={di} className="flex gap-2 mb-1">
-                            <input className={inputCls} style={{ ...inputStyle, flex: 1 }}
-                              placeholder="2к6+4"
-                              value={d.formula}
-                              onChange={e => updateInArray('actions', i, x => ({
-                                ...x,
-                                damages: x.damages.map((dd, ddi) => ddi === di ? { ...dd, formula: e.target.value } : dd)
-                              }))}
-                            />
-                            <select className="rounded-lg px-2 py-1.5 text-sm outline-none cursor-pointer shrink-0"
-                              style={{ background: 'var(--bg-deep)', border: '1px solid var(--border-md)', color: 'var(--text)', minWidth: 130 }}
-                              value={d.type}
-                              onChange={e => updateInArray('actions', i, x => ({
-                                ...x,
-                                damages: x.damages.map((dd, ddi) => ddi === di ? { ...dd, type: e.target.value } : dd)
-                              }))}>
-                              <option value="">—</option>
-                              {DMG_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
-                            </select>
-                            {(a.damages ?? []).length > 1 && (
-                              <button className="icon-btn shrink-0" style={{ width: 28, height: 28 }}
-                                onClick={() => updateInArray('actions', i, x => ({ ...x, damages: x.damages.filter((_, ddi) => ddi !== di) }))}>
-                                <IconTrash size={11} />
+                        {(a.damages ?? [{ ...EMPTY_DAMAGE }]).map((d, di) => {
+                          const updateDmg = upd =>
+                            updateInArray('actions', i, x => ({
+                              ...x,
+                              damages: x.damages.map((dd, ddi) => ddi === di ? { ...dd, ...upd } : dd),
+                            }))
+                          const updateBonus = (bi, upd) =>
+                            updateInArray('actions', i, x => ({
+                              ...x,
+                              damages: x.damages.map((dd, ddi) => ddi === di ? {
+                                ...dd,
+                                bonuses: dd.bonuses.map((b, bii) => bii === bi ? { ...b, ...upd } : b),
+                              } : dd),
+                            }))
+                          const addBonus = () =>
+                            updateInArray('actions', i, x => ({
+                              ...x,
+                              damages: x.damages.map((dd, ddi) => ddi === di ? {
+                                ...dd, bonuses: [...(dd.bonuses ?? []), { type: 'str', value: '' }],
+                              } : dd),
+                            }))
+                          const removeBonus = bi =>
+                            updateInArray('actions', i, x => ({
+                              ...x,
+                              damages: x.damages.map((dd, ddi) => ddi === di ? {
+                                ...dd, bonuses: dd.bonuses.filter((_, bii) => bii !== bi),
+                              } : dd),
+                            }))
+                          return (
+                            <div key={di} className="mb-2 p-2 rounded-lg" style={{ background: 'var(--bg-deep)', border: '1px solid var(--border)' }}>
+                              {/* Кости + тип урона */}
+                              <div className="flex gap-2 mb-2 items-center">
+                                {/* Количество кубиков */}
+                                <select
+                                  value={d.count ?? 1}
+                                  onChange={e => updateDmg({ count: Number(e.target.value) })}
+                                  className="rounded-lg px-2 py-1.5 text-sm outline-none cursor-pointer font-cinzel"
+                                  style={{ width: 54, background: 'var(--bg-row)', border: '1px solid var(--border-md)', color: 'var(--text)' }}>
+                                  {Array.from({ length: 20 }, (_, n) => n + 1).map(n => (
+                                    <option key={n} value={n}>{n}</option>
+                                  ))}
+                                </select>
+                                {/* Вид куба */}
+                                <select
+                                  value={d.die ?? 'd6'}
+                                  onChange={e => updateDmg({ die: e.target.value })}
+                                  className="rounded-lg px-2 py-1.5 text-sm outline-none cursor-pointer font-cinzel"
+                                  style={{ width: 70, background: 'var(--bg-row)', border: '1px solid var(--border-md)', color: 'var(--text)' }}>
+                                  {DICE_SIZES.map(s => <option key={s} value={s}>{s}</option>)}
+                                </select>
+                                <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>·</span>
+                                {/* Тип урона */}
+                                <select
+                                  value={d.type ?? ''}
+                                  onChange={e => updateDmg({ type: e.target.value })}
+                                  className="rounded-lg px-2 py-1.5 text-sm outline-none cursor-pointer flex-1"
+                                  style={{ background: 'var(--bg-row)', border: '1px solid var(--border-md)', color: 'var(--text)' }}>
+                                  <option value="">— тип урона —</option>
+                                  {DMG_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+                                </select>
+                                {/* Удалить этот урон */}
+                                {(a.damages ?? []).length > 1 && (
+                                  <button className="icon-btn shrink-0" style={{ width: 24, height: 24 }}
+                                    onClick={() => updateInArray('actions', i, x => ({
+                                      ...x, damages: x.damages.filter((_, ddi) => ddi !== di),
+                                    }))}>
+                                    <IconTrash size={11} />
+                                  </button>
+                                )}
+                              </div>
+                              {/* Бонусы */}
+                              {(d.bonuses ?? []).map((b, bi) => {
+                                const isAbility = ABILITY_KEYS.includes(b.type)
+                                const mod = isAbility
+                                  ? Math.floor(((form.abilities?.[b.type] ?? 10) - 10) / 2)
+                                  : null
+                                return (
+                                  <div key={bi} className="flex gap-2 mb-1 items-center">
+                                    <span className="font-cinzel text-xs shrink-0" style={{ color: 'var(--text-muted)' }}>+</span>
+                                    <select
+                                      value={b.type}
+                                      onChange={e => updateBonus(bi, { type: e.target.value, value: '' })}
+                                      className="rounded-lg px-2 py-1.5 text-sm outline-none cursor-pointer"
+                                      style={{ width: 140, background: 'var(--bg-row)', border: '1px solid var(--border-md)', color: 'var(--text)' }}>
+                                      {BONUS_OPTIONS.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
+                                    </select>
+                                    {/* Вычисленное значение мода */}
+                                    {isAbility && (
+                                      <span className="font-cinzel text-sm shrink-0" style={{ minWidth: 28, color: 'var(--gold)' }}>
+                                        {mod >= 0 ? `+${mod}` : String(mod)}
+                                      </span>
+                                    )}
+                                    {/* Свободный ввод для специального */}
+                                    {b.type === 'special' && (
+                                      <input
+                                        type="text"
+                                        placeholder="+5"
+                                        value={b.value ?? ''}
+                                        onChange={e => updateBonus(bi, { value: e.target.value })}
+                                        className="rounded-lg px-2 py-1.5 text-sm outline-none font-cinzel"
+                                        style={{ width: 70, background: 'var(--bg-row)', border: '1px solid var(--border-md)', color: 'var(--text)' }}
+                                      />
+                                    )}
+                                    <button className="icon-btn shrink-0 ml-auto" style={{ width: 22, height: 22 }}
+                                      onClick={() => removeBonus(bi)}>
+                                      <IconTrash size={10} />
+                                    </button>
+                                  </div>
+                                )
+                              })}
+                              <button type="button" className="btn btn-ghost w-full justify-center mt-1" style={{ fontSize: 10 }}
+                                onClick={addBonus}>
+                                <IconPlus size={10} /> Добавить бонус
                               </button>
-                            )}
-                          </div>
-                        ))}
+                            </div>
+                          )
+                        })}
                         <button type="button" className="btn btn-ghost w-full justify-center mt-1" style={{ fontSize: 11 }}
-                          onClick={() => updateInArray('actions', i, x => ({ ...x, damages: [...(x.damages ?? []), { formula: '', type: '' }] }))}>
+                          onClick={() => updateInArray('actions', i, x => ({
+                            ...x, damages: [...(x.damages ?? []), { ...EMPTY_DAMAGE }],
+                          }))}>
                           <IconPlus size={11} /> Ещё урон
                         </button>
                       </Field>
@@ -557,7 +676,7 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
                 </div>
               ))}
               <button type="button" className="btn btn-ghost w-full justify-center" style={{ fontSize: 12 }}
-                onClick={() => addToArray('actions', { name: '', section: 'action', attackBonus: null, damages: [{ formula: '', type: '' }], description: '' })}>
+                onClick={() => addToArray('actions', { name: '', section: 'action', attackBonus: null, damages: [{ ...EMPTY_DAMAGE }], description: '' })}>
                 <IconPlus size={13} /> Добавить действие
               </button>
             </Section>
