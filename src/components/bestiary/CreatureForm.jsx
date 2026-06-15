@@ -48,7 +48,7 @@ function computeDamagePreview(d, abilities = {}) {
     }
   }
   const avg        = Math.round(diceAvg + bonusTotal)
-  const formulaStr = `${count}к${dieNum}${bonusStrs.join(' ')}`
+  const formulaStr = `${count}d${dieNum}${bonusStrs.join(' ')}`
   return `ср. ${avg} (${formulaStr})`
 }
 function parseLegacyFormula(formula = '') {

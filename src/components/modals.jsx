@@ -30,6 +30,7 @@ function dmgName(id) { return DMG_LABEL[id] ?? id }
 
 /** Вычисляет строку урона. Поддерживает старый (formula) и новый (count/die/bonuses) форматы. */
 function damageLine(a, abilities = {}) {
+  if (!a.attackType) return null   // не атака — урон не показываем
   const damages = a.damages?.length > 0
     ? a.damages
     : a.damage ? [{ formula: a.damage, type: a.damageType }] : []
@@ -64,7 +65,7 @@ function damageLine(a, abilities = {}) {
     }
 
     const avg        = Math.round(diceAvg + bonusTotal)
-    const formulaStr = `${count}к${dieNum}${bonusStrs.join(' ')}`
+    const formulaStr = `${count}d${dieNum}${bonusStrs.join(' ')}`
     const typeStr    = type ? ` ${dmgName(type)}` : ''
     return `${avg} (${formulaStr})${typeStr}`
   }).filter(Boolean)
