@@ -7,8 +7,9 @@ import SpellInlineList from '../spells/SpellInlineList'
 import SpellMiniCard from '../spells/SpellMiniCard'
 
 const ATTACK_TYPE_LABEL = {
-  melee:        'Атака рукопашным оружием',
-  ranged:       'Атака дальнобойным оружием',
+  melee:  'Атака рукопашным оружием',
+  ranged: 'Атака дальнобойным оружием',
+  // spell-варианты оставлены для совместимости со старыми данными
   spell_melee:  'Атака заклинанием ближнего боя',
   spell_ranged: 'Атака заклинанием дальнего боя',
 }
@@ -17,11 +18,53 @@ const ATTACK_TYPE_LABEL = {
 const DMG_LABEL = Object.fromEntries(DMG_TYPES.map(t => [t.id, t.label]))
 function dmgName(id) { return DMG_LABEL[id] ?? id }
 
-// Формирует строку урона — поддерживает и старый и новый формат
-function damageLine(a) {
-  const damages = a.damages?.filter(d => d.formula) ?? (a.damage ? [{ formula: a.damage, type: a.damageType }] : [])
+/** Вычисляет строку урона. Поддерживает старый (formula) и новый (count/die/bonuses) форматы.
+ *  abilities — объект { str, dex, con, int, wis, cha } из существа */
+function damageLine(a, abilities = {}) {
+  const damages = a.damages?.length > 0
+    ? a.damages
+    : a.damage ? [{ formula: a.damage, type: a.damageType }] : []
   if (!damages.length) return null
-  return 'Попадание: ' + damages.map(d => `${d.formula}${d.type ? ` ${dmgName(d.type)}` : ''}`).join(' плюс ') + '.'
+
+  const parts = damages.map(d => {
+    // ── Старый формат ──
+    if (d.formula !== undefined && d.count === undefined) {
+      return d.formula ? `${d.formula}${d.type ? ` ${dmgName(d.type)}` : ''}` : null
+    }
+    // ── Новый формат ──
+    const count  = d.count ?? 1
+    const die    = d.die ?? 'd6'
+    const dieNum = parseInt(die.slice(1)) || 6
+    const bonuses = d.bonuses ?? []
+    const type    = d.type ?? ''
+
+    // Считаем среднее
+    const diceAvg = count * (dieNum + 1) / 2
+    let bonusTotal = 0
+    const bonusStrs = []
+
+    for (const b of bonuses) {
+      if (ABILITY_KEYS.includes(b.type)) {
+        const mod = Math.floor(((abilities[b.type] ?? 10) - 10) / 2)
+        bonusTotal += mod
+        bonusStrs.push(mod >= 0 ? `+${mod}` : String(mod))
+      } else if (b.type === 'special' && b.value !== '') {
+        const num = parseFloat(String(b.value).replace(/^\+/, ''))
+        if (!isNaN(num)) bonusTotal += num
+        const disp = String(b.value).startsWith('+') || String(b.value).startsWith('-')
+          ? b.value : `+${b.value}`
+        bonusStrs.push(disp)
+      }
+    }
+
+    const avg        = Math.round(diceAvg + bonusTotal)
+    const formulaStr = `${count}к${dieNum}${bonusStrs.join(' ')}`
+    const typeStr    = type ? ` ${dmgName(type)}` : ''
+    return `${avg} (${formulaStr})${typeStr}`
+  }).filter(Boolean)
+
+  if (!parts.length) return null
+  return 'Попадание: ' + parts.join(' плюс ') + '.'
 }
 
 // Формирует строку атаки как в официальных книгах
@@ -29,8 +72,8 @@ function attackLine(a) {
   if (!a.attackType && a.attackBonus == null) return null
   const typeLabel = ATTACK_TYPE_LABEL[a.attackType] ?? 'Атака'
   const bonus = a.attackBonus != null ? `${a.attackBonus >= 0 ? '+' : ''}${a.attackBonus} к попаданию` : ''
-  const isRanged = a.attackType === 'ranged' || a.attackType === 'spell_ranged'
   const isMelee  = a.attackType === 'melee'  || a.attackType === 'spell_melee'
+  const isRanged = a.attackType === 'ranged' || a.attackType === 'spell_ranged'
   const reach = isMelee  ? `, досягаемость ${a.reach || '1,5 м'}, одна цель` : ''
   const range = isRanged ? `, дальность ${a.range || '—'}, одна цель` : ''
   return `${typeLabel}: ${bonus}${reach}${range}.`
@@ -241,9 +284,9 @@ export default function StatblockView({ creature: c, onEdit }) {
                           <em>Атака:</em> {a.attackBonus >= 0 ? '+' : ''}{a.attackBonus} к попаданию.{' '}
                         </span>
                       )}
-                      {damageLine(a) && (
+                      {damageLine(a, c.abilities) && (
                         <span className="text-sm" style={{ color: 'var(--text-dim)' }}>
-                          <em>{damageLine(a)}</em>{' '}
+                          <em>{damageLine(a, c.abilities)}</em>{' '}
                         </span>
                       )}
                       {a.description && (

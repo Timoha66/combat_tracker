@@ -23,7 +23,34 @@ const BONUS_OPTIONS = [
   { id: 'special', label: 'Специальный' },
 ]
 
-/** Парсит старый формат "2к6+4" → новую структуру */
+/** Вычисляет живой предпросмотр урона для отображения в форме */
+function computeDamagePreview(d, abilities = {}) {
+  const count   = d.count ?? 1
+  const die     = d.die ?? 'd6'
+  const dieNum  = parseInt(die.slice(1)) || 6
+  const bonuses = d.bonuses ?? []
+
+  const diceAvg = count * (dieNum + 1) / 2
+  let bonusTotal = 0
+  const bonusStrs = []
+
+  for (const b of bonuses) {
+    if (['str','dex','con','int','wis','cha'].includes(b.type)) {
+      const mod = Math.floor(((abilities[b.type] ?? 10) - 10) / 2)
+      bonusTotal += mod
+      bonusStrs.push(mod >= 0 ? `+${mod}` : String(mod))
+    } else if (b.type === 'special' && b.value !== '') {
+      const num = parseFloat(String(b.value).replace(/^\+/, ''))
+      if (!isNaN(num)) bonusTotal += num
+      const disp = String(b.value).startsWith('+') || String(b.value).startsWith('-')
+        ? b.value : `+${b.value}`
+      bonusStrs.push(disp)
+    }
+  }
+  const avg        = Math.round(diceAvg + bonusTotal)
+  const formulaStr = `${count}к${dieNum}${bonusStrs.join(' ')}`
+  return `ср. ${avg} (${formulaStr})`
+}
 function parseLegacyFormula(formula = '') {
   const m = formula.match(/^(\d+)[кd](\d+)([+-]\d+)?$/)
   if (m) {
@@ -536,6 +563,7 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
                           />
                         </Field>
                       )}
+                      {a.attackType && (
                       <Field label="Урон">
                         {(a.damages ?? [{ ...EMPTY_DAMAGE }]).map((d, di) => {
                           const updateDmg = upd =>
@@ -565,92 +593,93 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
                                 ...dd, bonuses: dd.bonuses.filter((_, bii) => bii !== bi),
                               } : dd),
                             }))
+                          const preview = computeDamagePreview(d, form.abilities)
                           return (
-                            <div key={di} className="mb-2 p-2 rounded-lg" style={{ background: 'var(--bg-deep)', border: '1px solid var(--border)' }}>
-                              {/* Кости + тип урона */}
-                              <div className="flex gap-2 mb-2 items-center">
-                                {/* Количество кубиков */}
+                            <div key={di} className="mb-2 rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+                              {/* Строка кубиков и типа урона */}
+                              <div className="flex gap-1.5 p-2 items-center" style={{ background: 'var(--bg-deep)' }}>
                                 <select
                                   value={d.count ?? 1}
                                   onChange={e => updateDmg({ count: Number(e.target.value) })}
-                                  className="rounded-lg px-2 py-1.5 text-sm outline-none cursor-pointer font-cinzel"
-                                  style={{ width: 54, background: 'var(--bg-row)', border: '1px solid var(--border-md)', color: 'var(--text)' }}>
+                                  className="rounded px-1.5 py-1 text-sm outline-none cursor-pointer font-cinzel text-center"
+                                  style={{ width: 48, background: 'var(--bg-row)', border: '1px solid var(--border-md)', color: 'var(--text)' }}>
                                   {Array.from({ length: 20 }, (_, n) => n + 1).map(n => (
                                     <option key={n} value={n}>{n}</option>
                                   ))}
                                 </select>
-                                {/* Вид куба */}
+                                <span className="font-cinzel text-xs shrink-0" style={{ color: 'var(--text-muted)' }}>×</span>
                                 <select
                                   value={d.die ?? 'd6'}
                                   onChange={e => updateDmg({ die: e.target.value })}
-                                  className="rounded-lg px-2 py-1.5 text-sm outline-none cursor-pointer font-cinzel"
-                                  style={{ width: 70, background: 'var(--bg-row)', border: '1px solid var(--border-md)', color: 'var(--text)' }}>
+                                  className="rounded px-1.5 py-1 text-sm outline-none cursor-pointer font-cinzel text-center"
+                                  style={{ width: 64, background: 'var(--bg-row)', border: '1px solid var(--border-md)', color: 'var(--text)' }}>
                                   {DICE_SIZES.map(s => <option key={s} value={s}>{s}</option>)}
                                 </select>
-                                <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>·</span>
-                                {/* Тип урона */}
+                                <span className="font-cinzel text-xs shrink-0" style={{ color: 'var(--text-muted)' }}>·</span>
                                 <select
                                   value={d.type ?? ''}
                                   onChange={e => updateDmg({ type: e.target.value })}
-                                  className="rounded-lg px-2 py-1.5 text-sm outline-none cursor-pointer flex-1"
+                                  className="rounded px-2 py-1 text-sm outline-none cursor-pointer flex-1"
                                   style={{ background: 'var(--bg-row)', border: '1px solid var(--border-md)', color: 'var(--text)' }}>
                                   <option value="">— тип урона —</option>
                                   {DMG_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
                                 </select>
-                                {/* Удалить этот урон */}
                                 {(a.damages ?? []).length > 1 && (
-                                  <button className="icon-btn shrink-0" style={{ width: 24, height: 24 }}
+                                  <button className="icon-btn shrink-0" style={{ width: 22, height: 22 }}
                                     onClick={() => updateInArray('actions', i, x => ({
                                       ...x, damages: x.damages.filter((_, ddi) => ddi !== di),
                                     }))}>
-                                    <IconTrash size={11} />
+                                    <IconTrash size={10} />
                                   </button>
                                 )}
                               </div>
                               {/* Бонусы */}
-                              {(d.bonuses ?? []).map((b, bi) => {
-                                const isAbility = ABILITY_KEYS.includes(b.type)
-                                const mod = isAbility
-                                  ? Math.floor(((form.abilities?.[b.type] ?? 10) - 10) / 2)
-                                  : null
-                                return (
-                                  <div key={bi} className="flex gap-2 mb-1 items-center">
-                                    <span className="font-cinzel text-xs shrink-0" style={{ color: 'var(--text-muted)' }}>+</span>
-                                    <select
-                                      value={b.type}
-                                      onChange={e => updateBonus(bi, { type: e.target.value, value: '' })}
-                                      className="rounded-lg px-2 py-1.5 text-sm outline-none cursor-pointer"
-                                      style={{ width: 140, background: 'var(--bg-row)', border: '1px solid var(--border-md)', color: 'var(--text)' }}>
-                                      {BONUS_OPTIONS.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
-                                    </select>
-                                    {/* Вычисленное значение мода */}
-                                    {isAbility && (
-                                      <span className="font-cinzel text-sm shrink-0" style={{ minWidth: 28, color: 'var(--gold)' }}>
-                                        {mod >= 0 ? `+${mod}` : String(mod)}
-                                      </span>
-                                    )}
-                                    {/* Свободный ввод для специального */}
-                                    {b.type === 'special' && (
-                                      <input
-                                        type="text"
-                                        placeholder="+5"
-                                        value={b.value ?? ''}
-                                        onChange={e => updateBonus(bi, { value: e.target.value })}
-                                        className="rounded-lg px-2 py-1.5 text-sm outline-none font-cinzel"
-                                        style={{ width: 70, background: 'var(--bg-row)', border: '1px solid var(--border-md)', color: 'var(--text)' }}
-                                      />
-                                    )}
-                                    <button className="icon-btn shrink-0 ml-auto" style={{ width: 22, height: 22 }}
-                                      onClick={() => removeBonus(bi)}>
-                                      <IconTrash size={10} />
-                                    </button>
-                                  </div>
-                                )
-                              })}
-                              <button type="button" className="btn btn-ghost w-full justify-center mt-1" style={{ fontSize: 10 }}
-                                onClick={addBonus}>
-                                <IconPlus size={10} /> Добавить бонус
-                              </button>
+                              <div className="px-2 pt-1.5 pb-1" style={{ background: 'var(--bg-row)' }}>
+                                {(d.bonuses ?? []).map((b, bi) => {
+                                  const isAbility = ABILITY_KEYS.includes(b.type)
+                                  const mod = isAbility
+                                    ? Math.floor(((form.abilities?.[b.type] ?? 10) - 10) / 2)
+                                    : null
+                                  return (
+                                    <div key={bi} className="flex gap-2 mb-1 items-center">
+                                      <span className="font-cinzel text-xs shrink-0" style={{ color: 'var(--text-muted)' }}>+</span>
+                                      <select
+                                        value={b.type}
+                                        onChange={e => updateBonus(bi, { type: e.target.value, value: '' })}
+                                        className="rounded px-2 py-1 text-sm outline-none cursor-pointer"
+                                        style={{ width: 130, background: 'var(--bg-deep)', border: '1px solid var(--border-md)', color: 'var(--text)' }}>
+                                        {BONUS_OPTIONS.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
+                                      </select>
+                                      {isAbility && (
+                                        <span className="font-cinzel text-sm shrink-0" style={{ minWidth: 28, color: 'var(--gold)' }}>
+                                          {mod >= 0 ? `+${mod}` : String(mod)}
+                                        </span>
+                                      )}
+                                      {b.type === 'special' && (
+                                        <input
+                                          type="text" placeholder="+5" value={b.value ?? ''}
+                                          onChange={e => updateBonus(bi, { value: e.target.value })}
+                                          className="rounded px-2 py-1 text-sm outline-none font-cinzel"
+                                          style={{ width: 64, background: 'var(--bg-deep)', border: '1px solid var(--border-md)', color: 'var(--text)' }}
+                                        />
+                                      )}
+                                      <button className="icon-btn shrink-0 ml-auto" style={{ width: 20, height: 20 }}
+                                        onClick={() => removeBonus(bi)}>
+                                        <IconTrash size={10} />
+                                      </button>
+                                    </div>
+                                  )
+                                })}
+                                <button type="button" className="btn btn-ghost w-full justify-center" style={{ fontSize: 10, paddingTop: 2, paddingBottom: 2 }}
+                                  onClick={addBonus}>
+                                  <IconPlus size={10} /> Добавить бонус
+                                </button>
+                              </div>
+                              {/* Превью формулы */}
+                              <div className="px-2 py-1 flex items-center gap-1.5" style={{ background: 'rgba(0,0,0,0.25)', borderTop: '1px solid var(--border)' }}>
+                                <span className="font-cinzel text-[10px]" style={{ color: 'var(--text-muted)' }}>→</span>
+                                <span className="font-cinzel text-[11px]" style={{ color: 'var(--gold)' }}>{preview}</span>
+                              </div>
                             </div>
                           )
                         })}
@@ -661,6 +690,7 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
                           <IconPlus size={11} /> Ещё урон
                         </button>
                       </Field>
+                      )}
                     </div>
                     <Field label="Описание">
                       <textarea

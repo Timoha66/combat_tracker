@@ -9,8 +9,8 @@ import SpellInlineList from './spells/SpellInlineList'
 import SpellMiniCard from './spells/SpellMiniCard'
 
 const ATTACK_TYPE_LABEL = {
-  melee:        'Атака рукопашным оружием',
-  ranged:       'Атака дальнобойным оружием',
+  melee:  'Атака рукопашным оружием',
+  ranged: 'Атака дальнобойным оружием',
   spell_melee:  'Атака заклинанием ближнего боя',
   spell_ranged: 'Атака заклинанием дальнего боя',
 }
@@ -28,10 +28,49 @@ function attackLine(a) {
 const DMG_LABEL = Object.fromEntries(DMG_TYPES.map(t => [t.id, t.label]))
 function dmgName(id) { return DMG_LABEL[id] ?? id }
 
-function damageLine(a) {
-  const damages = a.damages?.filter(d => d.formula) ?? (a.damage ? [{ formula: a.damage, type: a.damageType }] : [])
+/** Вычисляет строку урона. Поддерживает старый (formula) и новый (count/die/bonuses) форматы. */
+function damageLine(a, abilities = {}) {
+  const damages = a.damages?.length > 0
+    ? a.damages
+    : a.damage ? [{ formula: a.damage, type: a.damageType }] : []
   if (!damages.length) return null
-  return 'Попадание: ' + damages.map(d => `${d.formula}${d.type ? ` ${dmgName(d.type)}` : ''}`).join(' плюс ') + '.'
+
+  const parts = damages.map(d => {
+    if (d.formula !== undefined && d.count === undefined) {
+      return d.formula ? `${d.formula}${d.type ? ` ${dmgName(d.type)}` : ''}` : null
+    }
+    const count  = d.count ?? 1
+    const die    = d.die ?? 'd6'
+    const dieNum = parseInt(die.slice(1)) || 6
+    const bonuses = d.bonuses ?? []
+    const type    = d.type ?? ''
+
+    const diceAvg = count * (dieNum + 1) / 2
+    let bonusTotal = 0
+    const bonusStrs = []
+
+    for (const b of bonuses) {
+      if (ABILITY_KEYS.includes(b.type)) {
+        const mod = Math.floor(((abilities[b.type] ?? 10) - 10) / 2)
+        bonusTotal += mod
+        bonusStrs.push(mod >= 0 ? `+${mod}` : String(mod))
+      } else if (b.type === 'special' && b.value !== '') {
+        const num = parseFloat(String(b.value).replace(/^\+/, ''))
+        if (!isNaN(num)) bonusTotal += num
+        const disp = String(b.value).startsWith('+') || String(b.value).startsWith('-')
+          ? b.value : `+${b.value}`
+        bonusStrs.push(disp)
+      }
+    }
+
+    const avg        = Math.round(diceAvg + bonusTotal)
+    const formulaStr = `${count}к${dieNum}${bonusStrs.join(' ')}`
+    const typeStr    = type ? ` ${dmgName(type)}` : ''
+    return `${avg} (${formulaStr})${typeStr}`
+  }).filter(Boolean)
+
+  if (!parts.length) return null
+  return 'Попадание: ' + parts.join(' плюс ') + '.'
 }
 
 // ─── CONDITION PICKER ─────────────────────────────────────────────────────────
@@ -421,7 +460,7 @@ function StatblockViewInline({ creature: c, currentHp, onSpellClick }) {
                   ? <><em>{attackLine(a)}</em>{' '}</>
                   : a.attackBonus != null ? <><em>Атака:</em> {a.attackBonus >= 0 ? '+' : ''}{a.attackBonus} к попаданию. </> : null
                 }
-                {damageLine(a) && <><em>{damageLine(a)}</em>{' '}</>}
+                {damageLine(a, c.abilities) && <><em>{damageLine(a, c.abilities)}</em>{' '}</>}
                 {a.description}
               </p>
             ))}
