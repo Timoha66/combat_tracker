@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import {
   IconPlus, IconSearch, IconUpload, IconDownload,
-  IconPencil, IconTrash, IconSword, IconUser, IconRefresh,
+  IconPencil, IconTrash, IconSword, IconRefresh,
   IconFilter, IconX, IconChevronDown,
 } from '@tabler/icons-react'
 import { useBestiaryStore } from '../../store/bestiaryStore'
@@ -82,14 +82,13 @@ export default function BestiaryPage() {
   }
 
   const typeColors = {
-    player:    'type-player',
     enemy:     'type-enemy',
     npc:       'type-npc',
     companion: 'type-ally',
     pet:       'type-ally',
   }
   const typeLabels = {
-    player: 'Игрок', enemy: 'Враг', npc: 'НПС',
+    enemy: 'Враг', npc: 'НПС',
     companion: 'Компаньон', pet: 'Питомец',
   }
 
@@ -193,9 +192,6 @@ export default function BestiaryPage() {
           <button className="btn btn-add flex-1 justify-center" style={{ fontSize: 11 }} onClick={() => openAdd('enemy')}>
             <IconSword size={13} /> Существо
           </button>
-          <button className="btn btn-blue flex-1 justify-center" style={{ fontSize: 11 }} onClick={() => openAdd('player')}>
-            <IconUser size={13} /> Игрок
-          </button>
         </div>
 
         {/* Список */}
@@ -232,11 +228,11 @@ export default function BestiaryPage() {
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-[11px]" style={{ color: 'var(--text-muted)' }}>
-                  {c.type !== 'player' && c.cr !== undefined && <span>CR {c.cr}</span>}
-                  {c.type !== 'player' && <span>·</span>}
-                  <span>HP {c.type === 'player' ? c.hp?.max : c.hp?.average}</span>
+                  {c.cr !== undefined && <span>CR {c.cr}</span>}
                   <span>·</span>
-                  <span>КД {c.type === 'player' ? c.ac : c.ac?.value}</span>
+                  <span>HP {c.hp?.average}</span>
+                  <span>·</span>
+                  <span>КД {c.ac?.value}</span>
                 </div>
               </div>
               {/* Actions */}

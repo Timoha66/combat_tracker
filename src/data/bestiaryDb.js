@@ -55,15 +55,6 @@ db.version(1).stores({
 //   notes: string,
 // }
 //
-// Для игроков (type: 'player'):
-// {
-//   id, name, type: 'player',
-//   hp: { max: number },
-//   ac: number,
-//   initiative: number,   // бонус
-//   abilities: { str, dex, con, int, wis, cha },
-// }
-
 export const EMPTY_CREATURE = {
   name: '',
   type: 'enemy',
@@ -92,13 +83,4 @@ export const EMPTY_CREATURE = {
   tags: [],
   source: 'homebrew',
   notes: '',
-}
-
-export const EMPTY_PLAYER = {
-  name: '',
-  type: 'player',
-  hp: { max: 20 },
-  ac: 12,
-  initiative: 0,
-  abilities: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
 }

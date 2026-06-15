@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { IconX, IconPlus, IconTrash, IconCheck } from '@tabler/icons-react'
 import { useBestiaryStore } from '../../store/bestiaryStore'
-import { EMPTY_CREATURE, EMPTY_PLAYER } from '../../data/bestiaryDb'
+import { EMPTY_CREATURE } from '../../data/bestiaryDb'
 import {
   SIZES, CREATURE_TYPES, CR_VALUES, CR_TO_PROF,
   ABILITY_KEYS, ABILITY_LABELS, ABILITY_FULL,
@@ -14,12 +14,9 @@ const DMG_NAMES = DMG_TYPES.map(t => t.label)
 
 export default function CreatureForm({ initial, onClose, onSaved }) {
   const { addCreature, updateCreature } = useBestiaryStore()
-  const isNew    = !initial?.id
-  const isPlayer = initial?.type === 'player'
+  const isNew = !initial?.id
 
-  const base = isPlayer
-    ? { ...EMPTY_PLAYER, ...initial }
-    : { ...EMPTY_CREATURE, ...initial }
+  const base = { ...EMPTY_CREATURE, ...initial }
 
   // Нормализуем старый формат damage/damageType → damages[]
   if (base.actions) {
@@ -153,9 +150,7 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
                   onBlur={e => Object.assign(e.target.style, inputStyle)}
                 />
               </Field>
-              {!isPlayer && (
-                <>
-                  <Field label="Размер">
+              <Field label="Размер">
                     <Select value={form.size} onChange={v => set('size', v)} options={SIZES.map(s => ({ id: s, label: s }))} />
                   </Field>
                   <Field label="Тип существа">
@@ -188,17 +183,13 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
                       { id: 'LH',   label: 'LH — LaserLlama' },
                     ]} />
                   </Field>
-                </>
-              )}
             </div>
           </Section>
 
           {/* ── БОЕВЫЕ ХАРАКТЕРИСТИКИ ── */}
           <Section title="Боевые характеристики">
             <div className="grid grid-cols-2 gap-3">
-              {!isPlayer ? (
-                <>
-                  <Field label="Среднее HP">
+              <Field label="Среднее HP">
                     <input className={inputCls} style={inputStyle} type="number" value={form.hp?.average ?? 0}
                       onChange={e => setNested('hp', 'average', Number(e.target.value))}
                       onFocus={e => Object.assign(e.target.style, focusStyle)}
@@ -242,32 +233,6 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
                       onBlur={e => Object.assign(e.target.style, inputStyle)}
                     />
                   </Field>
-                </>
-              ) : (
-                <>
-                  <Field label="Максимум HP">
-                    <input className={inputCls} style={inputStyle} type="number" value={form.hp?.max ?? 20}
-                      onChange={e => setNested('hp', 'max', Number(e.target.value))}
-                      onFocus={e => Object.assign(e.target.style, focusStyle)}
-                      onBlur={e => Object.assign(e.target.style, inputStyle)}
-                    />
-                  </Field>
-                  <Field label="КД">
-                    <input className={inputCls} style={inputStyle} type="number" value={form.ac ?? 10}
-                      onChange={e => set('ac', Number(e.target.value))}
-                      onFocus={e => Object.assign(e.target.style, focusStyle)}
-                      onBlur={e => Object.assign(e.target.style, inputStyle)}
-                    />
-                  </Field>
-                  <Field label="Бонус инициативы">
-                    <input className={inputCls} style={inputStyle} type="number" value={form.initiative ?? 0}
-                      onChange={e => set('initiative', Number(e.target.value))}
-                      onFocus={e => Object.assign(e.target.style, focusStyle)}
-                      onBlur={e => Object.assign(e.target.style, inputStyle)}
-                    />
-                  </Field>
-                </>
-              )}
             </div>
           </Section>
 
@@ -345,7 +310,6 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
           </Section>
 
           {/* ── СПАСБРОСКИ (только не-игроки) ── */}
-          {!isPlayer && (
             <Section title="Спасброски с владением">
               <div className="flex flex-wrap gap-2 mb-2">
                 {ABILITY_KEYS.map(k => {
@@ -390,10 +354,8 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
                 </div>
               ))}
             </Section>
-          )}
 
           {/* ── НАВЫКИ (только не-игроки) ── */}
-          {!isPlayer && (
             <Section title="Навыки с владением">
               <div className="flex flex-wrap gap-1 mb-2">
                 {SKILLS.map(sk => {
@@ -438,10 +400,8 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
                 </div>
               ))}
             </Section>
-          )}
 
           {/* ── ЧУВСТВА / ЯЗЫКИ (только не-игроки) ── */}
-          {!isPlayer && (
             <Section title="Чувства и языки">
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Чувства">
@@ -462,10 +422,8 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
                 </Field>
               </div>
             </Section>
-          )}
 
           {/* ── ЧЕРТЫ (только не-игроки) ── */}
-          {!isPlayer && (
             <Section title="Черты">
               {form.traits?.map((t, i) => (
                 <div key={i} className="flex gap-2 mb-2 p-2 rounded-lg" style={{ background: 'var(--bg-row)', border: '1px solid var(--border)' }}>
@@ -497,10 +455,8 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
                 <IconPlus size={13} /> Добавить черту
               </button>
             </Section>
-          )}
 
           {/* ── ДЕЙСТВИЯ (только не-игроки) ── */}
-          {!isPlayer && (
             <Section title="Действия и атаки">
               {form.actions?.map((a, i) => (
                 <div key={i} className="flex gap-2 mb-2 p-3 rounded-lg" style={{ background: 'var(--bg-row)', border: '1px solid var(--border)' }}>
@@ -605,10 +561,8 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
                 <IconPlus size={13} /> Добавить действие
               </button>
             </Section>
-          )}
 
           {/* ── ЛЕГЕНДАРНЫЕ (только не-игроки) ── */}
-          {!isPlayer && (
             <Section title="Легендарные способности">
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Легендарных сопротивлений / день (0 = нет)">
@@ -625,10 +579,8 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
                 </Field>
               </div>
             </Section>
-          )}
 
           {/* ── ЗАКЛИНАТЕЛЬ (только не-игроки) ── */}
-          {!isPlayer && (
             <SpellcastingSection
               form={form}
               setForm={setForm}
@@ -636,7 +588,6 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
               inputStyle={inputStyle}
               focusStyle={focusStyle}
             />
-          )}
 
           {/* ── ТЕГИ И ЗАМЕТКИ ── */}
           <Section title="Теги и заметки">

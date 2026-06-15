@@ -78,7 +78,6 @@ export const ACTION_SECTIONS = [
 
 // ─── ТИПЫ СУЩЕСТВ ДЛЯ ТРЕКЕРА ────────────────────────────────────────────────
 export const ENTITY_TYPES = [
-  { id: 'player',    label: 'Игрок' },
   { id: 'enemy',     label: 'Враг' },
   { id: 'npc',       label: 'НПС' },
   { id: 'companion', label: 'Компаньон' },
