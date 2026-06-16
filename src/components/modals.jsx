@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { IconX, IconCheck } from '@tabler/icons-react'
 import { useBattleStore, getEffectiveAC } from '../store/battleStore'
 import { useBestiaryStore } from '../store/bestiaryStore'
+import { usePartyStore } from '../store/partyStore'
 import { CONDITIONS, CONDITIONS_BASE, CONDITIONS_COMBAT, STATUS_LABEL, STATUS_PILL, getStatus } from '../data/constants'
 import { ABILITY_KEYS, ABILITY_LABELS, ACTION_SECTIONS, abilityMod } from '../data/gameData'
 import { DMG_TYPES } from '../data/constants'
@@ -507,22 +508,34 @@ export function BattleSummary() {
   const round       = useBattleStore(s => s.round)
   const setView     = useBattleStore(s => s.setView)
   const clearBattle = useBattleStore(s => s.clearBattle)
+  const { players: partyPlayers, loadAll: loadParty } = usePartyStore()
+
+  useEffect(() => { loadParty() }, [])
 
   function handleClear() {
     if (confirm('Очистить трекер? Все данные боя будут удалены.')) clearBattle()
   }
 
-  const players = combatants.filter(c => c.type === 'player')
-  const enemies = combatants.filter(c => c.type !== 'player')
+  const enemies       = combatants.filter(c => c.type !== 'player')
+  const enemiesKilled = enemies.filter(c => c.dead).length
 
-  const heroesDealt    = players.reduce((s, c) => s + (c.damageDealt ?? 0), 0)
-  const heroesTaken    = players.reduce((s, c) => s + (c.damageTaken ?? 0), 0)
-  const enemiesDealt   = enemies.reduce((s, c) => s + (c.damageDealt ?? 0), 0)
-  const enemiesTotalHp = enemies.reduce((s, c) => s + c.hp.max, 0)
-  const enemiesKilled  = enemies.filter(c => c.dead).length
+  // Мержим партию из Ширмы с данными трекера по sourceId
+  const partyRows = partyPlayers.map(p => {
+    const inTracker = combatants.find(c => c.sourceId === p.id)
+    return {
+      id:           p.id,
+      name:         p.name,
+      hpCurrent:    inTracker ? inTracker.hp.current : (p.hp?.max ?? 0),
+      hpMax:        inTracker ? inTracker.hp.max      : (p.hp?.max ?? 0),
+      damageTaken:  inTracker ? (inTracker.damageTaken ?? 0) : 0,
+      participated: !!inTracker,
+      status:       inTracker ? getStatus(inTracker) : null,
+    }
+  })
 
-  const topDealt  = [...combatants].sort((a, b) => (b.damageDealt ?? 0) - (a.damageDealt ?? 0)).slice(0, 3)
-  const topTaken  = [...combatants].sort((a, b) => (b.damageTaken ?? 0) - (a.damageTaken ?? 0)).slice(0, 3)
+  const heroesTaken = partyRows.reduce((s, p) => s + p.damageTaken, 0)
+  // Сортируем партию: участвовавшие и получившие больше урона — наверху
+  partyRows.sort((a, b) => b.damageTaken - a.damageTaken || (b.participated ? 1 : 0) - (a.participated ? 1 : 0))
 
   const typeLabel = { player: 'Игрок', enemy: 'Враг', ally: 'Союзник', npc: 'НПС', companion: 'Компаньон', pet: 'Питомец' }
 
@@ -530,86 +543,109 @@ export function BattleSummary() {
     <div className="flex-1 overflow-y-auto py-8 px-4">
       <div style={{ maxWidth: 680, margin: '0 auto' }}>
 
-        {/* Title */}
+        {/* Заголовок */}
         <div className="text-center mb-6">
           <div className="font-cinzel text-2xl font-bold mb-1" style={{ color: 'var(--gold)' }}>🏆 Бой завершён</div>
           <div className="text-sm" style={{ color: 'var(--text-dim)' }}>Раунд {round} · {combatants.length} участников</div>
         </div>
 
-        {/* Big stats */}
+        {/* Два главных числа */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="rounded-xl p-4 text-center" style={{ background: 'var(--bg-panel)', border: '1px solid var(--border)' }}>
-            <div className="font-cinzel text-[10px] tracking-widest uppercase mb-1" style={{ color: 'var(--text-muted)' }}>Урон героев</div>
-            <div className="font-cinzel text-3xl font-bold" style={{ color: '#60a5fa' }}>{heroesDealt}</div>
-            <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>получено: {heroesTaken}</div>
+            <div className="font-cinzel text-[10px] tracking-widest uppercase mb-1" style={{ color: 'var(--text-muted)' }}>Урон по партии</div>
+            <div className="font-cinzel text-3xl font-bold" style={{ color: '#f87171' }}>{heroesTaken}</div>
+            <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{partyPlayers.length} персонажей</div>
           </div>
           <div className="rounded-xl p-4 text-center" style={{ background: 'var(--bg-panel)', border: '1px solid var(--border)' }}>
-            <div className="font-cinzel text-[10px] tracking-widest uppercase mb-1" style={{ color: 'var(--text-muted)' }}>Урон врагов</div>
-            <div className="font-cinzel text-3xl font-bold" style={{ color: '#f87171' }}>{enemiesDealt}</div>
-            <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>убито: {enemiesKilled} / {enemies.length}</div>
+            <div className="font-cinzel text-[10px] tracking-widest uppercase mb-1" style={{ color: 'var(--text-muted)' }}>Врагов убито</div>
+            <div className="font-cinzel text-3xl font-bold" style={{ color: '#4ade80' }}>
+              {enemiesKilled}
+              <span className="font-cinzel text-lg ml-1" style={{ color: 'var(--text-muted)' }}>/ {enemies.length}</span>
+            </div>
+            <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>раундов: {round}</div>
           </div>
         </div>
 
-        {/* Top damage dealt / taken */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-            <div className="font-cinzel text-[10px] tracking-widest uppercase px-3 py-2" style={{ background: 'var(--bg-panel)', color: 'var(--text-muted)', borderBottom: '1px solid var(--border)' }}>
-              Топ урона
-            </div>
-            {topDealt.map((c, i) => (
-              <div key={c.id} className="flex items-center gap-2 px-3 py-2" style={{ background: 'var(--bg-row)', borderBottom: '0.5px solid var(--border)' }}>
-                <span className="font-cinzel text-xs" style={{ color: 'var(--text-muted)', minWidth: 16 }}>{i + 1}.</span>
-                <span className="font-cinzel text-sm flex-1 truncate" style={{ color: 'var(--text)' }}>{c.name}</span>
-                <span className="font-cinzel text-sm font-bold" style={{ color: '#60a5fa' }}>{c.damageDealt ?? 0}</span>
-                {(c.kills ?? 0) > 0 && <span className="font-cinzel text-[10px]" style={{ color: 'var(--gold)' }}>⚔ {c.kills}</span>}
-              </div>
-            ))}
+        {/* Состояние партии */}
+        <div className="rounded-xl overflow-hidden mb-4" style={{ border: '1px solid var(--border)' }}>
+          <div className="font-cinzel text-[10px] tracking-widest uppercase px-3 py-2"
+            style={{ background: 'var(--bg-panel)', color: 'var(--text-muted)', borderBottom: '1px solid var(--border)' }}>
+            Состояние партии
           </div>
-          <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-            <div className="font-cinzel text-[10px] tracking-widest uppercase px-3 py-2" style={{ background: 'var(--bg-panel)', color: 'var(--text-muted)', borderBottom: '1px solid var(--border)' }}>
-              Больше всего получил
+          {partyRows.length === 0 && (
+            <div className="px-3 py-4 text-center font-cinzel text-xs" style={{ color: 'var(--text-muted)' }}>
+              Партия пуста
             </div>
-            {topTaken.map((c, i) => (
-              <div key={c.id} className="flex items-center gap-2 px-3 py-2" style={{ background: 'var(--bg-row)', borderBottom: '0.5px solid var(--border)' }}>
-                <span className="font-cinzel text-xs" style={{ color: 'var(--text-muted)', minWidth: 16 }}>{i + 1}.</span>
-                <span className="font-cinzel text-sm flex-1 truncate" style={{ color: 'var(--text)' }}>{c.name}</span>
-                <span className="font-cinzel text-sm font-bold" style={{ color: '#f87171' }}>{c.damageTaken ?? 0}</span>
+          )}
+          {partyRows.map(p => {
+            const hpPct = p.hpMax > 0 ? Math.max(0, Math.min(1, p.hpCurrent / p.hpMax)) : 0
+            const hpColor = hpPct > 0.5 ? '#4ade80' : hpPct > 0.25 ? '#facc15' : '#f87171'
+            return (
+              <div key={p.id} className="flex items-center gap-3 px-3 py-2.5"
+                style={{ background: 'var(--bg-row)', borderBottom: '0.5px solid var(--border)' }}>
+                <span className="font-cinzel text-sm flex-1 truncate" style={{ color: 'var(--text)' }}>{p.name}</span>
+                {/* HP бар + значение */}
+                <div className="flex items-center gap-2 shrink-0">
+                  {p.participated && (
+                    <div className="rounded-full overflow-hidden" style={{ width: 56, height: 4, background: 'var(--bg-deep)' }}>
+                      <div className="h-full rounded-full transition-all" style={{ width: `${hpPct * 100}%`, background: hpColor }} />
+                    </div>
+                  )}
+                  <span className="font-cinzel text-sm" style={{ color: 'var(--text-dim)', minWidth: 60 }}>
+                    {p.hpCurrent} / {p.hpMax} HP
+                  </span>
+                </div>
+                {/* Полученный урон */}
+                <span className="font-cinzel text-sm font-bold shrink-0"
+                  style={{ color: p.damageTaken > 0 ? '#f87171' : 'var(--text-muted)', minWidth: 44, textAlign: 'right' }}>
+                  {p.damageTaken > 0 ? `−${p.damageTaken}` : '—'}
+                </span>
+                {/* Статус */}
+                <div className="shrink-0" style={{ minWidth: 76 }}>
+                  {p.participated && p.status
+                    ? <span className={`status-pill ${STATUS_PILL[p.status]}`}>{STATUS_LABEL[p.status]}</span>
+                    : <span className="font-cinzel text-[10px]" style={{ color: 'var(--text-muted)' }}>не участвовал</span>
+                  }
+                </div>
               </div>
-            ))}
-          </div>
+            )
+          })}
         </div>
 
-        {/* Full table */}
-        <div className="rounded-xl overflow-hidden mb-6" style={{ border: '1px solid var(--border)' }}>
-          <table className="w-full" style={{ borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: 'var(--bg-panel)' }}>
-                {['Участник', 'Тип', 'HP', 'Нанёс', 'Получил', 'Убийств', 'Статус'].map(h => (
-                  <th key={h} className="font-cinzel text-[10px] tracking-widest uppercase text-left px-3 py-2"
+        {/* Таблица врагов */}
+        {enemies.length > 0 && (
+          <div className="rounded-xl overflow-hidden mb-6" style={{ border: '1px solid var(--border)' }}>
+            <div className="font-cinzel text-[10px] tracking-widest uppercase px-3 py-2"
+              style={{ background: 'var(--bg-panel)', color: 'var(--text-muted)', borderBottom: '1px solid var(--border)' }}>
+              Враги
+            </div>
+            <table className="w-full" style={{ borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: 'var(--bg-panel)' }}>
+                  {['Участник', 'HP', 'Получил', 'Статус'].map(h => (
+                    <th key={h} className="font-cinzel text-[10px] tracking-widest uppercase text-left px-3 py-2"
                       style={{ color: 'var(--text-muted)', borderBottom: '1px solid var(--border)' }}>
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {combatants.map(c => {
-                const st = getStatus(c)
-                return (
-                  <tr key={c.id} style={{ background: 'var(--bg-row)', borderBottom: '0.5px solid var(--border)' }}>
-                    <td className="px-3 py-2 font-cinzel text-sm" style={{ color: 'var(--text)' }}>{c.name}</td>
-                    <td className="px-3 py-2"><span className={`type-badge type-${c.type}`}>{typeLabel[c.type] ?? c.type}</span></td>
-                    <td className="px-3 py-2 font-cinzel text-sm" style={{ color: 'var(--text-dim)' }}>{c.hp.current} / {c.hp.max}</td>
-                    <td className="px-3 py-2 font-cinzel text-sm font-bold" style={{ color: '#60a5fa' }}>{c.damageDealt ?? 0}</td>
-                    <td className="px-3 py-2 font-cinzel text-sm font-bold" style={{ color: '#f87171' }}>{c.damageTaken ?? 0}</td>
-                    <td className="px-3 py-2 font-cinzel text-sm" style={{ color: 'var(--gold)' }}>{c.kills ?? 0}</td>
-                    <td className="px-3 py-2"><span className={`status-pill ${STATUS_PILL[st]}`}>{STATUS_LABEL[st]}</span></td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {enemies.map(c => {
+                  const st = getStatus(c)
+                  return (
+                    <tr key={c.id} style={{ background: 'var(--bg-row)', borderBottom: '0.5px solid var(--border)' }}>
+                      <td className="px-3 py-2 font-cinzel text-sm" style={{ color: 'var(--text)' }}>{c.name}</td>
+                      <td className="px-3 py-2 font-cinzel text-sm" style={{ color: 'var(--text-dim)' }}>{c.hp.current} / {c.hp.max}</td>
+                      <td className="px-3 py-2 font-cinzel text-sm font-bold" style={{ color: '#f87171' }}>{c.damageTaken ?? 0}</td>
+                      <td className="px-3 py-2"><span className={`status-pill ${STATUS_PILL[st]}`}>{STATUS_LABEL[st]}</span></td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         <div className="flex gap-3 justify-center">
           <button className="btn btn-ghost" onClick={() => setView('tracker')}>← Вернуться</button>
