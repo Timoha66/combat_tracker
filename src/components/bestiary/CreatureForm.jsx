@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { IconX, IconPlus, IconTrash, IconCheck } from '@tabler/icons-react'
+import { IconX, IconPlus, IconTrash, IconCheck, IconGripVertical } from '@tabler/icons-react'
 import { useBestiaryStore } from '../../store/bestiaryStore'
 import { EMPTY_CREATURE } from '../../data/bestiaryDb'
 import {
@@ -121,6 +121,35 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
       const arr = f[field] ?? []
       return { ...f, [field]: arr.includes(val) ? arr.filter(x => x !== val) : [...arr, val] }
     })
+  }
+
+  // ── Drag & drop для действий ────────────────────────────────────────────────
+  const [dragIdx,     setDragIdx]     = useState(null)
+  const [dragOverIdx, setDragOverIdx] = useState(null)
+
+  function handleDragStart(e, i) {
+    setDragIdx(i)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+  function handleDragOver(e, i) {
+    e.preventDefault()
+    if (dragOverIdx !== i) setDragOverIdx(i)
+  }
+  function handleDrop(e, i) {
+    e.preventDefault()
+    if (dragIdx === null || dragIdx === i) { setDragIdx(null); setDragOverIdx(null); return }
+    setForm(f => {
+      const actions = [...(f.actions ?? [])]
+      const [moved] = actions.splice(dragIdx, 1)
+      actions.splice(i, 0, moved)
+      return { ...f, actions }
+    })
+    setDragIdx(null)
+    setDragOverIdx(null)
+  }
+  function handleDragEnd() {
+    setDragIdx(null)
+    setDragOverIdx(null)
   }
 
   // ── CR auto-prof ────────────────────────────────────────────────────────────
@@ -516,7 +545,23 @@ export default function CreatureForm({ initial, onClose, onSaved }) {
           {/* ── ДЕЙСТВИЯ (только не-игроки) ── */}
             <Section title="Действия и атаки">
               {form.actions?.map((a, i) => (
-                <div key={i} className="flex gap-2 mb-2 p-3 rounded-lg" style={{ background: 'var(--bg-row)', border: '1px solid var(--border)' }}>
+                <div key={i}
+                  draggable
+                  onDragStart={e => handleDragStart(e, i)}
+                  onDragOver={e => handleDragOver(e, i)}
+                  onDrop={e => handleDrop(e, i)}
+                  onDragEnd={handleDragEnd}
+                  className="flex gap-2 mb-2 p-3 rounded-lg"
+                  style={{
+                    background: 'var(--bg-row)',
+                    border: `1px solid ${dragOverIdx === i && dragIdx !== i ? 'rgba(226,201,126,0.6)' : 'var(--border)'}`,
+                    opacity: dragIdx === i ? 0.4 : 1,
+                    transition: 'opacity 0.15s, border-color 0.15s',
+                  }}>
+                  {/* Рукоятка перетаскивания */}
+                  <div className="flex items-start pt-1 shrink-0" style={{ color: 'var(--text-muted)', cursor: 'grab' }}>
+                    <IconGripVertical size={14} />
+                  </div>
                   <div className="flex-1">
                     <div className="grid grid-cols-2 gap-2 mb-2">
                       <Field label="Название">
